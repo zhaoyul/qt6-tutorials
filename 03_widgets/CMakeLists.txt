@@ -1,0 +1,7 @@
+add_subdirectory(01_basic_widgets)
+add_subdirectory(02_layouts)
+add_subdirectory(03_dialogs)
+add_subdirectory(04_main_window)
+add_subdirectory(05_item_views)
+add_subdirectory(06_graphics_view)
+add_subdirectory(07_custom_widgets)

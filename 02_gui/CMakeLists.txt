@@ -1,0 +1,5 @@
+add_subdirectory(01_painting)
+add_subdirectory(02_images)
+add_subdirectory(03_fonts)
+add_subdirectory(04_events)
+add_subdirectory(05_window)

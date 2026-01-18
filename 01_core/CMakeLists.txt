@@ -1,0 +1,8 @@
+add_subdirectory(01_meta_object)
+add_subdirectory(02_signals_slots)
+add_subdirectory(03_properties)
+add_subdirectory(04_containers)
+add_subdirectory(05_io_system)
+add_subdirectory(06_event_loop)
+add_subdirectory(07_threading)
+add_subdirectory(08_timer)
