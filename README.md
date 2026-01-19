@@ -173,6 +173,12 @@ qt-demos/
 - CMake 3.16+
 - C++17 兼容编译器
 
+### 配置并构建（推荐）
+```bash
+cmake -S . -B build
+cmake --build build -j 8
+```
+
 ### 构建单个示例
 ```bash
 cd 01_core/01_meta_object
@@ -188,6 +194,28 @@ mkdir build && cd build
 cmake ..
 make
 ```
+
+### 运行示例
+构建完成后，可直接运行对应可执行文件（在构建目录的子目录中）：
+```bash
+./build/01_core/01_meta_object/meta_object_demo
+```
+
+也可以单独构建目标：
+```bash
+cmake --build build --target meta_object_demo
+./build/01_core/01_meta_object/meta_object_demo
+```
+
+> 如果 CMake 找不到 Qt，请在配置时指定 Qt 安装路径，例如：
+> `cmake -S . -B build -DCMAKE_PREFIX_PATH=/path/to/Qt/6.x.x`
+
+### Emacs：快速编译当前示例
+仓库内的 `.dir-locals.el` 会在 Emacs 里打开 `main.cpp` 时自动设置 `compile-command`，让你直接 `M-x compile` 就能编译并运行当前示例：
+- 仅对 `c++-mode` 且文件名为 `main.cpp` 的缓冲区生效
+- 从当前目录的 `CMakeLists.txt` 中解析 `add_executable(...)` 的目标名
+- 使用仓库根目录下的 `build/`，生成命令：
+  - `cmake --build <root>/build --target <target> -j 8 && <root>/build/<rel>/<target>`
 
 ## 📖 学习建议
 
