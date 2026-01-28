@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/QmlCppIntegration/">
+    <file alias="Main.qml">/Users/kevinli/sandbox/tmp/qt-demos/04_qml/02_cpp_integration/Main.qml</file>
+  </qresource>
+</RCC>
+

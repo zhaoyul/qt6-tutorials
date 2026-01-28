@@ -1,0 +1,6 @@
+module QuickAnimations
+typeinfo quick_animations_demo.qmltypes
+prefer :/QuickAnimations/
+Main 1.0 Main.qml
+depends QtQuick
+

@@ -1,0 +1,14 @@
+-rootPath
+/Users/kevinli/sandbox/tmp/qt-demos/04_qml/01_basics
+-cmake-output
+-output-file
+/Users/kevinli/sandbox/tmp/qt-demos/build/04_qml/01_basics/.qt/qml_imports/qml_basics_demo_conf.cmake
+-importPath
+/Users/kevinli/sandbox/tmp/qt-demos/build/04_qml/01_basics/QmlBasics
+-importPath
+/Users/kevinli/sandbox/tmp/qt-demos/build/04_qml/01_basics
+-importPath
+/opt/homebrew/share/qt/qml
+-qrcFiles
+/Users/kevinli/sandbox/tmp/qt-demos/build/04_qml/01_basics/.qt/rcc/qmake_QmlBasics.qrc
+/Users/kevinli/sandbox/tmp/qt-demos/build/04_qml/01_basics/.qt/rcc/qml_basics_demo_raw_qml_0.qrc

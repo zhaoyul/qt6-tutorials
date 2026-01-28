@@ -1,0 +1,6 @@
+module QmlBasics
+typeinfo qml_basics_demo.qmltypes
+prefer :/QmlBasics/
+Main 1.0 Main.qml
+depends QtQuick
+
