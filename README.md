@@ -110,7 +110,7 @@ cpp/
 │   └── 01_basics/              # 3D基础
 │
 └── 12_project/                 # 综合实战项目
-    └── todo_app/               # 待办事项应用 (勾选/持久化)
+    └── todo_app/               # 待办事项应用 (优先级/标签/筛选/编辑/持久化)
 
 python/                         # Python 版本 (PySide6)
 ├── 01_core/                    # Qt Core 模块 (Python)
