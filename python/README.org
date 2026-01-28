@@ -1,0 +1,1117 @@
+#+TITLE: PySide6 Qt6 教程 - Python 版本
+#+AUTHOR: Qt6 Tutorials Project
+#+DESCRIPTION: 使用 PySide6 学习 Qt6 的 Python 实现
+
+* 🐍 PySide6 Qt6 教程
+
+本项目是 Qt6 C++ 教程的 Python 版本，使用 ~PySide6~ 绑定库实现。
+
+** 环境要求
+
+- Python 3.9+
+- PySide6 6.5+
+
+** 安装依赖
+
+*** 方式一：venv (标准库)
+
+#+begin_src shell :dir (expand-file-name "~/sandbox/tmp/qt6-tutorials/python")
+# 创建虚拟环境
+python3 -m venv venv
+
+# 激活 (Linux/macOS)
+source venv/bin/activate
+
+# 激活 (Windows CMD)
+# venv\Scripts\activate.bat
+
+# 激活 (Windows PowerShell)
+# venv\Scripts\Activate.ps1
+
+# 安装依赖
+pip install pyside6
+#+end_src
+
+*** 方式二：conda (推荐)
+
+创建环境并安装：
+
+#+begin_src shell :dir (expand-file-name "~/sandbox/tmp/qt6-tutorials/python")
+# 创建 conda 环境
+conda create -n qt6-py python=3.11 -y
+
+# 激活环境
+conda activate qt6-py
+
+# 安装 PySide6 (conda-forge 或 pip)
+conda install pyside6 -c conda-forge -y
+
+# 或使用 pip 安装最新版
+# pip install pyside6
+#+end_src
+
+验证安装：
+
+#+begin_src shell
+conda activate qt6-py && python -c "import PySide6; print('PySide6 version:', PySide6.__version__)"
+#+end_src
+
+*** 退出虚拟环境
+
+#+begin_src shell
+# 退出 venv
+deactivate
+
+# 退出 conda
+conda deactivate
+#+end_src
+
+** 项目结构
+
+#+begin_example
+python/
+├── 01_core/                    # Qt Core 模块 (8个示例)
+├── 02_gui/                     # Qt GUI 模块 (5个示例)
+├── 03_widgets/                 # Qt Widgets 模块 (7个示例)
+├── 04_qml/                     # Qt QML 模块 (2个示例)
+├── 05_quick/                   # Qt Quick 模块 (1个示例)
+├── 06_network/                 # Qt Network 模块 (3个示例)
+├── 07_sql/                     # Qt SQL 模块 (1个示例)
+├── 09_test/                    # Qt Test 模块 (1个示例)
+└── 10_concurrent/              # Qt Concurrent 模块 (1个示例)
+#+end_example
+
+* 📚 示例列表
+
+** 运行环境
+
+运行示例前请确保已激活虚拟环境：
+
+- *venv*: ~source venv/bin/activate~
+- *conda*: ~conda activate qt6-py~
+
+或使用 ~conda run~ 直接运行：
+
+* 01. Core 模块 (核心功能)
+
+** 01_meta_object - 元对象系统
+
+#+begin_src shell :dir (expand-file-name "~/sandbox/tmp/qt6-tutorials/python/01_core/01_meta_object") :results raw
+conda run -n qt6-py python main.py
+#+end_src
+
+#+RESULTS:
+=== PySide6 元对象系统示例 ===
+
+
+========== 元对象信息 ==========
+类名: Person
+父类: QObject
+
+--- 类信息 ---
+  author: Qt学习项目
+  version: 1.0
+
+--- 属性 (Property) ---
+  属性: name
+    类型: QString
+    可读: True
+    可写: True
+  属性: age
+    类型: int
+    可读: True
+    可写: True
+
+--- 方法 ---
+  信号: b'nameChanged(QString)'
+  信号: b'ageChanged(int)'
+  槽: b'introduce()'
+  槽: b'onBirthday()'
+
+--- 通过 QMetaObject::invokeMethod 调用方法 ---
+我是张三, 今年25岁
+
+--- 通过属性系统设置值 ---
+读取属性 name: 李四
+读取属性 age: 30
+
+--- 动态属性 ---
+动态属性 hobby: 编程
+
+--- 类型检查 ---
+person 是 Person 类型: True
+person 是 QObject 类型: True
+person 是 QWidget 类型: False
+
+
+** 02_signals_slots - 信号与槽
+
+#+begin_src shell :dir (expand-file-name "01_core/02_signals_slots") :results output
+conda run -n qt6-py python main.py
+#+end_src
+
+#+RESULTS:
+#+begin_example
+=== PySide6 信号与槽示例 ===
+
+--- 方式1: 直接连接 ---
+--- 方式2: Lambda 连接 ---
+--- 一个信号连接多个槽 ---
+
+--- 测试增加值 ---
+显示器1 显示值: 1
+Lambda 接收到值: 1
+显示器2 显示值: 1
+显示器1 显示值: 2
+Lambda 接收到值: 2
+显示器2 显示值: 2
+
+--- 测试设置值 ---
+显示器1 显示值: 9
+Lambda 接收到值: 9
+显示器2 显示值: 9
+
+--- 触发 limitReached ---
+显示器1 显示值: 10
+Lambda 接收到值: 10
+显示器2 显示值: 10
+Counter2 被触发, 值: 1
+
+--- 断开 display2 的连接 ---
+显示器1 显示值: 11
+Lambda 接收到值: 11
+Counter2 被触发, 值: 2
+
+--- 连接类型说明 ---
+Qt.AutoConnection (默认): 自动选择
+Qt.DirectConnection: 直接调用 (同步)
+Qt.QueuedConnection: 队列调用 (异步)
+Qt.UniqueConnection: 防止重复连接
+重复连接结果: 成功
+
+--- QTimer.singleShot 示例 ---
+100ms 后执行的 Lambda
+
+#+end_example
+
+** 03_properties - 属性系统
+
+#+begin_src shell :dir (expand-file-name "./01_core/03_properties") :results output
+conda run -n qt6-py python main.py
+#+end_src
+
+
+** 04_containers - 容器类
+
+#+begin_src shell :dir (expand-file-name "01_core/04_containers") :results output
+conda run -n qt6-py python main.py
+#+end_src
+
+#+RESULTS:
+#+begin_example
+=== PySide6 容器类示例 ===
+
+=== Python 字符串示例 ===
+
+拼接: Hello World
+格式化 (f-string): Name: Alice, Age: 25
+格式化 (format): Name: Alice, Age: 25
+格式化 (%): Name: Alice, Age: 25
+包含 World: True
+World 位置: 6
+替换后: Hello Qt Qt
+分割: ['apple', 'banana', 'cherry']
+连接: apple | banana | cherry
+大写: HELLO
+小写: hello
+裁剪: hello
+字符串转数字: 123
+数字转字符串: 3.14
+中文字符串: 中文支持
+中文长度: 4
+
+=== Python 列表示例 ===
+
+list1: [0, 1, 2, 3, 4, 5, 6, 7, 8]
+第一个: 0
+最后一个: 8
+索引 3: 3
+切片 [1:4]: [1, 2, 3]
+前3个: [0, 1, 2]
+后3个: [6, 7, 8]
+包含 5: True
+5 的索引: 5
+计数 3: 1
+修改后: [1, 2, 3, 4, 6, 7]
+遍历:
+  1
+  2
+  3
+  4
+  6
+  7
+带索引遍历:
+  索引 0: 1
+  索引 1: 2
+  索引 2: 3
+  索引 3: 4
+  索引 4: 6
+  索引 5: 7
+排序后: [1, 1, 2, 3, 4, 5, 6, 9]
+原地排序: [1, 1, 2, 3, 4, 5, 6, 9]
+平方列表: [1, 4, 9, 16, 25]
+
+=== Python 字典示例 (哈希表实现) ===
+
+scores: {'Alice': 95, 'Bob': 87, 'Charlie': 92, 'David': 88}
+Alice 分数: 95
+不存在的键 (get): -1
+包含 Bob: True
+大小: 4
+所有键: ['Alice', 'Bob', 'Charlie', 'David']
+所有值: [95, 87, 92, 88]
+所有项: [('Alice', 95), ('Bob', 87), ('Charlie', 92), ('David', 88)]
+遍历:
+  Alice: 95
+  Bob: 87
+  Charlie: 92
+  David: 88
+删除后: {'Alice': 95, 'Bob': 87, 'Charlie': 92}
+分数平方: {'Alice': 9025, 'Bob': 7569, 'Charlie': 8464}
+
+=== Python 集合示例 ===
+
+set1: {1, 2, 3, 4, 5}
+set2: {4, 5, 6, 7, 8}
+并集: {1, 2, 3, 4, 5, 6, 7, 8}
+交集: {4, 5}
+差集 (set1 - set2): {1, 2, 3}
+对称差集: {1, 2, 3, 6, 7, 8}
+修改后 set1: {3, 4, 5, 10}
+包含 3: True
+偶数平方集合: {0, 64, 4, 36, 16}
+
+=== Python 字节示例 ===
+
+数据: b'Hello, Binary World!'
+大小: 20
+十六进制: 48656c6c6f2c2042696e61727920576f726c6421
+Base64 编码: b'SGVsbG8sIEJpbmFyeSBXb3JsZCE='
+Base64 解码: b'Hello, Binary World!'
+数值转字节: b'12345'
+字节转数值: 12345
+可变字节数组: bytearray(b'Hello')
+
+=== Python 引用语义示例 ===
+
+original id: 4526389056
+reference id: 4526389056
+是同一对象: True
+修改后 original: [100, 2, 3]
+修改后 reference: [100, 2, 3]
+浅拷贝修改后 original: [100, 2, 3]
+浅拷贝: [999, 2, 3]
+深拷贝 original nested: [[1, 2], [3, 4]]
+深拷贝: [[100, 2], [3, 4]]
+
+提示:
+- Python没有Qt的隐式共享机制
+- 赋值操作是引用拷贝
+- 需要独立副本时使用 copy.copy() 或 copy.deepcopy()
+
+=== Python vs Qt 容器对比 ===
+| Qt       | Python | 说明 |
+|----------|--------|------|
+| QString  | str    | Python字符串功能更强大 |
+| QList    | list   | Python列表更灵活 |
+| QMap     | dict   | dict基于哈希表，O(1)查找 |
+| QHash    | dict   | Python只有dict |
+| QSet     | set    | 功能基本相同 |
+| QByteArray| bytes/bytearray | Python分开不可变/可变 |
+
+#+end_example
+
+** 05_io_system - I/O 系统
+
+#+begin_src shell :dir (expand-file-name "01_core/05_io_system") :results output
+conda run -n qt6-py python main.py
+#+end_src
+
+#+RESULTS:
+#+begin_example
+=== PySide6 I/O 系统示例 ===
+
+=== Python 文件操作示例 ===
+
+文件写入成功: test_python.txt
+
+文件内容 (逐行):
+  Hello, Python!
+  这是中文内容
+  Line 3
+
+全部内容:
+Hello, Python!
+这是中文内容
+Line 3
+
+内容已追加
+
+=== QFile 文本操作示例 ===
+
+文件写入成功: test.txt
+
+文件内容:
+  Hello, Qt6!
+  这是中文内容
+  Line 3
+
+全部内容: b'Hello, Qt6!\n\xe8\xbf\x99\xe6\x98\xaf\xe4\xb8\xad\xe6\x96\x87\xe5\x86\x85\xe5\xae\xb9\nLine 3\n'
+内容已追加
+
+=== QDataStream (二进制) 示例 ===
+
+二进制写入成功
+读取字符串: Hello
+读取整数: 12345
+读取浮点: 3.14159
+读取列表: ['Apple', 'Banana', 'Cherry']
+
+=== QDir 示例 ===
+
+当前目录: /Users/a123/sandbox/tmp/qt6-tutorials/python/01_core/05_io_system
+主目录: /Users/a123
+临时目录: /var/folders/gl/10x44fsn6bn1799lkf_g096r0000gn/T
+根目录: /
+
+当前目录文件:
+  data.bin
+  main.py
+  test.txt
+
+子目录:
+
+Python 文件:
+  main.py
+
+创建目录成功: test_dir
+删除目录成功: test_dir
+
+=== Python pathlib 示例 ===
+
+当前目录: /Users/a123/sandbox/tmp/qt6-tutorials/python/01_core/05_io_system
+主目录: /Users/a123
+文件路径: /Users/a123/sandbox/tmp/qt6-tutorials/python/01_core/05_io_system/test.txt
+文件名: test.txt
+后缀: .txt
+基本名: test
+父目录: /Users/a123/sandbox/tmp/qt6-tutorials/python/01_core/05_io_system
+
+Python 文件:
+  /Users/a123/sandbox/tmp/qt6-tutorials/python/01_core/05_io_system/main.py
+
+文件大小: 54 bytes
+修改时间: 2026-01-28 16:15:23.350918
+
+=== QFileInfo 示例 ===
+
+文件名: test.txt
+完整路径: /Users/a123/sandbox/tmp/qt6-tutorials/python/01_core/05_io_system/test.txt
+目录: /Users/a123/sandbox/tmp/qt6-tutorials/python/01_core/05_io_system
+后缀: txt
+基本名: test
+大小: 54 bytes
+是文件: True
+是目录: False
+可读: True
+可写: True
+创建时间: Wed Jan 28 16:15:23 2026
+修改时间: Wed Jan 28 16:15:23 2026
+
+=== QStandardPaths 示例 ===
+
+桌面: /Users/a123/Desktop
+文档: /Users/a123/Documents
+下载: /Users/a123/Downloads
+音乐: /Users/a123/Music
+图片: /Users/a123/Pictures
+视频: /Users/a123/Movies
+缓存: /Users/a123/Library/Caches/main.py
+配置: /Users/a123/Library/Preferences
+应用数据: /Users/a123/Library/Application Support/main.py
+
+=== QTemporaryFile 示例 ===
+
+临时文件: /var/folders/gl/10x44fsn6bn1799lkf_g096r0000gn/T/main.py.BItBFc
+Python临时文件: /var/folders/gl/10x44fsn6bn1799lkf_g096r0000gn/T/tmpbr5eig_9.txt
+持久临时文件: /var/folders/gl/10x44fsn6bn1799lkf_g096r0000gn/T/main.py.XvjPYB
+
+测试文件已清理
+
+#+end_example
+
+** 06_event_loop - 事件循环
+
+#+begin_src shell :dir (expand-file-name "01_core/06_event_loop") :results output
+conda run -n qt6-py python main.py
+#+end_src
+
+#+RESULTS:
+#+begin_example
+=== PySide6 事件循环示例 ===
+
+应用信息:
+应用名称: EventLoopDemo
+应用目录: /Users/a123/miniforge/envs/qt6-py/bin
+应用文件: /Users/a123/miniforge/envs/qt6-py/bin/python
+参数: ['main.py']
+
+=== 事件发送示例 ===
+
+--- postEvent (异步) ---
+事件已投递到队列
+事件过滤器拦截了来自 TestReceiver 的事件
+收到自定义事件: 异步消息1
+信号槽收到: 异步消息1
+事件过滤器拦截了来自 TestReceiver 的事件
+收到自定义事件: 异步消息2
+信号槽收到: 异步消息2
+
+--- sendEvent (同步) ---
+发送前
+事件过滤器拦截了来自 TestReceiver 的事件
+收到自定义事件: 同步消息
+信号槽收到: 同步消息
+发送后 (已处理)
+
+=== 队列调用示例 ===
+
+队列调用已安排
+队列调用执行
+
+--- 事件循环控制 ---
+使用 singleShot 延迟操作
+进入事件循环...
+定时器触发 #1
+定时器触发 #2
+定时器触发 #3
+定时器触发 #4
+定时器触发 #5
+
+500ms 到达，退出事件循环
+
+#+end_example
+
+** 07_threading - 多线程
+
+#+begin_src shell :dir (expand-file-name "01_core/07_threading") :results output
+conda run -n qt6-py python main.py
+#+end_src
+
+#+RESULTS:
+#+begin_example
+=== PySide6 多线程示例 ===
+
+=== QThread 继承方式 ===
+
+主线程 ID: 140704330102720
+Worker1 开始工作，线程ID: 123145405558784
+Worker1 工作完成
+
+=== moveToThread 方式 (推荐) ===
+
+Worker 执行任务: 任务A 线程: 140704330102720
+任务A 进度: 33%
+任务A 进度: 66%
+任务A 进度: 99%
+
+=== QThreadPool 方式 ===
+
+最大线程数: 12
+Task 1 运行在线程: 123145405558784
+Task 4 运行在线程: 123145407168512
+Task 3 运行在线程: 123145406631936
+Task 2 运行在线程: 123145406095360
+Task 5 运行在线程: 123145407705088
+Task 2 完成
+Task 1 完成
+Task 3 完成
+Task 4 完成
+Task 5 完成
+所有任务完成
+
+=== 同步原语 ===
+
+计数结果 (应为500): 500
+
+=== Python threading 对比 ===
+
+Python线程 ID: 123145421811712
+Python线程 ID: 123145438601216
+Python线程 ID: 123145455390720
+所有Python线程完成，结果数: 3
+
+对比总结:
+- PySide6 QThread: 与Qt事件循环集成，跨线程信号槽
+- Python threading: 标准库，更轻量，适合非Qt代码
+
+=== 线程最佳实践 ===
+1. 避免继承 QThread, 使用 moveToThread
+2. 使用信号槽跨线程通信
+3. 使用 QMutexLocker/QReadLocker 自动管理锁
+4. 简单任务使用 QThreadPool
+5. CPU密集型任务考虑Python multiprocessing
+
+#+end_example
+
+** 08_timer - 定时器
+
+#+begin_src shell :dir (expand-file-name "01_core/08_timer") :results output
+conda run -n qt6-py python main.py
+#+end_src
+
+#+RESULTS:
+#+begin_example
+=== PySide6 定时器示例 ===
+
+=== QElapsedTimer (计时) ===
+
+耗时: 29 ms
+耗时 (纳秒): 29913384 ns
+sleep 50ms 实际耗时: 50 ms
+已过去 100ms: False
+
+=== QDeadlineTimer (截止时间) ===
+
+剩余时间: 100 ms
+已过期: False
+50ms 后剩余: 47 ms
+110ms 后已过期: True
+永不过期定时器已过期: False
+
+=== Python time 模块对比 ===
+
+Python time 耗时: 12.39 ms
+Python sleep 50ms 实际: 53.60 ms
+
+对比总结:
+- QTimer: 与Qt事件循环集成，GUI应用首选
+- Python time: 简单脚本适用，不依赖Qt
+
+=== 定时器类型 ===
+
+精确定时器: 误差 < 1ms
+粗略定时器: 误差 ~5%，节省电量
+非常粗略定时器: 整秒级别
+
+=== QTimer 示例 ===
+
+重复定时器已启动 (100ms 间隔)
+
+=== singleShot 示例 ===
+
+单次定时器已安排
+
+=== 基础定时器 (startTimer) ===
+
+基础定时器 ID: 5
+
+--- 进入事件循环 ---
+
+重复定时器 #1
+基础定时器触发
+singleShot Lambda 执行
+重复定时器 #2
+QTimer singleShot 执行
+singleShot 槽执行
+基础定时器触发
+重复定时器 #3
+基础定时器已停止
+重复定时器 #4
+重复定时器 #5
+重复定时器已停止
+
+#+end_example
+
+* 02. GUI 模块 (图形界面基础)
+
+** 01_painting - 2D绘图系统
+
+#+begin_src shell :dir (expand-file-name "02_gui/01_painting") :results output
+conda run -n qt6-py python main.py
+#+end_src
+
+#+RESULTS:
+#+begin_example
+=== PySide6 2D绘图系统示例 ===
+
+绘制基本图形...
+绘制线条...
+绘制渐变...
+绘制路径...
+绘制变换...
+绘制文字...
+
+图像已保存到: painting_demo.png
+
+=== 绘图要点 ===
+1. QPainter 必须绑定到 QPaintDevice
+2. 使用 save()/restore() 保存/恢复状态
+3. setRenderHint 启用抗锯齿
+4. QPainterPath 用于复杂图形
+5. 渐变可用于 QBrush
+
+#+end_example
+
+** 02_images - 图像处理
+
+#+begin_src shell :dir (expand-file-name "02_gui/02_images") :results output
+conda run -n qt6-py python main.py
+#+end_src
+
+#+RESULTS:
+#+begin_example
+=== PySide6 图像处理示例 ===
+
+=== 创建图像 ===
+
+尺寸: (200, 150)
+宽度: 200
+高度: 150
+深度: 32 bits
+格式: Format.Format_RGB32
+字节数: 120000
+渐变图像已保存: gradient.png
+
+=== 像素操作 ===
+
+像素(25,25) R:255 G:0 B:0 A:255
+像素操作图像已保存: pixels.png
+
+=== 图像变换 ===
+
+缩放: 100x80 -> (200, 160)
+水平镜像已保存
+旋转45度已保存
+裁剪已保存
+
+=== 图像格式 ===
+
+支持的读取格式:
+  bmp
+  cur
+  gif
+  heic
+  heif
+  icns
+  ico
+  jfif
+  jp2
+  jpeg
+  jpg
+  pbm
+  pdf
+  pgm
+  png
+  ppm
+  svg
+  svgz
+  tga
+  tif
+  tiff
+  wbmp
+  webp
+  xbm
+  xpm
+
+支持的写入格式:
+  bmp
+  cur
+  heic
+  heif
+  icns
+  ico
+  jfif
+  jp2
+  jpeg
+  jpg
+  pbm
+  pgm
+  png
+  ppm
+  tif
+  tiff
+  wbmp
+  webp
+  xbm
+  xpm
+
+=== 颜色与格式转换 ===
+
+灰度图像已保存
+单色图像已保存
+
+QColor 示例:
+RGB: 255 128 64
+HSV: 20 191 255
+十六进制: #ff8040
+更亮: #ffd5bf
+更暗: #aa552b
+
+=== 图像合成 ===
+
+合成图像已保存: composite.png
+
+常用合成模式:
+- SourceOver: 标准 alpha 混合
+- DestinationOver: 目标在上
+- Clear: 清除
+- Source: 替换
+- Multiply: 正片叠底
+- Screen: 滤色
+
+=== 图像处理要点 ===
+1. QImage 用于像素操作
+2. QPixmap 用于屏幕显示
+3. setPixelColor 和 pixelColor 用于像素操作
+4. 使用 Qt.SmoothTransformation 获得好质量
+
+#+end_example
+
+** 03_fonts - 字体系统
+
+#+begin_src shell :dir (expand-file-name "02_gui/03_fonts") :results output
+conda run -n qt6-py python main.py
+#+end_src
+
+#+RESULTS:
+#+begin_example
+=== PySide6 字体系统示例 ===
+=== 系统字体 ===
+
+系统字体数量: 255
+
+前10个字体:
+  .AppleSystemUIFont
+  Academy Engraved LET
+  Al Bayan
+  Al Nile
+  Al Tarikh
+  American Typewriter
+  Andale Mono
+  Apple Braille
+  Apple Chancery
+  Apple Color Emoji
+
+Arial 的样式:
+  Regular
+  Italic
+  Bold
+  Bold Italic
+
+标准字体:
+系统字体: .AppleSystemUIFont
+等宽字体: Menlo
+标题字体: .AppleSystemUIFont
+
+=== QFont 配置 ===
+
+基本字体: Arial 12
+配置字体:
+  家族: Times New Roman
+  大小: 14 pt
+  粗细: 700
+  斜体: True
+  下划线: True
+
+像素大小: 20 px
+
+字体粗细级别:
+Thin: 100
+Light: 300
+Normal: 400
+Medium: 500
+DemiBold: 600
+Bold: 700
+ExtraBold: 800
+Black: 900
+
+=== QFontMetrics 度量 ===
+
+字体: Arial 14 pt
+高度: 16
+上升部: 13
+下降部: 3
+行间距: 0
+平均字符宽度: 6
+最大字符宽度: 13
+
+文字 "Hello, Qt6!" 的尺寸:
+  宽度: 66
+  边界矩形: (1, -13, 64, 16)
+
+文字截断 (150px):
+  原文: This is a very long text that might need to be elided
+  截断: This is a very long tex…
+
+=== 字体渲染示例 ===
+
+字体渲染示例已保存: fonts_demo.png
+
+=== 字体匹配 ===
+
+请求字体: Non Existent Font Family
+实际字体: .AppleSystemUIFont
+完全匹配: False
+
+字体回退策略:
+1. Qt 首先尝试完全匹配请求的字体
+2. 如果不存在，使用相似的替代字体
+3. 最后使用系统默认字体
+
+#+end_example
+
+** 04_events - GUI事件处理
+
+#+begin_src shell :dir (expand-file-name "02_gui/04_events") :results output
+conda run -n qt6-py python main.py
+#+end_src
+
+#+RESULTS:
+#+begin_example
+=== PySide6 GUI事件系统示例 ===
+窗口将显示并响应各种事件
+事件信息将打印到控制台
+
+窗口大小改变: (400, 300) -> (400, 300)
+获得焦点, 原因: FocusReason.ActiveWindowFocusReason
+鼠标进入窗口
+鼠标离开窗口
+失去焦点, 原因: FocusReason.ActiveWindowFocusReason
+
+#+end_example
+
+** 05_window - 窗口系统
+
+#+begin_src shell :dir (expand-file-name "02_gui/05_window") :results output
+conda run -n qt6-py python main.py
+#+end_src
+
+#+RESULTS:
+#+begin_example
+=== PySide6 窗口系统示例 ===
+=== 屏幕信息 ===
+
+屏幕数量: 1
+
+屏幕 1:
+  名称: Built-in Retina Display
+  几何: (0, 0, 2560, 1440)
+  可用几何: (0, 30, 2560, 1410)
+  虚拟几何: (0, 0, 2560, 1440)
+  物理尺寸: (599.2995301699309, 340.24185535519626) mm
+  逻辑 DPI: 72.0
+  物理 DPI: 108.00000162199728
+  设备像素比: 2.0
+  刷新率: 60.0 Hz
+  色深: 24 bits
+  方向: ScreenOrientation.LandscapeOrientation
+
+主屏幕: Built-in Retina Display
+
+=== 窗口类型 (Qt.WindowType) ===
+
+Qt.Window - 独立窗口
+Qt.Dialog - 对话框
+Qt.Sheet - macOS 表单
+Qt.Popup - 弹出菜单
+Qt.Tool - 工具窗口
+Qt.ToolTip - 提示框
+Qt.SplashScreen - 启动画面
+
+=== 窗口标志 (Qt.WindowFlags) ===
+
+Qt.FramelessWindowHint - 无边框
+Qt.WindowStaysOnTopHint - 置顶
+Qt.WindowStaysOnBottomHint - 置底
+Qt.WindowTransparentForInput - 穿透点击
+Qt.WindowMinMaxButtonsHint - 最小化/最大化按钮
+Qt.WindowCloseButtonHint - 关闭按钮
+
+#+end_example
+
+* 03. Widgets 模块 (桌面组件)
+
+** 01_basic_widgets - 基础控件
+
+#+begin_src shell :dir (expand-file-name "03_widgets/01_basic_widgets") :results output
+conda run -n qt6-py python main.py
+#+end_src
+
+** 02_layouts - 布局管理
+
+#+begin_src shell :dir (expand-file-name "03_widgets/02_layouts") :results output
+conda run -n qt6-py python main.py
+#+end_src
+
+#+RESULTS:
+: === PySide6 布局管理示例 ===
+:
+:
+
+** 03_dialogs - 对话框
+
+#+begin_src shell :dir (expand-file-name "~/sandbox/tmp/qt6-tutorials/python/03_widgets/03_dialogs")
+conda run -n qt6-py python main.py
+#+end_src
+
+** 04_main_window - 主窗口
+
+#+begin_src shell :dir (expand-file-name "~/sandbox/tmp/qt6-tutorials/python/03_widgets/04_main_window")
+conda run -n qt6-py python main.py
+#+end_src
+
+** 05_item_views - 模型/视图
+
+#+begin_src shell :dir (expand-file-name "~/sandbox/tmp/qt6-tutorials/python/03_widgets/05_item_views")
+conda run -n qt6-py python main.py
+#+end_src
+
+** 06_graphics_view - 图形视图框架
+
+#+begin_src shell :dir (expand-file-name "~/sandbox/tmp/qt6-tutorials/python/03_widgets/06_graphics_view")
+conda run -n qt6-py python main.py
+#+end_src
+
+** 07_custom_widgets - 自定义控件
+
+#+begin_src shell :dir (expand-file-name "~/sandbox/tmp/qt6-tutorials/python/03_widgets/07_custom_widgets")
+conda run -n qt6-py python main.py
+#+end_src
+
+* 04. QML 模块 (声明式UI)
+
+** 01_basics - QML基础
+
+#+begin_src shell :dir (expand-file-name "~/sandbox/tmp/qt6-tutorials/python/04_qml/01_basics")
+conda run -n qt6-py python main.py
+#+end_src
+
+** 02_cpp_integration - Python与QML集成
+
+#+begin_src shell :dir (expand-file-name "~/sandbox/tmp/qt6-tutorials/python/04_qml/02_cpp_integration")
+conda run -n qt6-py python main.py
+#+end_src
+
+* 05. Quick 模块 (现代UI)
+
+** 01_animations - 动画系统
+
+#+begin_src shell :dir (expand-file-name "~/sandbox/tmp/qt6-tutorials/python/05_quick/01_animations")
+conda run -n qt6-py python main.py
+#+end_src
+
+* 06. Network 模块 (网络通信)
+
+** 01_tcp - TCP通信
+
+#+begin_src shell :dir (expand-file-name "~/sandbox/tmp/qt6-tutorials/python/06_network/01_tcp")
+conda run -n qt6-py python main.py
+#+end_src
+
+** 02_udp - UDP通信
+
+#+begin_src shell :dir (expand-file-name "~/sandbox/tmp/qt6-tutorials/python/06_network/02_udp")
+conda run -n qt6-py python main.py
+#+end_src
+
+** 03_http - HTTP请求
+
+#+begin_src shell :dir (expand-file-name "~/sandbox/tmp/qt6-tutorials/python/06_network/03_http")
+conda run -n qt6-py python main.py
+#+end_src
+
+* 07. SQL 模块 (数据库)
+
+** 01_basics - 数据库基础
+
+#+begin_src shell :dir (expand-file-name "~/sandbox/tmp/qt6-tutorials/python/07_sql/01_basics")
+conda run -n qt6-py python main.py
+#+end_src
+
+* 09. Test 模块 (测试框架)
+
+** 01_unit_test - 单元测试
+
+#+begin_src shell :dir (expand-file-name "~/sandbox/tmp/qt6-tutorials/python/09_test/01_unit_test")
+conda run -n qt6-py python main.py
+#+end_src
+
+* 10. Concurrent 模块 (并发编程)
+
+** 01_basics - 并发基础
+
+#+begin_src shell :dir (expand-file-name "~/sandbox/tmp/qt6-tutorials/python/10_concurrent/01_basics")
+conda run -n qt6-py python main.py
+#+end_src
+
+* 🔄 C++ vs Python 对照表
+
+| C++ 特性          | PySide6 对应                  | 说明                      |
+|-------------------+-------------------------------+---------------------------|
+| ~Q_OBJECT~ 宏       | 不需要                        | Python 动态类型，无需 MOC |
+| ~Q_PROPERTY~        | ~@Property~ 装饰器              | Pythonic 语法             |
+| ~signals:~ / ~slots:~ | ~Signal~ / ~@Slot~                | 类级别定义信号            |
+| ~Q_INVOKABLE~       | ~@Slot~ 或普通方法              | Python 方法默认可调用     |
+| ~QML_ELEMENT~       | ~@QmlElement~ / ~qmlRegisterType~ | PySide6 6.4+ 支持装饰器   |
+| ~QString~           | Python ~str~                    | 直接使用原生类型          |
+| ~QList~ / ~QVector~   | Python ~list~                   | 直接使用原生类型          |
+| ~QMap~ / ~QHash~      | Python ~dict~                   | 直接使用原生类型          |
+| ~QFile~ / ~QDir~      | ~QFile~ / ~QDir~ 或 ~pathlib~       | 可用 Qt 或标准库          |
+| ~qDebug()~          | Python ~print()~                | 或 Qt 的日志系统          |
+| ~QtConcurrent::run~ | ~concurrent.futures~            | Python 标准库             |
+| ~QTest~             | ~unittest~ + ~QtTest~             | Python unittest 为主      |
+
+* 📝 快速开始
+
+** 首次运行
+
+#+begin_src shell :dir (expand-file-name ".")
+# 1. 创建 conda 环境
+conda create -n qt6-py python=3.11 -y
+
+# 2. 安装 PySide6
+conda activate qt6-py
+conda install pyside6 -c conda-forge
+
+# 3. 运行第一个示例
+conda run -n qt6-py python 01_core/01_meta_object/main.py
+#+end_src
+
+** 批量运行所有示例
+
+#+begin_src shell :dir (expand-file-name ".")
+#!/bin/bash
+# run_all.sh
+
+for dir in 01_core/*/ 02_gui/*/ 03_widgets/*/ 04_qml/*/ 05_quick/*/ 06_network/*/ 07_sql/*/ 09_test/*/ 10_concurrent/*/; do
+    if [ -f "$dir/main.py" ]; then
+        echo "Running: $dir"
+        conda run -n qt6-py python "$dir/main.py" || true
+        echo "---"
+    fi
+done
+#+end_src
+
+* 📖 学习建议
+
+1. *按顺序学习*: 从 01_core 开始，逐步深入
+2. *对比 C++ 版本*: 理解相同功能的不同实现方式
+3. *动手实践*: 修改示例代码，观察效果变化
+4. *参考官方文档*: PySide6 文档: https://doc.qt.io/qtforpython/
+
+* 🔗 相关链接
+
+- [[https://doc.qt.io/qtforpython/][PySide6 官方文档]]
+- [[https://wiki.qt.io/Qt_for_Python][Qt for Python Wiki]]
+- [[https://github.com/qtforpython][Qt for Python GitHub]]

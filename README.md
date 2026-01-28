@@ -115,65 +115,90 @@ qt-demos/
 │
 └── 12_project/                 # 综合实战项目
     └── todo_app/               # 待办事项应用
+
+python/                         # Python 版本 (PySide6)
+├── 01_core/                    # Qt Core 模块 (Python)
+├── 02_gui/                     # Qt GUI 模块 (Python)
+├── 03_widgets/                 # Qt Widgets 模块 (Python)
+└── requirements.txt            # Python 依赖
 ```
 
-## 🔑 核心C++类速查
+## 🔑 核心类速查
+
+### C++ Qt6 核心类
 
 ### Qt Core 核心类
-| 类名 | 功能 | 示例位置 |
-|------|------|----------|
-| `QObject` | 所有Qt对象的基类 | 01_core/01_meta_object |
-| `QCoreApplication` | 事件循环 | 01_core/06_event_loop |
-| `QString` | Unicode字符串 | 01_core/04_containers |
-| `QList` / `QVector` | 动态数组 | 01_core/04_containers |
-| `QMap` / `QHash` | 关联容器 | 01_core/04_containers |
-| `QFile` / `QDir` | 文件操作 | 01_core/05_io_system |
-| `QThread` | 线程 | 01_core/07_threading |
-| `QTimer` | 定时器 | 01_core/08_timer |
-| `QVariant` | 通用值容器 | 01_core/03_properties |
+| 类名                | 功能             | 示例位置               |
+|---------------------|------------------|------------------------|
+| `QObject`           | 所有Qt对象的基类 | 01_core/01_meta_object |
+| `QCoreApplication`  | 事件循环         | 01_core/06_event_loop  |
+| `QString`           | Unicode字符串    | 01_core/04_containers  |
+| `QList` / `QVector` | 动态数组         | 01_core/04_containers  |
+| `QMap` / `QHash`    | 关联容器         | 01_core/04_containers  |
+| `QFile` / `QDir`    | 文件操作         | 01_core/05_io_system   |
+| `QThread`           | 线程             | 01_core/07_threading   |
+| `QTimer`            | 定时器           | 01_core/08_timer       |
+| `QVariant`          | 通用值容器       | 01_core/03_properties  |
 
 ### Qt GUI 核心类
-| 类名 | 功能 | 示例位置 |
-|------|------|----------|
-| `QGuiApplication` | GUI应用程序 | 02_gui/05_window |
-| `QPainter` | 2D绘图 | 02_gui/01_painting |
-| `QImage` / `QPixmap` | 图像 | 02_gui/02_images |
-| `QFont` | 字体 | 02_gui/03_fonts |
-| `QWindow` | 窗口 | 02_gui/05_window |
-| `QEvent` | 事件基类 | 02_gui/04_events |
+| 类名                 | 功能        | 示例位置           |
+|----------------------|-------------|--------------------|
+| `QGuiApplication`    | GUI应用程序 | 02_gui/05_window   |
+| `QPainter`           | 2D绘图      | 02_gui/01_painting |
+| `QImage` / `QPixmap` | 图像        | 02_gui/02_images   |
+| `QFont`              | 字体        | 02_gui/03_fonts    |
+| `QWindow`            | 窗口        | 02_gui/05_window   |
+| `QEvent`             | 事件基类    | 02_gui/04_events   |
 
 ### Qt Widgets 核心类
-| 类名 | 功能 | 示例位置 |
-|------|------|----------|
-| `QApplication` | Widgets应用 | 03_widgets/01_basic |
-| `QWidget` | 所有控件基类 | 03_widgets/01_basic |
-| `QPushButton` | 按钮 | 03_widgets/01_basic |
-| `QLabel` | 标签 | 03_widgets/01_basic |
-| `QLineEdit` | 单行输入 | 03_widgets/01_basic |
-| `QTextEdit` | 多行文本 | 03_widgets/01_basic |
-| `QVBoxLayout` | 垂直布局 | 03_widgets/02_layouts |
-| `QHBoxLayout` | 水平布局 | 03_widgets/02_layouts |
-| `QMainWindow` | 主窗口 | 03_widgets/04_main_window |
-| `QDialog` | 对话框 | 03_widgets/03_dialogs |
-| `QTableView` | 表格视图 | 03_widgets/05_item_views |
-| `QListView` | 列表视图 | 03_widgets/05_item_views |
+| 类名           | 功能         | 示例位置                  |
+|----------------|--------------|---------------------------|
+| `QApplication` | Widgets应用  | 03_widgets/01_basic       |
+| `QWidget`      | 所有控件基类 | 03_widgets/01_basic       |
+| `QPushButton`  | 按钮         | 03_widgets/01_basic       |
+| `QLabel`       | 标签         | 03_widgets/01_basic       |
+| `QLineEdit`    | 单行输入     | 03_widgets/01_basic       |
+| `QTextEdit`    | 多行文本     | 03_widgets/01_basic       |
+| `QVBoxLayout`  | 垂直布局     | 03_widgets/02_layouts     |
+| `QHBoxLayout`  | 水平布局     | 03_widgets/02_layouts     |
+| `QMainWindow`  | 主窗口       | 03_widgets/04_main_window |
+| `QDialog`      | 对话框       | 03_widgets/03_dialogs     |
+| `QTableView`   | 表格视图     | 03_widgets/05_item_views  |
+| `QListView`    | 列表视图     | 03_widgets/05_item_views  |
 
 ### Qt Network 核心类
-| 类名 | 功能 | 示例位置 |
-|------|------|----------|
-| `QTcpSocket` | TCP客户端 | 06_network/01_tcp |
-| `QTcpServer` | TCP服务器 | 06_network/01_tcp |
-| `QUdpSocket` | UDP通信 | 06_network/02_udp |
-| `QNetworkAccessManager` | HTTP请求 | 06_network/03_http |
+| 类名                    | 功能      | 示例位置           |
+|-------------------------|-----------|--------------------|
+| `QTcpSocket`            | TCP客户端 | 06_network/01_tcp  |
+| `QTcpServer`            | TCP服务器 | 06_network/01_tcp  |
+| `QUdpSocket`            | UDP通信   | 06_network/02_udp  |
+| `QNetworkAccessManager` | HTTP请求  | 06_network/03_http |
+
+### Python PySide6 对应类
+
+| C++ 类                | PySide6 类                    | 说明             |
+|-----------------------|-------------------------------|------------------|
+| `QObject`             | `PySide6.QtCore.QObject`      | 完全一致         |
+| `Q_PROPERTY`          | `@Property` 装饰器            | Python化语法     |
+| `signals:` / `slots:` | `Signal` / `@Slot`            | 类级别定义信号   |
+| `QString`             | Python `str`                  | 直接使用原生类型 |
+| `QList` / `QVector`   | Python `list`                 | 直接使用原生类型 |
+| `QMap` / `QHash`      | Python `dict`                 | 直接使用原生类型 |
+| `QFile` / `QDir`      | `QFile` / `QDir` 或 `pathlib` | 可用Qt或标准库   |
+| `qDebug()`            | Python `print()`              | 或 Qt 的日志系统 |
+
+更多转换对照请参考各 Python 示例文件中的注释。
 
 ## 🚀 快速开始
 
-### 环境要求
+### C++ 版本
+
+#### 环境要求
 - Qt 6.5+ (推荐 6.6 或更高)
 - CMake 3.16+
 - C++17 兼容编译器
 
-### 配置并构建（推荐）
+#### 配置并构建（推荐）
 ```bash
 cmake -S . -B build
 cmake --build build -j 8
@@ -209,6 +234,79 @@ cmake --build build --target meta_object_demo
 
 > 如果 CMake 找不到 Qt，请在配置时指定 Qt 安装路径，例如：
 > `cmake -S . -B build -DCMAKE_PREFIX_PATH=/path/to/Qt/6.x.x`
+
+---
+
+### Python 版本 (PySide6)
+
+项目同时提供了 Python 版本的实现，使用 **PySide6** 绑定库。
+
+#### 环境要求
+- Python 3.9+
+- PySide6 6.5+
+
+#### 方式一：使用虚拟环境 venv（推荐）
+
+```bash
+# 1. 创建虚拟环境
+cd python
+python3 -m venv venv
+
+# 2. 激活虚拟环境
+# Linux/macOS:
+source venv/bin/activate
+# Windows:
+venv\Scripts\activate
+
+# 3. 安装依赖
+pip install -r requirements.txt
+
+# 4. 运行示例
+cd 01_core/01_meta_object
+python main.py
+```
+
+#### 方式二：使用 conda
+
+```bash
+# 1. 创建 conda 环境
+conda create -n qt6-py python=3.11
+
+# 2. 激活环境
+conda activate qt6-py
+
+# 3. 安装 PySide6
+conda install pyside6
+
+# 4. 运行示例
+cd python/01_core/01_meta_object
+python main.py
+```
+
+#### 退出虚拟环境
+
+```bash
+# 退出 venv
+deactivate
+
+# 退出 conda
+conda deactivate
+```
+
+#### 项目结构 (Python)
+
+```
+python/
+├── 01_core/                    # Qt Core 模块 (Python)
+│   ├── 01_meta_object/
+│   ├── 02_signals_slots/
+│   └── ...
+├── 02_gui/                     # Qt GUI 模块 (Python)
+├── 03_widgets/                 # Qt Widgets 模块 (Python)
+└── requirements.txt            # Python 依赖
+```
+
+---
 
 ### Emacs：快速编译当前示例
 仓库内的 `.dir-locals.el` 会在 Emacs 里打开 `main.cpp` 时自动设置 `compile-command`，让你直接 `M-x compile` 就能编译并运行当前示例：
