@@ -1,8 +1,12 @@
-# Qt Multimedia 模块 (可选)
-# 需要系统支持多媒体后端
+# Qt Multimedia module (optional)
+# Requires system multimedia backend support.
 
-# 取消注释以启用
-# add_subdirectory(01_audio)
-# add_subdirectory(02_video)
+find_package(Qt6 COMPONENTS Multimedia QUIET)
 
-message(STATUS "Qt Multimedia 模块已跳过 (可选模块)")
+if (Qt6Multimedia_FOUND)
+  add_subdirectory(01_audio)
+  add_subdirectory(02_video)
+  add_subdirectory(03_camera)
+else()
+  message(STATUS "Qt Multimedia module not found, skipping optional demos.")
+endif()

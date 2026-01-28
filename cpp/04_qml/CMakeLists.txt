@@ -1,2 +1,4 @@
 add_subdirectory(01_basics)
-add_subdirectory(02_cpp_integration)
+add_subdirectory(02_types)
+add_subdirectory(03_javascript)
+add_subdirectory(04_cpp_integration)

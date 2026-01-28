@@ -92,7 +92,7 @@ cpp/
 │   ├── 02_queries/             # SQL查询
 │   └── 03_models/              # SQL模型
 │
-├── 08_multimedia/              # Qt Multimedia 模块
+├── 08_multimedia/              # Qt Multimedia 模块 (可选)
 │   ├── 01_audio/               # 音频播放
 │   ├── 02_video/               # 视频播放
 │   └── 03_camera/              # 摄像头
@@ -110,7 +110,7 @@ cpp/
 │   └── 01_basics/              # 3D基础
 │
 └── 12_project/                 # 综合实战项目
-    └── todo_app/               # 待办事项应用
+    └── todo_app/               # 待办事项应用 (勾选/持久化)
 
 python/                         # Python 版本 (PySide6)
 ├── 01_core/                    # Qt Core 模块 (Python)
@@ -196,40 +196,60 @@ python/                         # Python 版本 (PySide6)
 
 #### 配置并构建（推荐）
 ```bash
-cmake -S . -B build
-cmake --build build -j 8
+cmake -S cpp -B cpp/build
+cmake --build cpp/build -j 8
 ```
 
 ### 构建单个示例
 ```bash
-cd 01_core/01_meta_object
-mkdir build && cd build
-cmake ..
-make
-./meta_object_demo
+cmake --build cpp/build --target meta_object_demo -j 8
 ```
 
 ### 构建所有示例
 ```bash
-mkdir build && cd build
-cmake ..
-make
+cmake -S cpp -B cpp/build
+cmake --build cpp/build -j 8
 ```
 
 ### 运行示例
 构建完成后，可直接运行对应可执行文件（在构建目录的子目录中）：
 ```bash
-./build/01_core/01_meta_object/meta_object_demo
+./cpp/build/01_core/01_meta_object/meta_object_demo
 ```
 
 也可以单独构建目标：
 ```bash
-cmake --build build --target meta_object_demo
-./build/01_core/01_meta_object/meta_object_demo
+cmake --build cpp/build --target meta_object_demo
+./cpp/build/01_core/01_meta_object/meta_object_demo
 ```
 
 > 如果 CMake 找不到 Qt，请在配置时指定 Qt 安装路径，例如：
-> `cmake -S . -B build -DCMAKE_PREFIX_PATH=/path/to/Qt/6.x.x`
+> `cmake -S cpp -B cpp/build -DCMAKE_PREFIX_PATH=/path/to/Qt/6.x.x`
+>
+> 08_multimedia 和 11_3d 为可选模块：缺少 Qt Multimedia/Qt 3D 时会自动跳过。
+
+### 构建可选/综合示例
+```bash
+# Qt Multimedia (可选)
+cmake --build cpp/build --target multimedia_audio_demo
+cmake --build cpp/build --target multimedia_video_demo
+cmake --build cpp/build --target multimedia_camera_demo
+
+# Qt 3D (可选)
+cmake --build cpp/build --target qt3d_basics_demo
+
+# 综合项目
+cmake --build cpp/build --target todo_app
+```
+
+### 运行可选/综合示例
+```bash
+./cpp/build/08_multimedia/01_audio/multimedia_audio_demo
+./cpp/build/08_multimedia/02_video/multimedia_video_demo
+./cpp/build/08_multimedia/03_camera/multimedia_camera_demo
+./cpp/build/11_3d/01_basics/qt3d_basics_demo
+./cpp/build/12_project/todo_app/todo_app
+```
 
 ---
 

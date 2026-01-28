@@ -32,3 +32,5 @@ add_subdirectory(07_sql)
 add_subdirectory(08_multimedia EXCLUDE_FROM_ALL)  # 可选
 add_subdirectory(09_test)
 add_subdirectory(10_concurrent)
+add_subdirectory(11_3d EXCLUDE_FROM_ALL)          # 可选
+add_subdirectory(12_project)
