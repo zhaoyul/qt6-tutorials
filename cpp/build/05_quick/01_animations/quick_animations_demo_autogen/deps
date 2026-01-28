@@ -1,8 +1,0 @@
-quick_animations_demo_autogen/timestamp: \
-	/Users/kevinli/sandbox/tmp/qt-demos/05_quick/01_animations/CMakeLists.txt \
-	/Users/kevinli/sandbox/tmp/qt-demos/05_quick/01_animations/main.cpp \
-	/Users/kevinli/sandbox/tmp/qt-demos/build/05_quick/01_animations/.qt/qml_imports/quick_animations_demo_conf.cmake \
-	/opt/homebrew/lib/cmake/Qt6Core/Qt6CoreConfigureFileTemplate.in \
-	/opt/homebrew/lib/cmake/Qt6Qml/Qt6QmlModuleDirMappingTemplate.qrc.in \
-	/opt/homebrew/lib/cmake/Qt6Qml/Qt6qmldirTemplate.cmake.in \
-	/opt/homebrew/bin/cmake

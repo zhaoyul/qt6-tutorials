@@ -1,6 +1,0 @@
-<RCC>
-  <qresource prefix="/">
-    <file alias="/QuickAnimations">/Users/kevinli/sandbox/tmp/qt-demos/build/05_quick/01_animations/QuickAnimations</file>
-
-  </qresource>
-</RCC>

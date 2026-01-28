@@ -1,6 +1,0 @@
-<RCC>
-  <qresource prefix="/">
-    <file alias="/QmlBasics">/Users/kevinli/sandbox/tmp/qt-demos/build/04_qml/01_basics/QmlBasics</file>
-
-  </qresource>
-</RCC>

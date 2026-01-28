@@ -18,6 +18,7 @@ find_package(Qt6 REQUIRED COMPONENTS
     Quick
     Test
     Concurrent
+    WebSockets
 )
 
 # 添加子目录

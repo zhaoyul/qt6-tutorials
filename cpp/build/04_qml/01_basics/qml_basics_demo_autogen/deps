@@ -1,8 +1,0 @@
-qml_basics_demo_autogen/timestamp: \
-	/Users/kevinli/sandbox/tmp/qt-demos/04_qml/01_basics/CMakeLists.txt \
-	/Users/kevinli/sandbox/tmp/qt-demos/04_qml/01_basics/main.cpp \
-	/Users/kevinli/sandbox/tmp/qt-demos/build/04_qml/01_basics/.qt/qml_imports/qml_basics_demo_conf.cmake \
-	/opt/homebrew/lib/cmake/Qt6Core/Qt6CoreConfigureFileTemplate.in \
-	/opt/homebrew/lib/cmake/Qt6Qml/Qt6QmlModuleDirMappingTemplate.qrc.in \
-	/opt/homebrew/lib/cmake/Qt6Qml/Qt6qmldirTemplate.cmake.in \
-	/opt/homebrew/bin/cmake

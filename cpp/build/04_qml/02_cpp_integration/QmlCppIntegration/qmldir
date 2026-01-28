@@ -1,6 +1,0 @@
-module QmlCppIntegration
-typeinfo qml_cpp_demo.qmltypes
-prefer :/QmlCppIntegration/
-Main 1.0 Main.qml
-depends QtQuick
-

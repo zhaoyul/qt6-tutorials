@@ -1,1 +1,5 @@
 add_subdirectory(01_animations)
+add_subdirectory(01_items)
+add_subdirectory(02_controls)
+add_subdirectory(04_states)
+add_subdirectory(05_effects)

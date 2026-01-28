@@ -1,6 +1,0 @@
-<RCC>
-  <qresource prefix="/QmlBasics/">
-    <file alias="Main.qml">/Users/kevinli/sandbox/tmp/qt-demos/04_qml/01_basics/Main.qml</file>
-  </qresource>
-</RCC>
-
