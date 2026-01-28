@@ -1,0 +1,13 @@
+{:deps
+ {org.clojure/clojure {:mvn/version "1.12.4"}
+  clj-python/libpython-clj {:mvn/version "2.026"}
+  cnuernber/dtype-next {:mvn/version "11.004"}}
+
+ :paths ["src" "."]
+
+ ;; 使用 :run alias 配置 JVM 参数
+ ;; -XstartOnFirstThread: macOS GUI 必须在主线程运行
+ ;; --enable-native-access=ALL-UNNAMED: Java 21+ 原生访问支持
+ :aliases
+ {:run {:jvm-opts ["-XstartOnFirstThread"
+                   "--enable-native-access=ALL-UNNAMED"]}}}

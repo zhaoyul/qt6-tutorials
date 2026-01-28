@@ -48,3 +48,8 @@ moc_*.cpp
 
 # User-specific CMake presets
 CMakeUserPresets.json
+/clojure/.clj-kondo/
+/clojure/.cpcache/
+/clojure/.lsp/
+/clojure/.nrepl-port
+/clojure/classes/
