@@ -2,7 +2,7 @@
   . ((eval . (let* ((file (buffer-file-name))
                     (dir (and file (file-name-directory file))))
                (when (and file (string= (file-name-nondirectory file) "main.cpp"))
-                 (let* ((root (or (locate-dominating-file dir ".git")
+                 (let* ((root (or (locate-dominating-file dir ".dir-locals.el")
                                   (locate-dominating-file dir "CMakeLists.txt")
                                   dir))
                         (cmake (expand-file-name "CMakeLists.txt" dir))
