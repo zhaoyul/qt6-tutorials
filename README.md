@@ -116,7 +116,50 @@ python/                         # Python 版本 (PySide6)
 ├── 01_core/                    # Qt Core 模块 (Python)
 ├── 02_gui/                     # Qt GUI 模块 (Python)
 ├── 03_widgets/                 # Qt Widgets 模块 (Python)
+├── 04_qml/
+├── 05_quick/
+├── 06_network/
+├── 07_sql/
+├── 08_multimedia/
+├── 09_test/
+├── 10_concurrent/
+├── 11_3d/
+├── 12_project/
+├── README.org
 └── requirements.txt            # Python 依赖
+
+basilisp/                       # Basilisp + PySide6 Lisp 示例
+├── 01_core/                    # 元对象/信号/属性/容器/事件等
+├── 02_gui/                     # GUI 相关
+├── 03_widgets/                 # Widgets 及布局
+├── 04_qml/                     # QML & C++ 集成
+├── 05_quick/                   # Quick 控件、动画、状态、效果
+├── 06_network/                 # 网络通信 (TCP/UDP/HTTP/WebSocket)
+├── 07_sql/                     # SQL 示例
+├── 08_multimedia/              # 多媒体示例
+├── 09_test/                    # 测试/自动化
+├── 10_concurrent/              # 并发/任务
+├── 11_3d/                      # 3D 示例
+├── 12_project/                 # 综合项目
+├── AGENTS.md                  # Basilisp 环境/风格提示
+└── README.md
+
+clojure/                        # Clojure + PySide6 示例
+├── 01_core/                    # 核心低级模块或元对象
+├── 02_gui/                     # GUI 与绘图
+├── 03_widgets/                 # Widgets 系列
+├── 04_qml/                     # QML、JavaScript、C++ 集成
+├── 05_quick/                   # Quick 控件、动画、状态、效果
+├── 06_network/                 # TCP/UDP/HTTP/WebSocket
+├── 07_sql/                     # SQL 示例
+├── 08_multimedia/              # 多媒体
+├── 09_test/                    # 测试
+├── 10_concurrent/              # 并发
+├── 11_3d/                      # 3D
+├── 12_project/                 # 组合项目
+├── README.md
+├── deps.edn
+└── python.edn
 ```
 
 ## 🔑 核心类速查
