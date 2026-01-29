@@ -11,7 +11,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QmlCppIntegration  // 导入模块 (包含 Counter)
+import QmlCppIntegration 1.0  // 导入模块 (包含 Counter)
 
 ApplicationWindow {
     id: root

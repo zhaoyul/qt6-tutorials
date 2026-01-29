@@ -14,6 +14,7 @@
 ;; 获取类
 (def QApplication (py/get-attr QtWidgets "QApplication"))
 (def QQmlApplicationEngine (py/get-attr QtQml "QQmlApplicationEngine"))
+(def QTimer (py/get-attr QtCore "QTimer"))
 (def QQmlComponent (py/get-attr QtQml "QQmlComponent"))
 (def QUrl (py/get-attr QtCore "QUrl"))
 
@@ -118,48 +119,62 @@ Window {
   []
   (println "\n=== 基本 QML 示例 ===")
   
-  (let [app (QApplication (make-array String 0))
+  (let [app (QApplication (py/->py-list []))
         engine (QQmlApplicationEngine)]
     
-    ;; 创建临时 QML 文件
-    (let [qml-path (create-qml-file hello-qml "/tmp/hello_clojure.qml")]
+    ;; 加载 QML 文件
+    (let [qml-path (str (System/getProperty "user.dir")
+                        "/04_qml/01_basics/Main.qml")]
       (py/call-attr engine "load" qml-path))
     
     ;; 检查是否有根对象
-    (if (empty? (py/get-attr engine "rootObjects"))
+    (if (empty? (py/call-attr engine "rootObjects"))
       (println "错误: 无法加载 QML")
       (do
         (println "QML 加载成功")
-        (py/call-attr app "exec")))))
+        (when-let [auto-ms (System/getenv "QT6_TUTORIAL_AUTOQUIT")]
+          (py/call-attr QTimer "singleShot"
+                        (Integer/parseInt auto-ms)
+                        (py/get-attr app "quit")))
+        (py/call-attr app "exec")
+        (when (System/getenv "QT6_TUTORIAL_AUTOQUIT")
+          (System/exit 0))))))
 
 (defn run-property-binding
   "运行属性绑定示例"
   []
   (println "\n=== 属性绑定示例 ===")
   
-  (let [app (QApplication (make-array String 0))
+  (let [app (QApplication (py/->py-list []))
         engine (QQmlApplicationEngine)]
     
     (let [qml-path (create-qml-file property-binding-qml "/tmp/property_binding.qml")]
       (py/call-attr engine "load" qml-path))
     
-    (if (empty? (py/get-attr engine "rootObjects"))
+    (if (empty? (py/call-attr engine "rootObjects"))
       (println "错误: 无法加载 QML")
-      (py/call-attr app "exec"))))
+      (do
+        (when-let [auto-ms (System/getenv "QT6_TUTORIAL_AUTOQUIT")]
+          (py/call-attr QTimer "singleShot"
+                        (Integer/parseInt auto-ms)
+                        (py/get-attr app "quit")))
+        (py/call-attr app "exec")
+        (when (System/getenv "QT6_TUTORIAL_AUTOQUIT")
+          (System/exit 0))))))
 
 (defn run-from-url
   "演示从 URL/字符串加载"
   []
   (println "\n=== 从内存加载 QML ===")
   
-  (let [app (QApplication (make-array String 0))
+  (let [app (QApplication (py/->py-list []))
         engine (QQmlApplicationEngine)
         component (QQmlComponent engine)]
     
     ;; 从字符串设置数据
     (py/call-attr component "setData"
                   (.getBytes hello-qml)
-                  (QUrl. ""))
+                  (QUrl ""))
     
     ;; 创建对象
     (let [obj (py/call-attr component "create")]
@@ -167,7 +182,13 @@ Window {
         (do
           (println "对象创建成功")
           (py/call-attr obj "show")
-          (py/call-attr app "exec"))
+          (when-let [auto-ms (System/getenv "QT6_TUTORIAL_AUTOQUIT")]
+            (py/call-attr QTimer "singleShot"
+                          (Integer/parseInt auto-ms)
+                          (py/get-attr app "quit")))
+          (py/call-attr app "exec")
+          (when (System/getenv "QT6_TUTORIAL_AUTOQUIT")
+            (System/exit 0)))
         (println (str "错误: " (py/call-attr component "errorString")))))))
 
 (defn -main
@@ -176,12 +197,6 @@ Window {
   
   ;; 运行基本示例
   (run-basic-qml)
-  
-  ;; 清理临时文件
-  (doseq [f ["/tmp/hello_clojure.qml" "/tmp/property_binding.qml"]]
-    (let [file (java.io.File. f)]
-      (when (.exists file)
-        (.delete file))))
   
   (println "\n=== 完成 ==="))
 

@@ -1,0 +1,145 @@
+(ns basilisp.examples.ex04_qml.ex04_cpp_integration)
+
+(import* [sys :as sys]
+         [os :as os]
+         [os.path :as path]
+         [builtins :as builtins]
+         [PySide6.QtCore :as QtCore]
+         [PySide6.QtGui :as QtGui]
+         [PySide6.QtQml :as QtQml])
+
+;; 获取类和函数
+(def QGuiApplication (.-QGuiApplication QtGui))
+(def QQmlApplicationEngine (.-QQmlApplicationEngine QtQml))
+(def QTimer (.-QTimer QtCore))
+(def qmlRegisterType (.-qmlRegisterType QtQml))
+(def QObject (.-QObject QtCore))
+(def Property (.-Property QtCore))
+(def Signal (.-Signal QtCore))
+(def Slot (.-Slot QtCore))
+
+(def py-int (.-int builtins))
+(def py-str (.-str builtins))
+
+;; 定义 Counter 类
+(def value-changed (Signal))
+(def step-changed (Signal))
+(def limit-reached (Signal py-str))
+
+(defn- counter-init [self & [parent]]
+  ((.-__init__ (python/super (.-__class__ self) self)) parent)
+  (set! (.-_value self) 0)
+  (set! (.-_step self) 1)
+  (set! (.-_min_value self) 0)
+  (set! (.-_max_value self) 100)
+  nil)
+
+(defn- counter-get-value [self]
+  (.-_value self))
+
+(defn- counter-set-value [self val]
+  (let [current (.-_value self)
+        min-val (.-_min_value self)
+        max-val (.-_max_value self)]
+    (when (not= current val)
+      (let [bounded-val (python/max min-val (python/min val max-val))]
+        (set! (.-_value self) bounded-val)
+        (. (.-valueChanged self) emit)
+        ;; 检查边界
+        (cond
+          (= bounded-val max-val)
+          (. (.-limitReached self) emit "已达到最大值!")
+          (= bounded-val min-val)
+          (. (.-limitReached self) emit "已达到最小值!")))))
+  nil)
+
+(defn- counter-get-step [self]
+  (.-_step self))
+
+(defn- counter-set-step [self s]
+  (when (not= (.-_step self) s)
+    (set! (.-_step self) s)
+    (. (.-stepChanged self) emit))
+  nil)
+
+(defn- counter-display-text [self]
+  (str "当前值: " (.-_value self)))
+
+(defn- counter-increment [self]
+  (python/print "[Basilisp/Python] increment() 被调用")
+  (let [current (.-_value self)
+        step (.-_step self)]
+    (.set_value self (+ current step)))
+  nil)
+
+(defn- counter-decrement [self]
+  (python/print "[Basilisp/Python] decrement() 被调用")
+  (let [current (.-_value self)
+        step (.-_step self)]
+    (.set_value self (- current step)))
+  nil)
+
+(defn- counter-reset [self]
+  (python/print "[Basilisp/Python] reset() 被调用")
+  (.set_value self 0)
+  nil)
+
+(defn- counter-format-value [self prefix]
+  (str prefix ": " (.-_value self)))
+
+(def Counter
+  (python/type
+    "Counter"
+    (python/tuple [QObject])
+    (python/dict
+      {"__init__" counter-init
+       "valueChanged" value-changed
+       "stepChanged" step-changed
+       "limitReached" limit-reached
+       "get_value" counter-get-value
+       "set_value" counter-set-value
+       "get_step" counter-get-step
+       "set_step" counter-set-step
+       "get_displayText" counter-display-text
+       "value" (Property py-int counter-get-value counter-set-value ** :notify value-changed)
+       "step" (Property py-int counter-get-step counter-set-step ** :notify step-changed)
+       "displayText" (Property py-str counter-display-text ** :notify value-changed)
+       "increment" counter-increment
+       "decrement" counter-decrement
+       "reset" counter-reset
+       "formatValue" counter-format-value})))
+
+(defn main []
+  (python/print "=== PySide6 QML 与 Python 集成示例 (Basilisp) ===\n")
+  
+  (def app (QGuiApplication (.-argv sys)))
+  
+  ;; 注册 Counter 类型到 QML
+(qmlRegisterType Counter "QmlCppIntegration" 1 0 "Counter")
+  
+  (def engine (QQmlApplicationEngine))
+  
+  ;; 创建全局 Counter 实例
+  (def globalCounter (Counter engine))
+  (.set_value globalCounter 50)
+  
+  ;; 设置上下文属性
+  (. (. engine rootContext) setContextProperty "globalCounter" globalCounter)
+  (. (. engine rootContext) setContextProperty "appVersion" "1.0.0")
+  (. (. engine rootContext) setContextProperty "debugMode" true)
+  
+  ;; 加载 QML 文件
+  (def qml-path (path/join (os/getcwd) "basilisp" "04_qml" "04_cpp_integration" "Main.qml"))
+  (. engine load (python/str qml-path))
+  
+  ;; 检查加载是否成功
+  (when (> (python/len (. engine rootObjects)) 0)
+    (python/print "QML 加载成功"))
+  
+  (def auto-ms (os/getenv "QT6_TUTORIAL_AUTOQUIT"))
+  (when auto-ms
+    (. QTimer singleShot (python/int auto-ms) (fn [] (. app quit))))
+
+  (. app exec))
+
+(main)

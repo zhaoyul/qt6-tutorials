@@ -15,8 +15,10 @@ Qt Quick 视觉效果：
 """
 
 import sys
+import os
 from pathlib import Path
 from PySide6.QtGui import QGuiApplication
+from PySide6.QtCore import QTimer
 from PySide6.QtQml import QQmlApplicationEngine
 
 
@@ -35,6 +37,10 @@ def main():
         print("QML 加载失败")
         return -1
     
+    auto_quit_ms = os.environ.get("QT6_TUTORIAL_AUTOQUIT")
+    if auto_quit_ms:
+        QTimer.singleShot(int(auto_quit_ms), app.quit)
+
     return app.exec()
 
 

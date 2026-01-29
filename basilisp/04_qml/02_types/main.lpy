@@ -3,20 +3,26 @@
 (import* [sys :as sys]
          [os :as os]
          [os.path :as path]
+         [PySide6.QtCore :as QtCore]
          [PySide6.QtGui :as QtGui]
          [PySide6.QtQml :as QtQml])
 
 (def QGuiApplication (.-QGuiApplication QtGui))
 (def QQmlApplicationEngine (.-QQmlApplicationEngine QtQml))
+(def QTimer (.-QTimer QtCore))
 
 (defn main []
   (def app (QGuiApplication (.-argv sys)))
   (python/print "=== QML Types Demo ===\n")
   (def engine (QQmlApplicationEngine))
-  (def qml-path (path/join (os/getcwd) "clojure" "04_qml" "02_types" "Main.qml"))
+  (def qml-path (path/join (os/getcwd) "basilisp" "04_qml" "02_types" "Main.qml"))
   (. engine load (python/str qml-path))
   (when (> (python/len (. engine rootObjects)) 0)
     (python/print "QML loaded"))
+  (def auto-ms (os/getenv "QT6_TUTORIAL_AUTOQUIT"))
+  (when auto-ms
+    (. QTimer singleShot (python/int auto-ms) (fn [] (. app quit))))
+
   (. app exec))
 
 (main)

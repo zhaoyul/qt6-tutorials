@@ -14,8 +14,10 @@ PySide6 QML 与 Python 集成示例
 """
 
 import sys
+import os
 from pathlib import Path
 from PySide6.QtGui import QGuiApplication
+from PySide6.QtCore import QTimer
 from PySide6.QtQml import QQmlApplicationEngine, QQmlContext, qmlRegisterType
 from counter import Counter
 
@@ -27,7 +29,7 @@ def main():
     
     # 注册 Counter 类型到 QML
     # 对应 C++ 的 QML_ELEMENT
-    qmlRegisterType(Counter, "QmlPythonIntegration", 1, 0, "Counter")
+    qmlRegisterType(Counter, "QmlCppIntegration", 1, 0, "Counter")
     
     engine = QQmlApplicationEngine()
     
@@ -48,6 +50,10 @@ def main():
         print("QML 加载失败")
         return -1
     
+    auto_quit_ms = os.environ.get("QT6_TUTORIAL_AUTOQUIT")
+    if auto_quit_ms:
+        QTimer.singleShot(int(auto_quit_ms), app.quit)
+
     return app.exec()
 
 

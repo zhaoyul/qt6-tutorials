@@ -997,9 +997,9 @@ conda run -n qt6-py python main.py
 conda run -n qt6-py python main.py
 #+end_src
 
-** 02_cpp_integration - Python与QML集成
+** 04_cpp_integration - Python与QML集成
 
-#+begin_src shell :dir (expand-file-name "~/sandbox/tmp/qt6-tutorials/python/04_qml/02_cpp_integration")
+#+begin_src shell :dir (expand-file-name "~/sandbox/tmp/qt6-tutorials/python/04_qml/04_cpp_integration")
 conda run -n qt6-py python main.py
 #+end_src
 
