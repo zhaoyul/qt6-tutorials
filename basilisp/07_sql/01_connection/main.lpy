@@ -1,0 +1,243 @@
+(ns basilisp.examples.ex07_sql.ex01_connection)
+
+(import* [sys :as sys]
+         [os :as os]
+         [PySide6.QtCore :as QtCore]
+         [PySide6.QtSql :as QtSql])
+
+(def QCoreApplication (.-QCoreApplication QtCore))
+(def QSqlDatabase (.-QSqlDatabase QtSql))
+(def QSqlQuery (.-QSqlQuery QtSql))
+
+(defn show-available-drivers []
+  (python/print "=== 可用数据库驱动 ===\n")
+  (python/print "驱动列表:" (.drivers QSqlDatabase)))
+
+(defn create-connection []
+  (python/print "\n=== 创建数据库连接 ===\n")
+  
+  ;; 使用 SQLite (内置，无需安装)
+  (def db (.addDatabase QSqlDatabase "QSQLITE"))
+  (.setDatabaseName db "demo.db")
+  
+  ;; 内存数据库: (.setDatabaseName db ":memory:")
+  
+  (if (.open db)
+    (do
+      (python/print "数据库连接成功")
+      (python/print "数据库文件: demo.db")
+      true)
+    (do
+      (python/print "数据库打开失败:" (.text (.lastError db)))
+      false)))
+
+(defn create-tables []
+  (python/print "\n=== 创建表 ===\n")
+  
+  (def query (QSqlQuery))
+  
+  ;; 删除旧表
+  (.exec query "DROP TABLE IF EXISTS users")
+  (.exec query "DROP TABLE IF EXISTS orders")
+  
+  ;; 创建用户表
+  (def success (.exec query "
+    CREATE TABLE users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE,
+        age INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  "))
+  
+  (if success
+    (python/print "users 表创建成功")
+    (python/print "创建失败:" (.text (.lastError query))))
+  
+  ;; 创建订单表
+  (def success (.exec query "
+    CREATE TABLE orders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        product TEXT,
+        amount REAL,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    )
+  "))
+  
+  (if success
+    (python/print "orders 表创建成功")))
+
+(defn insert-data []
+  (python/print "\n=== 插入数据 ===\n")
+  
+  (def query (QSqlQuery))
+  
+  ;; 方式1: 直接执行
+  (.exec query "INSERT INTO users (name, email, age) VALUES ('张三', 'zhang@example.com', 25)")
+  (python/print "插入张三, ID:" (.lastInsertId query))
+  
+  ;; 方式2: 预处理语句 (推荐，防 SQL 注入)
+  (.prepare query "INSERT INTO users (name, email, age) VALUES (?, ?, ?)")
+  (.addBindValue query "李四")
+  (.addBindValue query "li@example.com")
+  (.addBindValue query 30)
+  (.exec query)
+  (python/print "插入李四, ID:" (.lastInsertId query))
+  
+  ;; 方式3: 命名参数
+  (.prepare query "INSERT INTO users (name, email, age) VALUES (:name, :email, :age)")
+  (.bindValue query ":name" "王五")
+  (.bindValue query ":email" "wang@example.com")
+  (.bindValue query ":age" 28)
+  (.exec query)
+  (python/print "插入王五, ID:" (.lastInsertId query))
+  
+  ;; 批量插入订单
+  (.prepare query "INSERT INTO orders (user_id, product, amount) VALUES (?, ?, ?)")
+  
+  (.addBindValue query [1 1 2 3])
+  (.addBindValue query ["手机" "电脑" "平板" "耳机"])
+  (.addBindValue query [5999.0 8999.0 3299.0 299.0])
+  
+  (if (.execBatch query)
+    (python/print "批量插入订单成功")))
+
+(defn query-data []
+  (python/print "\n=== 查询数据 ===\n")
+  
+  (def query (QSqlQuery))
+  
+  ;; 简单查询
+  (python/print "--- 所有用户 ---")
+  (.exec query "SELECT * FROM users")
+  (loop []
+    (when (.next query)
+      (python/print "  ID:" (.value query 0)
+                   "姓名:" (.value query "name")
+                   "邮箱:" (.value query "email")
+                   "年龄:" (.value query "age"))
+      (recur)))
+  
+  ;; 条件查询
+  (python/print "\n--- 年龄大于25的用户 ---")
+  (.prepare query "SELECT name, age FROM users WHERE age > ?")
+  (.addBindValue query 25)
+  (.exec query)
+  (loop []
+    (when (.next query)
+      (python/print "  " (.value query "name") "," (.value query "age") "岁")
+      (recur)))
+  
+  ;; 联表查询
+  (python/print "\n--- 用户订单 (JOIN) ---")
+  (.exec query "
+    SELECT users.name, orders.product, orders.amount
+    FROM orders
+    JOIN users ON orders.user_id = users.id
+    ORDER BY users.name
+  ")
+  (loop []
+    (when (.next query)
+      (python/print "  " (.value query 0) " 购买了 " (.value query 1) ", ¥" (python/float (.value query 2)))
+      (recur)))
+  
+  ;; 聚合查询
+  (python/print "\n--- 统计信息 ---")
+  (.exec query "SELECT COUNT(*), AVG(age) FROM users")
+  (when (.next query)
+    (python/print "  用户数:" (.value query 0))
+    (python/print "  平均年龄:" (.value query 1)))
+  
+  (.exec query "SELECT user_id, SUM(amount) as total FROM orders GROUP BY user_id")
+  (python/print "\n--- 各用户消费总额 ---")
+  (loop []
+    (when (.next query)
+      (python/print "  用户" (.value query 0) ": ¥" (python/float (.value query 1)))
+      (recur))))
+
+(defn update-and-delete []
+  (python/print "\n=== 更新和删除 ===\n")
+  
+  (def query (QSqlQuery))
+  
+  ;; 更新
+  (.prepare query "UPDATE users SET age = age + 1 WHERE name = ?")
+  (.addBindValue query "张三")
+  (when (.exec query)
+    (python/print "更新成功, 影响行数:" (.numRowsAffected query)))
+  
+  ;; 验证更新
+  (.exec query "SELECT name, age FROM users WHERE name = '张三'")
+  (when (.next query)
+    (python/print "张三现在" (.value query "age") "岁"))
+  
+  ;; 删除 (演示，不实际删除)
+  (python/print "\n删除语法: DELETE FROM users WHERE id = ?"))
+
+(defn demonstrate-transactions []
+  (python/print "\n=== 事务处理 ===\n")
+  
+  (def db (.database QSqlDatabase))
+  (def query (QSqlQuery))
+  
+  ;; 开始事务
+  (.transaction db)
+  (python/print "事务开始")
+  
+  (.exec query "INSERT INTO users (name, email, age) VALUES ('临时用户', 'temp@example.com', 20)")
+  (python/print "插入临时用户")
+  
+  ;; 回滚事务
+  (.rollback db)
+  (python/print "事务回滚")
+  
+  ;; 验证回滚
+  (.exec query "SELECT COUNT(*) FROM users WHERE name = '临时用户'")
+  (when (.next query)
+    (python/print "临时用户数量:" (.value query 0) "(应为0)"))
+  
+  ;; 提交事务示例
+  (python/print "\n提交事务语法: db.commit()"))
+
+(defn show-record-info []
+  (python/print "\n=== 记录信息 ===\n")
+  
+  (def query (QSqlQuery "SELECT * FROM users LIMIT 1"))
+  (def record (.record query))
+  
+  (python/print "字段数量:" (.count record))
+  (loop [i 0]
+    (when (< i (.count record))
+      (def field (.field record i))
+      (python/print "  字段" i ":" (.fieldName record i) "(" (.typeID field) ")")
+      (recur (inc i)))))
+
+(defn main []
+  (def app (QCoreApplication (.-argv sys)))
+  
+  (python/print "=== PySide6 SQL 数据库连接示例 ===")
+  
+  (show-available-drivers)
+  
+  (when-not (create-connection)
+    (python/sys.exit 1))
+  
+  (create-tables)
+  (insert-data)
+  (query-data)
+  (update-and-delete)
+  (demonstrate-transactions)
+  (show-record-info)
+  
+  ;; 清理
+  (def db (.database QSqlDatabase))
+  (.close db)
+  (when (.exists (.-path os) "demo.db")
+    (.remove (.-path os) "demo.db")
+    (python/print "\n测试数据库已删除"))
+  
+  0)
+
+(main)

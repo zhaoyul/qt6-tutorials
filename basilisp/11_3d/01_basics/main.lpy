@@ -1,0 +1,105 @@
+(ns basilisp.examples.ex11_3d.ex01_basics)
+
+(import* [sys :as sys]
+         [PySide6.QtGui :as QtGui]
+         [PySide6.QtCore :as QtCore]
+         [PySide6.Qt3DExtras :as Qt3DExtras]
+         [PySide6.Qt3DCore :as Qt3DCore]
+         [PySide6.Qt3DRender :as Qt3DRender])
+
+;; QtGui classes
+(def QGuiApplication (.-QGuiApplication QtGui))
+(def QColor (.-QColor QtGui))
+(def QVector3D (.-QVector3D QtGui))
+(def QQuaternion (.-QQuaternion QtGui))
+
+;; Qt3DExtras classes
+(def Qt3DWindow (.-Qt3DWindow Qt3DExtras))
+(def QSphereMesh (.-QSphereMesh Qt3DExtras))
+(def QPhongMaterial (.-QPhongMaterial Qt3DExtras))
+(def QOrbitCameraController (.-QOrbitCameraController Qt3DExtras))
+
+;; Qt3DCore classes
+(def QEntity (.-QEntity Qt3DCore))
+(def QTransform (.-QTransform Qt3DCore))
+
+;; Qt3DRender classes
+(def QPointLight (.-QPointLight Qt3DRender))
+
+;; QtCore classes
+(def QPropertyAnimation (.-QPropertyAnimation QtCore))
+
+(defn main []
+  (python/print "=== PySide6 Qt3D Basics Demo (Basilisp) ===")
+  
+  ;; Initialize application
+  (def app (QGuiApplication (.-argv sys)))
+  
+  ;; Create 3D window
+  (def view (Qt3DWindow))
+  (. view setTitle "Qt 3D Basics")
+  (. (. view defaultFrameGraph) setClearColor (QColor 30 30 40))
+  
+  ;; Root entity
+  (def root (QEntity))
+  
+  ;; Camera setup
+  (def camera (. view camera))
+  (. (. camera lens) setPerspectiveProjection 45.0 (/ 16.0 9.0) 0.1 1000.0)
+  (. camera setPosition (QVector3D 0.0 0.0 10.0))
+  (. camera setViewCenter (QVector3D 0.0 0.0 0.0))
+  
+  ;; Camera controller
+  (def cam-controller (QOrbitCameraController root))
+  (. cam-controller setCamera camera)
+  
+  ;; Sphere entity
+  (def sphere (QEntity root))
+  
+  ;; Sphere mesh
+  (def mesh (QSphereMesh))
+  (. mesh setRadius 1.5)
+  
+  ;; Phong material
+  (def material (QPhongMaterial))
+  (. material setDiffuse (QColor 0 170 255))
+  (. material setSpecular (QColor 255 255 255))
+  (. material setShininess 80.0)
+  
+  ;; Transform for sphere
+  (def transform (QTransform))
+  
+  ;; Add components to sphere
+  (. sphere addComponent mesh)
+  (. sphere addComponent material)
+  (. sphere addComponent transform)
+  
+  ;; Light entity
+  (def light-entity (QEntity root))
+  (def light (QPointLight light-entity))
+  (. light setColor (QColor 255 255 255))
+  (. light setIntensity 1.0)
+  (def light-transform (QTransform light-entity))
+  (. light-transform setTranslation (QVector3D 6.0 6.0 6.0))
+  (. light-entity addComponent light)
+  (. light-entity addComponent light-transform)
+  
+  ;; Rotation animation
+  (def spin (QPropertyAnimation transform "rotation"))
+  (. spin setStartValue (. QQuaternion fromAxisAndAngle (QVector3D 0.0 1.0 0.0) 0.0))
+  (. spin setEndValue (. QQuaternion fromAxisAndAngle (QVector3D 0.0 1.0 0.0) 360.0))
+  (. spin setDuration 6000)
+  (. spin setLoopCount -1)
+  (. spin start)
+  
+  ;; Set root entity and show window
+  (. view setRootEntity root)
+  (. view resize 800 600)
+  (. view show)
+  
+  (python/print "3D scene loaded. Close window to exit.")
+  
+  ;; Execute application
+  (. app exec))
+
+(main)

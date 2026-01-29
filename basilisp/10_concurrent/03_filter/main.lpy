@@ -1,0 +1,40 @@
+(ns basilisp.examples.ex10_concurrent.ex03_filter)
+
+(import* [sys :as sys]
+         [concurrent.futures :as futures]
+         [PySide6.QtCore :as QtCore])
+
+(def QCoreApplication (.-QCoreApplication QtCore))
+
+(defn is-even [value]
+  "判断是否为偶数"
+  (= 0 (mod value 2)))
+
+(defn main []
+  (def app (QCoreApplication (.-argv sys)))
+  
+  (def numbers (python/list (range 1 11)))
+  
+  ;; 使用 ThreadPoolExecutor 替代 QtConcurrent::filtered
+  (def executor (futures/ThreadPoolExecutor))
+  (try
+    ;; 提交所有过滤任务
+    (def future-map (python/dict))
+    (doseq [n (seq numbers)]
+      (. future-map __setitem__ (. executor submit is-even n) n))
+    
+    ;; 收集偶数结果
+    (def even-numbers (python/list))
+    (doseq [f (iterator-seq (. futures as_completed (. future-map keys)))]
+      (def n (. future-map __getitem__ f))
+      (when (. f result)
+        (. even-numbers append n)))
+    
+    (. even-numbers sort)
+    (python/print "Even numbers:" even-numbers)
+    (finally
+      (. executor shutdown)))
+  
+  0)
+
+(main)

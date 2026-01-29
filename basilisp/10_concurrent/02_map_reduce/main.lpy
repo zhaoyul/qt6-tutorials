@@ -1,0 +1,31 @@
+(ns basilisp.examples.ex10_concurrent.ex02_map_reduce)
+
+(import* [sys :as sys]
+         [concurrent.futures :as futures]
+         [PySide6.QtCore :as QtCore])
+
+(def QCoreApplication (.-QCoreApplication QtCore))
+
+(defn square [value]
+  "计算平方"
+  (* value value))
+
+(defn main []
+  (def app (QCoreApplication (.-argv sys)))
+  
+  (def numbers (python/list (range 1 11)))
+  
+  ;; 使用 ThreadPoolExecutor 替代 QtConcurrent::mappedReduced
+  (def executor (futures/ThreadPoolExecutor))
+  (try
+    ;; Map: 并行计算平方
+    (def mapped-results (python/list (. executor map square numbers)))
+    ;; Reduce: 求和
+    (def result (python/sum mapped-results))
+    (python/print "Sum of squares:" result)
+    (finally
+      (. executor shutdown)))
+  
+  0)
+
+(main)

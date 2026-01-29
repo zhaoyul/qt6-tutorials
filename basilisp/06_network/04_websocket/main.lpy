@@ -1,0 +1,128 @@
+(ns basilisp.examples.ex06_network.ex04_websocket
+  (:import [sys :as sys]
+           [PySide6.QtCore :as QtCore]
+           [PySide6.QtWebSockets :as QtWebSockets]
+           [PySide6.QtNetwork :as QtNetwork]))
+
+(def QUrl (.-QUrl QtCore))
+(def QTimer (.-QTimer QtCore))
+(def QCoreApplication (.-QCoreApplication QtCore))
+(def QWebSocket (.-QWebSocket QtWebSockets))
+(def QAbstractSocket (.-QAbstractSocket QtNetwork))
+
+;; WebSocket 客户端类
+(defn- make-websocket-client []
+  (let [socket (QWebSocket)
+        message-count (atom 0)
+        timer-ref (atom nil)
+        
+        send-message (fn [msg]
+                       (if (= (. socket state) (.-ConnectedState QAbstractSocket))
+                         (do
+                           (python/print "[WebSocket] 发送:" msg)
+                           (. socket sendTextMessage msg))
+                         (python/print "[WebSocket] 无法发送，未连接")))
+        
+        close-fn (fn []
+                   (python/print "[WebSocket] 正在关闭连接...")
+                   (. socket close))
+        
+        send-periodic (fn []
+                        (if (< @message-count 3)
+                          (do
+                            (swap! message-count inc)
+                            (send-message (str "Test message #" @message-count " from Basilisp WebSocket client")))
+                          (do
+                            (when @timer-ref
+                              (. @timer-ref stop))
+                            (. QTimer singleShot 1000 close-fn))))
+        
+        on-connected (fn []
+                       (python/print "[WebSocket] 连接成功!")
+                       (let [peer (. socket peerAddress)
+                             port (. socket peerPort)]
+                         (python/print "[WebSocket] 服务器地址:" (. peer toString) ":" port))
+                       
+                       ;; 发送第一条消息
+                       (swap! message-count inc)
+                       (send-message (str "Hello WebSocket! Message #" @message-count))
+                       
+                       ;; 设置定时器
+                       (let [timer (QTimer)]
+                         (reset! timer-ref timer)
+                         (. timer timeout connect send-periodic)
+                         (. timer start 1500)))
+        
+        on-disconnected (fn []
+                          (python/print "[WebSocket] 连接已断开")
+                          (python/print "[WebSocket] 关闭原因:" 
+                                        (. socket closeCode) "-" (. socket closeReason))
+                          (. QCoreApplication quit))
+        
+        on-text-message (fn [message]
+                          (python/print "[WebSocket] 收到消息:" message))
+        
+        on-error (fn [error]
+                   (python/print "[WebSocket] 错误发生:" error "-" (. socket errorString)))
+        
+        on-state-changed (fn [state]
+                           (let [state-names {(py/->py-dict
+                                               {(.-UnconnectedState QAbstractSocket) "未连接"
+                                                (.-HostLookupState QAbstractSocket) "查找主机"
+                                                (.-ConnectingState QAbstractSocket) "正在连接"
+                                                (.-ConnectedState QAbstractSocket) "已连接"
+                                                (.-BoundState QAbstractSocket) "已绑定"
+                                                (.-ListeningState QAbstractSocket) "监听中"
+                                                (.-ClosingState QAbstractSocket) "正在关闭"})}]
+                             (python/print "[WebSocket] 状态变化:" 
+                                           (or (.get state-names state) "未知状态"))))
+        
+        on-ssl-errors (fn [errors]
+                        (python/print "[WebSocket] SSL 错误 (忽略并继续):")
+                        (doseq [error errors]
+                          (python/print "  -" (. error errorString)))
+                        (. socket ignoreSslErrors))
+        
+        connect-to-server (fn [url]
+                            (python/print "[WebSocket] 正在连接到:" (. url toString))
+                            (. socket open url))]
+    
+    ;; 连接信号
+    (. socket connected connect on-connected)
+    (. socket disconnected connect on-disconnected)
+    (. socket textMessageReceived connect on-text-message)
+    (. socket errorOccurred connect on-error)
+    (. socket stateChanged connect on-state-changed)
+    (. socket sslErrors connect on-ssl-errors)
+    
+    ;; 返回客户端对象
+    {:socket socket
+     :connect-to-server connect-to-server
+     :send-message send-message
+     :close close-fn}))
+
+(defn main []
+  (python/print "=== PySide6 WebSocket 客户端示例 (Basilisp) ===\n")
+  
+  (let [client (make-websocket-client)
+        server-url (if (> (.-argc sys) 1)
+                     (QUrl (aget (.-argv sys) 1))
+                     (QUrl "wss://echo.websocket.org/"))]
+    
+    (python/print "使用服务器:" (. server-url toString))
+    (python/print "可以通过命令行参数指定其他服务器，例如:")
+    (python/print "  basilisp run main.lpy ws://localhost:8080\n")
+    
+    ;; 延迟连接
+    (. QTimer singleShot 100 (fn [] ((:connect-to-server client) server-url)))
+    
+    ;; 超时处理
+    (. QTimer singleShot 30000 (fn []
+                                 (python/print "\n[WebSocket] 超时，关闭连接...")
+                                 ((:close client))))
+    
+    ;; 启动应用
+    (def app (QCoreApplication (.-argv sys)))
+    (. app exec)))
+
+(main)

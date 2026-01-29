@@ -1,0 +1,22 @@
+(ns basilisp.examples.ex04_qml.ex03_javascript)
+
+(import* [sys :as sys]
+         [os :as os]
+         [os.path :as path]
+         [PySide6.QtGui :as QtGui]
+         [PySide6.QtQml :as QtQml])
+
+(def QGuiApplication (.-QGuiApplication QtGui))
+(def QQmlApplicationEngine (.-QQmlApplicationEngine QtQml))
+
+(defn main []
+  (def app (QGuiApplication (.-argv sys)))
+  (python/print "=== QML JavaScript Integration Demo ===\n")
+  (def engine (QQmlApplicationEngine))
+  (def qml-path (path/join (os/getcwd) "clojure" "04_qml" "03_javascript" "Main.qml"))
+  (. engine load (python/str qml-path))
+  (when (> (python/len (. engine rootObjects)) 0)
+    (python/print "QML loaded"))
+  (. app exec))
+
+(main)

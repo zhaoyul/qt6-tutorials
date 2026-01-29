@@ -1,127 +1,143 @@
 (ns basilisp.examples.ex04_qml.ex02_cpp_integration)
 
 (import* [sys :as sys]
-         [builtins :as builtins]
          [os :as os]
          [os.path :as path]
+         [PySide6.QtCore :as QtCore]
          [PySide6.QtGui :as QtGui]
-         [PySide6.QtQml :as QtQml]
-         [PySide6.QtCore :as QtCore])
+         [PySide6.QtQml :as QtQml])
 
+;; 获取类和函数
 (def QGuiApplication (.-QGuiApplication QtGui))
 (def QQmlApplicationEngine (.-QQmlApplicationEngine QtQml))
 (def qmlRegisterType (.-qmlRegisterType QtQml))
-
 (def QObject (.-QObject QtCore))
 (def Property (.-Property QtCore))
 (def Signal (.-Signal QtCore))
 (def Slot (.-Slot QtCore))
 
-(def py-int (.-int builtins))
-(def py-str (.-str builtins))
-
-(def value-changed (Signal))
-(def step-changed (Signal))
-(def limit-reached (Signal py-str))
-
-(defn- counter-init
-  ([self] (counter-init self nil))
-  ([self parent]
-   ((.-__init__ (python/super (.-__class__ self) self)) parent)
-   (set! (.-_value self) 0)
-   (set! (.-_step self) 1)
-   (set! (.-_min_value self) 0)
-   (set! (.-_max_value self) 100)
-   nil))
-
-(defn- get-value [self] (.-_value self))
-(defn- set-value [self val]
-  (when (not= (.-_value self) val)
-    (def clamped (python/max (.-_min_value self) (python/min val (.-_max_value self))))
-    (set! (.-_value self) clamped)
-    (. (.-valueChanged self) emit)
-    (cond
-      (= (.-_value self) (.-_max_value self)) (. (.-limitReached self) emit "max reached")
-      (= (.-_value self) (.-_min_value self)) (. (.-limitReached self) emit "min reached")
-      :else nil))
-  nil)
-
-(defn- get-step [self] (.-_step self))
-(defn- set-step [self val]
-  (when (not= (.-_step self) val)
-    (set! (.-_step self) val)
-    (. (.-stepChanged self) emit))
-  nil)
-
-(defn- display-text [self]
-  (str "Value: " (.-_value self)))
-
-(defn- increment [self]
-  (python/print "[Basilisp] increment")
-  (set-value self (+ (.-_value self) (.-_step self)))
-  nil)
-
-(defn- decrement [self]
-  (python/print "[Basilisp] decrement")
-  (set-value self (- (.-_value self) (.-_step self)))
-  nil)
-
-(defn- reset [self]
-  (python/print "[Basilisp] reset")
-  (set-value self 0)
-  nil)
-
-(defn- format-value [self prefix]
-  (str prefix ": " (.-_value self)))
-
+;; 定义 Counter 类
 (def Counter
   (python/type
-   "Counter"
-   (python/tuple [QObject])
-   (python/dict
-    {"__init__" counter-init
-     "valueChanged" value-changed
-     "stepChanged" step-changed
-     "limitReached" limit-reached
-     "value" (Property py-int get-value set-value ** :notify value-changed)
-     "step" (Property py-int get-step set-step ** :notify step-changed)
-     "displayText" (Property py-str display-text ** :notify value-changed)
-     "increment" ((Slot) increment)
-     "decrement" ((Slot) decrement)
-     "reset" ((Slot) reset)
-     "formatValue" ((Slot py-str ** :result py-str) format-value)})))
+    "Counter"
+    #(QObject)
+    (python/dict
+      ;; __init__ 方法
+      :__init__ (python/lambda [self & [parent]]
+                  (python/super Counter self).__init__ :parent parent
+                  (set! (.-_value self) 0)
+                  (set! (.-_step self) 1)
+                  (set! (.-_min_value self) 0)
+                  (set! (.-_max_value self) 100)
+                  nil)
+      
+      ;; 信号
+      :valueChanged (Signal)
+      :stepChanged (Signal)
+      :limitReached (Signal str)
+      
+      ;; value getter
+      :get_value (python/lambda [self]
+                   (.-_value self))
+      
+      ;; value setter
+      :set_value (python/lambda [self val]
+                   (let [current (.-_value self)
+                         min-val (.-_min_value self)
+                         max-val (.-_max_value self)]
+                     (when (!= current val)
+                       (let [bounded-val (python/max min-val (python/min val max-val))]
+                         (set! (.-_value self) bounded-val)
+                         (.emit (.-valueChanged self))
+                         ;; 检查边界
+                         (cond
+                           (= bounded-val max-val)
+                           (.emit (.-limitReached self) "已达到最大值!")
+                           (= bounded-val min-val)
+                           (.emit (.-limitReached self) "已达到最小值!"))))))
+      
+      ;; step getter
+      :get_step (python/lambda [self]
+                  (.-_step self))
+      
+      ;; step setter
+      :set_step (python/lambda [self s]
+                  (when (!= (.-_step self) s)
+                    (set! (.-_step self) s)
+                    (.emit (.-stepChanged self))))
+      
+      ;; displayText getter
+      :get_displayText (python/lambda [self]
+                         (python/str "当前值: " (.-_value self)))
+      
+      ;; increment 方法
+      :increment (python/lambda [self]
+                   (python/print "[Basilisp/Python] increment() 被调用")
+                   (let [current (.-_value self)
+                         step (.-_step self)]
+                     (.set_value self (+ current step))))
+      
+      ;; decrement 方法
+      :decrement (python/lambda [self]
+                   (python/print "[Basilisp/Python] decrement() 被调用")
+                   (let [current (.-_value self)
+                         step (.-_step self)]
+                     (.set_value self (- current step))))
+      
+      ;; reset 方法
+      :reset (python/lambda [self]
+               (python/print "[Basilisp/Python] reset() 被调用")
+               (.set_value self 0))
+      
+      ;; formatValue 方法
+      :formatValue (python/lambda [self prefix]
+                     (python/str prefix ": " (.-_value self))))))
+
+;; 添加 Property 装饰器
+(set! (.-value Counter)
+      (Property int 
+                :fget (.-get_value Counter)
+                :fset (.-set_value Counter)
+                :notify (.-valueChanged Counter)))
+
+(set! (.-step Counter)
+      (Property int
+                :fget (.-get_step Counter)
+                :fset (.-set_step Counter)
+                :notify (.-stepChanged Counter)))
+
+(set! (.-displayText Counter)
+      (Property str
+                :fget (.-get_displayText Counter)
+                :notify (.-valueChanged Counter)))
 
 (defn main []
+  (python/print "=== PySide6 QML 与 Python 集成示例 (Basilisp) ===\n")
+  
   (def app (QGuiApplication (.-argv sys)))
-  (python/print "=== QML Integration ===\n")
-
+  
+  ;; 注册 Counter 类型到 QML
+  (qmlRegisterType Counter "QmlBasilispIntegration" 1 0 "Counter")
+  
   (def engine (QQmlApplicationEngine))
-
-  (try
-    (qmlRegisterType Counter "PythonCounter" 1 0 "Counter")
-    (python/print "registered Counter")
-    (catch python/Exception e
-      (python/print "register type error" e)))
-
-  (def global-counter (Counter engine))
-  (python/setattr global-counter "value" 50)
-  (. (. engine rootContext) setContextProperty "globalCounter" global-counter)
-  (. (. engine rootContext) setContextProperty "appVersion" "1.0.0 (Basilisp)")
+  
+  ;; 创建全局 Counter 实例
+  (def globalCounter (Counter engine))
+  (.set_value globalCounter 50)
+  
+  ;; 设置上下文属性
+  (. (. engine rootContext) setContextProperty "globalCounter" globalCounter)
+  (. (. engine rootContext) setContextProperty "appVersion" "1.0.0")
   (. (. engine rootContext) setContextProperty "debugMode" true)
-
-  (def qml-path (path/join (os/getcwd) "python" "04_qml" "02_cpp_integration" "Main.qml"))
-  (def f (python/open qml-path "r" ** :encoding "utf-8"))
-  (def content (. f read))
-  (. f close)
-  (def content2 (. content replace "import QmlCppIntegration" "import PythonCounter 1.0"))
-  (. engine loadData (. content2 encode "utf-8") (python/str qml-path))
-
-  (when (= (python/len (. engine rootObjects)) 0)
-    (python/print "load failed, fallback")
-    (. engine load (python/str qml-path)))
-
-  (if (= (python/len (. engine rootObjects)) 0)
-    (do (python/print "QML load failed") -1)
-    (. app exec)))
+  
+  ;; 加载 QML 文件
+  (def qml-path (path/join (os/getcwd) "basilisp" "04_qml" "02_cpp_integration" "Main.qml"))
+  (. engine load (python/str qml-path))
+  
+  ;; 检查加载是否成功
+  (when (> (python/len (. engine rootObjects)) 0)
+    (python/print "QML 加载成功"))
+  
+  (. app exec))
 
 (main)

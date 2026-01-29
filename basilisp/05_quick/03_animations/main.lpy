@@ -1,0 +1,23 @@
+(ns basilisp.examples.ex05_quick.ex03_animations)
+
+(import* [sys :as sys]
+         [os :as os]
+         [os.path :as path]
+         [PySide6.QtGui :as QtGui]
+         [PySide6.QtQml :as QtQml])
+
+(def QGuiApplication (.-QGuiApplication QtGui))
+(def QQmlApplicationEngine (.-QQmlApplicationEngine QtQml))
+
+(defn main []
+  (def app (QGuiApplication (.-argv sys)))
+  (python/print "=== Qt Quick Animations ===\n")
+  (def engine (QQmlApplicationEngine))
+  (def qml-path (path/join (os/getcwd) "cpp" "05_quick" "03_animations" "Main.qml"))
+  (. engine load (python/str qml-path))
+  (when (= (python/len (. engine rootObjects)) 0)
+    (python/print "QML load failed")
+    -1)
+  (. app exec))
+
+(main)

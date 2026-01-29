@@ -1,0 +1,56 @@
+(ns basilisp.examples.ex09_test.ex02_gui_test)
+
+(import* [sys :as sys]
+         [unittest :as unittest]
+         [PySide6.QtWidgets :as QtWidgets])
+
+(def QApplication (.-QApplication QtWidgets))
+(def QPushButton (.-QPushButton QtWidgets))
+(def QWidget (.-QWidget QtWidgets))
+
+(defn- setup-class [cls]
+  (python/print "=== GUI 测试开始 ===")
+  (def app (or (. QApplication instance) (QApplication (python/list))))
+  nil)
+
+(defn- teardown-class [cls]
+  (python/print "=== GUI 测试结束 ===")
+  nil)
+
+(defn- test-button-text [self]
+  (def button (QPushButton))
+  (. button setText "Hello")
+  (. self assertEqual (. button text) "Hello"))
+
+(defn- test-show-hide-widget [self]
+  (def widget (QWidget))
+  ;; 测试显示
+  (. widget show)
+  (. self assertTrue (. widget isVisible))
+  ;; 测试隐藏
+  (. widget hide)
+  (. self assertFalse (. widget isVisible)))
+
+(def TestGuiDemo
+  (python/type
+   "TestGuiDemo"
+   (python/tuple [unittest/TestCase])
+   (python/dict
+    {"setUpClass" (python/classmethod setup-class)
+     "tearDownClass" (python/classmethod teardown-class)
+     "test_button_text" test-button-text
+     "test_show_hide_widget" test-show-hide-widget})))
+
+(defn main []
+  (python/print "=== GUI 测试示例 ===\n")
+  
+  (def loader (unittest/TestLoader))
+  (def suite (unittest/TestSuite))
+  (. suite addTests (. loader loadTestsFromTestCase TestGuiDemo))
+  
+  (def runner (unittest/TextTestRunner ** :verbosity 2))
+  (def result (. runner run suite))
+  
+  (if (. result wasSuccessful) 0 1))
+
+(. sys exit (main))

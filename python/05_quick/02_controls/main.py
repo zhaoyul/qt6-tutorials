@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+PySide6 Quick Controls 示例
+
+Qt Quick Controls：
+- Button: 按钮
+- Slider: 滑块
+- ComboBox: 下拉框
+- CheckBox: 复选框
+- RadioButton: 单选按钮
+- TextField: 文本输入
+- Switch: 开关
+- ProgressBar: 进度条
+
+官方文档: https://doc.qt.io/qtforpython/PySide6/QtQuick/index.html
+"""
+
+import sys
+from pathlib import Path
+from PySide6.QtGui import QGuiApplication
+from PySide6.QtQml import QQmlApplicationEngine
+
+
+def main():
+    app = QGuiApplication(sys.argv)
+    
+    print("=== PySide6 Quick Controls 示例 ===\n")
+    
+    engine = QQmlApplicationEngine()
+    
+    # 加载 QML 文件
+    qml_file = Path(__file__).parent / "Main.qml"
+    engine.load(str(qml_file))
+    
+    if not engine.rootObjects():
+        print("QML 加载失败")
+        return -1
+    
+    return app.exec()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

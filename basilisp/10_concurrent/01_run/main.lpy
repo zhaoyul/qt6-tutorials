@@ -1,0 +1,31 @@
+(ns basilisp.examples.ex10_concurrent.ex01_run)
+
+(import* [sys :as sys]
+         [time :as time]
+         [concurrent.futures :as futures]
+         [PySide6.QtCore :as QtCore])
+
+(def QCoreApplication (.-QCoreApplication QtCore))
+
+(defn heavy-computation [value]
+  "耗时计算：模拟耗时操作并返回结果"
+  (. time sleep 0.2)
+  (* value 2))
+
+(defn main []
+  (def app (QCoreApplication (.-argv sys)))
+  
+  (python/print "Running task...")
+  
+  ;; 使用 ThreadPoolExecutor 替代 QtConcurrent::run
+  (def executor (futures/ThreadPoolExecutor ** :max_workers 1))
+  (try
+    (def future (. executor submit heavy-computation 21))
+    (def result (. future result))
+    (python/print "Result:" result)
+    (finally
+      (. executor shutdown)))
+  
+  0)
+
+(main)

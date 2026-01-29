@@ -1,0 +1,37 @@
+(ns basilisp.examples.ex08_multimedia.ex01_audio)
+
+;; Qt6 Multimedia Audio Demo
+;;
+;; Lists available audio input and output devices.
+
+(defn list-audio-devices []
+  (python/print "=== Audio Outputs ===")
+  (py/run-simple-string "
+from PySide6.QtCore import QCoreApplication
+from PySide6.QtMultimedia import QMediaDevices
+
+app = QCoreApplication([])
+
+outputs = QMediaDevices.audioOutputs()
+for device in outputs:
+    print(f' - {device.description()}')
+")
+
+  (python/print "\n=== Audio Inputs ===")
+  (py/run-simple-string "
+from PySide6.QtMultimedia import QMediaDevices
+
+inputs = QMediaDevices.audioInputs()
+for device in inputs:
+    print(f' - {device.description()}')
+"))
+
+(defn main []
+  (python/print "=== Qt6 Multimedia Audio Demo ===\n")
+  
+  (list-audio-devices)
+  
+  (python/print "\n=== Done ===")
+  0)
+
+(main)

@@ -1,0 +1,363 @@
+(ns basilisp.examples.ex12_project.todo-app)
+
+;; PySide6 Todo App Demo (Basilisp)
+;; A feature-rich TODO application with priorities, tags, and persistence
+
+(import* [sys :as sys]
+         [json :as json]
+         [os :as os]
+         [pathlib :as pathlib]
+         [datetime :as datetime]
+         [PySide6.QtWidgets :as QtWidgets]
+         [PySide6.QtCore :as QtCore])
+
+;; Import Qt classes
+(def QApplication (.-QApplication QtWidgets))
+(def QWidget (.-QWidget QtWidgets))
+(def QVBoxLayout (.-QVBoxLayout QtWidgets))
+(def QHBoxLayout (.-QHBoxLayout QtWidgets))
+(def QGridLayout (.-QGridLayout QtWidgets))
+(def QLineEdit (.-QLineEdit QtWidgets))
+(def QPushButton (.-QPushButton QtWidgets))
+(def QListWidget (.-QListWidget QtWidgets))
+(def QListWidgetItem (.-QListWidgetItem QtWidgets))
+(def QLabel (.-QLabel QtWidgets))
+(def QFrame (.-QFrame QtWidgets))
+(def QComboBox (.-QComboBox QtWidgets))
+(def QInputDialog (.-QInputDialog QtWidgets))
+(def QButtonGroup (.-QButtonGroup QtWidgets))
+
+(def Qt (.-Qt QtCore))
+(def QStandardPaths (.-QStandardPaths QtCore))
+
+;; Filter mode enum
+(def FilterMode {:ALL 0 :ACTIVE 1 :DONE 2})
+
+(defn data-file-path []
+  "Get the path for storing todo data."
+  (let [data-dir (. QStandardPaths writableLocation 
+                    (.-AppDataLocation QStandardPaths))]
+    (. (. pathlib Path data-dir) mkdir :parents true :exist_ok true)
+    (. os path join data-dir "todos.json")))
+
+(defn priority-color [priority]
+  "Get color for a given priority."
+  (case priority
+    "High" "#ef4444"
+    "Medium" "#f59e0b"
+    "Low" "#10b981"
+    "#9ca3af"))
+
+(defn update-item-label [item]
+  "Update the display label of an item."
+  (let [base (or (. item data (.-UserRole Qt) 3) "")
+        priority (or (. item data (.-UserRole Qt) 1) "Medium")
+        tag (or (. item data (.-UserRole Qt) 2) "")
+        suffix (str " [" priority "]" (if (python/len tag) (str " #" tag) ""))]
+    (. item setText (str base suffix))
+    (. item setForeground (priority-color priority))))
+
+(defn save-tasks [list-widget]
+  "Save tasks to JSON file."
+  (let [tasks (python/list)]
+    (dotimes [i (. list-widget count)]
+      (let [item (. list-widget item i)
+            task {:text (. item text)
+                  :done (= (. item checkState) (.-Checked Qt))
+                  :createdAt (or (. item data (.-UserRole Qt)) "")
+                  :priority (or (. item data (.-UserRole Qt) 1) "Medium")
+                  :tag (or (. item data (.-UserRole Qt) 2) "")}]
+        (. tasks append task)))
+    (try
+      (with [f (python/open (data-file-path) "w")]
+        (. json dump tasks f))
+      (catch [e Exception]
+        (python/print "Error saving tasks:" e)))))
+
+(defn load-tasks [list-widget loading-flag]
+  "Load tasks from JSON file."
+  (try
+    (with [f (python/open (data-file-path) "r")]
+      (let [tasks (. json load f)]
+        (doseq [task tasks]
+          (let [raw-text (.get task "text" "")
+                done (.get task "done" false)
+                created-at (.get task "createdAt" "")
+                priority (.get task "priority" "Medium")
+                tag (.get task "tag" "")
+                base-text (if (python/in " [" raw-text)
+                           (get (. raw-text split " [") 0)
+                           raw-text)
+                item (QListWidgetItem)]
+            (. item setFlags 
+               (python/or (. item flags)
+                         (.-ItemIsUserCheckable Qt)
+                         (.-ItemIsEditable Qt)))
+            (. item setCheckState (if done (.-Checked Qt) (.-Unchecked Qt)))
+            (. item setData (.-UserRole Qt) created-at)
+            (. item setData (.-UserRole Qt) priority 1)
+            (. item setData (.-UserRole Qt) tag 2)
+            (. item setData (.-UserRole Qt) base-text 3)
+            (update-item-label item)
+            (. list-widget addItem item)))))
+    (catch [e python/FileNotFoundError]
+      nil)
+    (catch [e Exception]
+      (python/print "Error loading tasks:" e))))
+
+(defn create-todo-app []
+  "Create the Todo App main window."
+  (let [window (QWidget)]
+    (. window setWindowTitle "Todo App")
+    (. window resize 560 680)
+    
+    ;; State variables (using closure)
+    (def loading (atom true))
+    (def current-filter (atom (:ALL FilterMode)))
+    
+    ;; UI Elements
+    (def layout (QVBoxLayout window))
+    (. layout setContentsMargins 24 24 24 24)
+    (. layout setSpacing 16)
+    
+    ;; Title
+    (def title (QLabel "Todo App" window))
+    (. title setObjectName "Title")
+    (def subtitle (QLabel "Prioritized and tagged tasks with persistence." window))
+    (. subtitle setObjectName "Subtitle")
+    
+    ;; Input card
+    (def input-card (QFrame window))
+    (. input-card setObjectName "Card")
+    (def input-layout (QGridLayout input-card))
+    (. input-layout setContentsMargins 12 12 12 12)
+    (. input-layout setHorizontalSpacing 10)
+    (. input-layout setVerticalSpacing 10)
+    
+    (def input-field (QLineEdit window))
+    (. input-field setPlaceholderText "Add a task...")
+    
+    (def priority-box (QComboBox window))
+    (. priority-box addItems (python/list ["High" "Medium" "Low"]))
+    (. priority-box setCurrentText "Medium")
+    
+    (def tag-input (QLineEdit window))
+    (. tag-input setPlaceholderText "Tag (optional)")
+    
+    (def add-button (QPushButton "Add" window))
+    (. add-button setObjectName "Primary")
+    (def edit-button (QPushButton "Edit" window))
+    
+    (. input-layout addWidget input-field 0 0 1 2)
+    (. input-layout addWidget priority-box 0 2)
+    (. input-layout addWidget tag-input 1 0 1 2)
+    (. input-layout addWidget add-button 1 2)
+    (. input-layout addWidget edit-button 2 2)
+    
+    ;; Task list
+    (def list-widget (QListWidget window))
+    (. list-widget setSelectionMode (.-SingleSelection QListWidget))
+    (. list-widget setObjectName "TaskList")
+    
+    ;; Filter row
+    (def filter-row (QFrame window))
+    (. filter-row setObjectName "Card")
+    (def filter-layout (QHBoxLayout filter-row))
+    (. filter-layout setContentsMargins 12 8 12 8)
+    (. filter-layout setSpacing 8)
+    
+    (def all-button (QPushButton "All" window))
+    (def active-button (QPushButton "Active" window))
+    (def done-button (QPushButton "Done" window))
+    
+    (. all-button setCheckable true)
+    (. active-button setCheckable true)
+    (. done-button setCheckable true)
+    (. all-button setChecked true)
+    
+    (def filters (QButtonGroup window))
+    (. filters setExclusive true)
+    (. filters addButton all-button (:ALL FilterMode))
+    (. filters addButton active-button (:ACTIVE FilterMode))
+    (. filters addButton done-button (:DONE FilterMode))
+    
+    (. filter-layout addWidget all-button)
+    (. filter-layout addWidget active-button)
+    (. filter-layout addWidget done-button)
+    (. filter-layout addStretch)
+    
+    ;; Status row
+    (def status-row (QHBoxLayout))
+    (def stats-label (QLabel "0 total, 0 active, 0 done" window))
+    (def remove-button (QPushButton "Remove Selected" window))
+    (def clear-button (QPushButton "Clear Completed" window))
+    (. status-row addWidget stats-label)
+    (. status-row addStretch)
+    (. status-row addWidget remove-button)
+    (. status-row addWidget clear-button)
+    
+    ;; Empty state
+    (def empty-state (QLabel "No tasks yet. Add one above." window))
+    (. empty-state setObjectName "EmptyState")
+    (. empty-state setAlignment (.-AlignCenter Qt))
+    
+    ;; Add to main layout
+    (. layout addWidget title)
+    (. layout addWidget subtitle)
+    (. layout addWidget input-card)
+    (. layout addWidget filter-row)
+    (. layout addWidget list-widget)
+    (. layout addWidget empty-state)
+    (. layout addLayout status-row)
+    
+    ;; Helper functions
+    (defn update-empty-state []
+      (let [is-empty (= (. list-widget count) 0)]
+        (. empty-state setVisible is-empty)
+        (. list-widget setVisible (not is-empty))))
+    
+    (defn update-stats []
+      (let [total (. list-widget count)
+            done (sum (python/list
+                       (for [i (range total)]
+                         (if (= (. (. list-widget item i) checkState) (.-Checked Qt))
+                           1 0))))
+            active (- total done)]
+        (. stats-label setText (str total " total, " active " active, " done " done"))))
+    
+    (defn apply-filter []
+      (dotimes [i (. list-widget count)]
+        (let [item (. list-widget item i)
+              done (= (. item checkState) (.-Checked Qt))]
+          (cond
+            (and (= @current-filter (:ACTIVE FilterMode)) done)
+            (. item setHidden true)
+            (and (= @current-filter (:DONE FilterMode)) (not done))
+            (. item setHidden true)
+            :else
+            (. item setHidden false)))))
+    
+    (defn add-task []
+      (let [raw-text (.strip (. input-field text))]
+        (when (> (python/len raw-text) 0)
+          (let [item (QListWidgetItem)]
+            (. item setFlags 
+               (python/or (. item flags)
+                         (.-ItemIsUserCheckable Qt)
+                         (.-ItemIsEditable Qt)))
+            (. item setCheckState (.-Unchecked Qt))
+            (. item setData (.-UserRole Qt) (.isoformat (. datetime datetime now)))
+            (. item setData (.-UserRole Qt) (. priority-box currentText) 1)
+            (. item setData (.-UserRole Qt) (.strip (. tag-input text)) 2)
+            (. item setData (.-UserRole Qt) raw-text 3)
+            (update-item-label item)
+            (. list-widget addItem item)
+            (. input-field clear)
+            (. tag-input clear)
+            (. input-field setFocus)
+            (update-stats)
+            (update-empty-state)
+            (apply-filter)
+            (save-tasks list-widget)))))
+    
+    (defn edit-task []
+      (let [item (. list-widget currentItem)]
+        (when item
+          (let [current-text (or (. item data (.-UserRole Qt) 3) "")
+                result (. QInputDialog getText
+                         window "Edit Task" "Task:"
+                         (.-Normal QLineEdit) current-text)
+                text (get result 0)
+                ok (get result 1)]
+            (when (and ok (> (python/len (.strip text)) 0))
+              (. item setData (.-UserRole Qt) (.strip text) 3)
+              (update-item-label item)
+              (save-tasks list-widget))))))
+    
+    (defn remove-selected []
+      (let [row (. list-widget currentRow)]
+        (when (>= row 0)
+          (. list-widget takeItem row)
+          (update-stats)
+          (update-empty-state)
+          (save-tasks list-widget))))
+    
+    (defn clear-completed []
+      (dotimes [i (. list-widget count)]
+        (let [idx (- (. list-widget count) 1 i)
+              item (. list-widget item idx)]
+          (when (= (. item checkState) (.-Checked Qt))
+            (. list-widget takeItem idx))))
+      (update-stats)
+      (update-empty-state)
+      (save-tasks list-widget))
+    
+    (defn on-item-changed [item]
+      (when (not @loading)
+        (when item
+          (update-item-label item))
+        (update-stats)
+        (apply-filter)
+        (save-tasks list-widget)))
+    
+    (defn on-filter-changed [filter-id]
+      (reset! current-filter filter-id)
+      (apply-filter))
+    
+    ;; Connect signals
+    (. (.-clicked add-button) connect add-task)
+    (. (.-returnPressed input-field) connect #(. add-button click))
+    (. (.-clicked edit-button) connect edit-task)
+    (. (.-clicked remove-button) connect remove-selected)
+    (. (.-clicked clear-button) connect clear-completed)
+    (. (.-itemChanged list-widget) connect on-item-changed)
+    (. (.-idClicked filters) connect on-filter-changed)
+    
+    ;; Setup styles
+    (. window setStyleSheet
+       (str "QLabel#Title { font-size: 24px; font-weight: 600; color: #111827; }"
+            "QLabel#Subtitle { color: #6b7280; }"
+            "QLabel#EmptyState { color: #9ca3af; padding: 18px; }"
+            "QFrame#Card { background: white; border: 1px solid #e5e7eb; border-radius: 10px; }"
+            "QLineEdit { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 8px; }"
+            "QLineEdit:focus { border-color: #2f6fed; }"
+            "QComboBox { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 8px; }"
+            "QPushButton { padding: 8px 12px; border-radius: 8px; background: #eef2f6; border: 1px solid #d7dee7; }"
+            "QPushButton:hover { background: #e2e8f0; }"
+            "QPushButton#Primary { background: #2f6fed; color: white; border: none; }"
+            "QPushButton#Primary:hover { background: #255ad0; }"
+            "QPushButton:checked { background: #2f6fed; color: white; border: none; }"
+            "QListWidget#TaskList { background: white; border: 1px solid #e5e7eb; border-radius: 10px; padding: 6px; }"
+            "QListWidget::item { padding: 6px; }"
+            "QListWidget::item:selected { background: #e5edff; color: #111827; }"))
+    
+    ;; Load tasks and initialize
+    (load-tasks list-widget loading)
+    (reset! loading false)
+    (update-stats)
+    (update-empty-state)
+    (apply-filter)
+    
+    window))
+
+(defn main []
+  (def app (QApplication (.-argv sys)))
+  (. app setStyle "Fusion")
+  
+  ;; Setup palette
+  (def palette (. app palette))
+  (. palette setColor (.-Window palette) "#f5f7fa")
+  (. palette setColor (.-Base palette) "#ffffff")
+  (. palette setColor (.-Button palette) "#eef2f6")
+  (. palette setColor (.-Highlight palette) "#2f6fed")
+  (. palette setColor (.-HighlightedText palette) "#ffffff")
+  (. app setPalette palette)
+  
+  (python/print "=== PySide6 Todo App (Basilisp) ===")
+  (python/print "Data is saved to:" (data-file-path))
+  
+  (def window (create-todo-app))
+  (. window show)
+  (. app exec))
+
+(main)
