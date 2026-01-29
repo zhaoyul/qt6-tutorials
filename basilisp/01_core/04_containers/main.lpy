@@ -1,0 +1,98 @@
+(ns basilisp.examples.ex01_core.ex04_containers)
+
+(import* [sys :as sys]
+         [PySide6.QtCore :as QtCore]
+         [copy :as copy])
+
+(def QCoreApplication (.-QCoreApplication QtCore))
+
+(defn demonstrate-string []
+  (python/print "=== String (QString) ===\n")
+  (def s1 "Hello")
+  (def s2 (python/str "World"))
+  (def s3 "Unicode text")
+
+  (python/print "concat:" (str s1 " " s2))
+  (def name "Alice")
+  (def age 25)
+  (python/print "format:" (. "Name: {}, Age: {}" format name age))
+  (python/print "replace:" (. "Hello World World" replace "World" "Qt"))
+  (def csv "apple,banana,cherry")
+  (def fruits (. csv split ","))
+  (python/print "split:" fruits)
+  (python/print "join:" (. " | " join fruits))
+  (python/print "upper:" (. "hello" upper))
+  (python/print "strip:" (. "  hello  " strip))
+  (python/print "int:" (python/int "123"))
+  (python/print "float:" (. "{:.2f}" format 3.14159))
+  (python/print "unicode:" s3 "len" (python/len s3)))
+
+(defn demonstrate-list []
+  (python/print "\n=== List (QList) ===\n")
+  (def list1 (python/list [1 2 3 4 5]))
+  (. list1 append 6)
+  (. list1 insert 0 0)
+  (. list1 extend (python/list [7 8]))
+  (python/print "list1:" list1)
+  (python/print "first:" (. list1 __getitem__ 0))
+  (python/print "last:" (. list1 __getitem__ (- (python/len list1) 1)))
+  (python/print "contains 5:" (. list1 __contains__ 5))
+  (python/print "index 5:" (. list1 index 5))
+  (. list1 __setitem__ 0 100)
+  (. list1 pop)
+  (. list1 pop 0)
+  (. list1 remove 5)
+  (python/print "modified:" list1)
+  (python/print "iterate:")
+  (doseq [v (seq list1)]
+    (python/print " " v))
+  (python/print "sorted:" (python/sorted list1))
+  (def squares (python/list (map (fn [x] (* x x)) (range 1 6))))
+  (python/print "squares:" squares))
+
+(defn demonstrate-dict []
+  (python/print "\n=== Dict (QMap/QHash) ===\n")
+  (def scores (python/dict))
+  (. scores __setitem__ "Alice" 95)
+  (. scores __setitem__ "Bob" 87)
+  (. scores __setitem__ "Charlie" 92)
+  (python/print "scores:" scores)
+  (python/print "Alice:" (. scores __getitem__ "Alice"))
+  (python/print "Unknown (get):" (. scores get "Unknown" -1))
+  (python/print "keys:" (python/list (. scores keys)))
+  (python/print "values:" (python/list (. scores values)))
+  (python/print "items:")
+  (doseq [[k v] (seq (. scores items))]
+    (python/print " " k ":" v))
+  (. scores __delitem__ "Bob")
+  (python/print "after delete:" scores))
+
+(defn demonstrate-set []
+  (python/print "\n=== Set (QSet) ===\n")
+  (def set1 (python/set [1 2 3 4 5]))
+  (def set2 (python/set [4 5 6 7 8]))
+  (python/print "set1:" set1)
+  (python/print "set2:" set2)
+  (python/print "union:" (. set1 __or__ set2))
+  (python/print "intersection:" (. set1 __and__ set2))
+  (python/print "diff:" (. set1 __sub__ set2)))
+
+(defn demonstrate-bytes []
+  (python/print "\n=== Bytes (QByteArray) ===\n")
+  (def b1 (python/bytes "Hello" "utf-8"))
+  (def b2 (python/bytes [0 1 2 3 255]))
+  (python/print "b1:" b1)
+  (python/print "b2:" b2)
+  (python/print "len:" (python/len b2))
+  (python/print "to str:" (. b1 decode "utf-8")))
+
+(defn main []
+  (def app (QCoreApplication (.-argv sys)))
+  (demonstrate-string)
+  (demonstrate-list)
+  (demonstrate-dict)
+  (demonstrate-set)
+  (demonstrate-bytes)
+  0)
+
+(main)

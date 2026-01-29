@@ -1,0 +1,148 @@
+(ns basilisp.examples.ex01_core.ex05_io_system)
+
+(import* [sys :as sys]
+         [os :as os]
+         [pathlib :as pathlib]
+         [datetime :as datetime]
+         [PySide6.QtCore :as QtCore])
+
+(def QCoreApplication (.-QCoreApplication QtCore))
+(def QFile (.-QFile QtCore))
+(def QDir (.-QDir QtCore))
+(def QFileInfo (.-QFileInfo QtCore))
+(def QTextStream (.-QTextStream QtCore))
+(def QDataStream (.-QDataStream QtCore))
+(def QIODevice (.-QIODevice QtCore))
+(def QTemporaryFile (.-QTemporaryFile QtCore))
+(def QStandardPaths (.-QStandardPaths QtCore))
+
+(defn demonstrate-python-io []
+  (python/print "=== Python file IO ===\n")
+  (def file-name "test_python.txt")
+  (def f (python/open file-name "w" ** :encoding "utf-8"))
+  (. f write "Hello, Python!\n")
+  (. f write "Line 2\n")
+  (. f close)
+  (python/print "written:" file-name)
+
+  (def f2 (python/open file-name "r" ** :encoding "utf-8"))
+  (python/print "content:")
+  (doseq [line (iterator-seq f2)]
+    (python/print " " (. line rstrip)))
+  (. f2 close)
+
+  (. os remove file-name))
+
+(defn demonstrate-qfile []
+  (python/print "\n=== QFile text IO ===\n")
+  (def file-name "test.txt")
+  (def write-file (QFile file-name))
+  (when (. write-file open (bit-or (.-WriteOnly QIODevice) (.-Text QIODevice)))
+    (def stream (QTextStream write-file))
+    (. stream __lshift__ "Hello, Qt6!\n")
+    (. stream __lshift__ "Line 2\n")
+    (. write-file close)
+    (python/print "written:" file-name))
+
+  (def read-file (QFile file-name))
+  (when (. read-file open (bit-or (.-ReadOnly QIODevice) (.-Text QIODevice)))
+    (def stream2 (QTextStream read-file))
+    (python/print "content:")
+    (loop []
+      (when (not (. stream2 atEnd))
+        (python/print " " (. stream2 readLine))
+        (recur)))
+    (. read-file close))
+
+  (when (. write-file open (bit-or (.-Append QIODevice) (.-Text QIODevice)))
+    (def stream3 (QTextStream write-file))
+    (. stream3 __lshift__ "Appended\n")
+    (. write-file close)
+    (python/print "appended"))
+
+  (. read-file remove))
+
+(defn demonstrate-qdatastream []
+  (python/print "\n=== QDataStream binary IO ===\n")
+  (def bin-file "data.bin")
+  (def write-file (QFile bin-file))
+  (when (. write-file open (.-WriteOnly QIODevice))
+    (def stream (QDataStream write-file))
+    (. stream writeQString "Hello")
+    (. stream writeInt32 12345)
+    (. stream writeDouble 3.14159)
+    (. stream writeInt32 3)
+    (doseq [item ["Apple" "Banana" "Cherry"]]
+      (. stream writeQString item))
+    (. write-file close)
+    (python/print "binary written"))
+
+  (def read-file (QFile bin-file))
+  (when (. read-file open (.-ReadOnly QIODevice))
+    (def stream2 (QDataStream read-file))
+    (def s (. stream2 readQString))
+    (def i (. stream2 readInt32))
+    (def d (. stream2 readDouble))
+    (def n (. stream2 readInt32))
+    (def items (python/list))
+    (dotimes [_ n]
+      (. items append (. stream2 readQString)))
+    (python/print "str:" s "int:" i "double:" d "items:" items)
+    (. read-file close))
+  (. read-file remove))
+
+(defn demonstrate-qdir []
+  (python/print "\n=== QDir ===\n")
+  (def current (. QDir current))
+  (python/print "cwd:" (. current absolutePath))
+  (python/print "home:" (. QDir homePath))
+  (python/print "temp:" (. QDir tempPath))
+
+  (python/print "files:")
+  (def files (. current entryList (.-Files QDir)))
+  (doseq [f (take 5 (seq files))]
+    (python/print " " f))
+
+  (python/print "dirs:")
+  (def dirs (. current entryList (bit-or (.-Dirs QDir) (.-NoDotAndDotDot QDir))))
+  (doseq [d (take 5 (seq dirs))]
+    (python/print " " d))
+
+  (def test-dir "test_dir")
+  (when (. current mkdir test-dir)
+    (python/print "created dir" test-dir)
+    (. current rmdir test-dir)
+    (python/print "removed dir" test-dir)))
+
+(defn demonstrate-paths []
+  (python/print "\n=== Paths ===\n")
+  (def current (. (.-Path pathlib) cwd))
+  (python/print "pathlib cwd:" (python/str current))
+  (python/print "exists:" (. current exists))
+  (python/print "parent:" (python/str (.-parent current)))
+
+  (python/print "standard paths:")
+  (python/print "Desktop:" (. QStandardPaths writableLocation (.-DesktopLocation QStandardPaths)))
+  (python/print "Documents:" (. QStandardPaths writableLocation (.-DocumentsLocation QStandardPaths)))
+  (python/print "Temp:" (. QStandardPaths writableLocation (.-TempLocation QStandardPaths))))
+
+(defn demonstrate-temp-file []
+  (python/print "\n=== QTemporaryFile ===\n")
+  (def tmp (QTemporaryFile))
+  (when (. tmp open)
+    (def stream (QTextStream tmp))
+    (. stream __lshift__ "Temp content\n")
+    (python/print "temp file:" (. tmp fileName))
+    (. tmp close)))
+
+(defn main []
+  (def app (QCoreApplication (.-argv sys)))
+  (demonstrate-python-io)
+  (demonstrate-qfile)
+  (demonstrate-qdatastream)
+  (demonstrate-qdir)
+  (demonstrate-paths)
+  (demonstrate-temp-file)
+  0)
+
+(main)

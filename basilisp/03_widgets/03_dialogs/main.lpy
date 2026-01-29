@@ -1,0 +1,51 @@
+(ns basilisp.examples.ex03_widgets.ex03_dialogs)
+
+(import* [sys :as sys]
+         [PySide6.QtWidgets :as QtWidgets]
+         [PySide6.QtCore :as QtCore])
+
+(def QApplication (.-QApplication QtWidgets))
+(def QWidget (.-QWidget QtWidgets))
+(def QVBoxLayout (.-QVBoxLayout QtWidgets))
+(def QPushButton (.-QPushButton QtWidgets))
+(def QMessageBox (.-QMessageBox QtWidgets))
+(def QInputDialog (.-QInputDialog QtWidgets))
+(def QFileDialog (.-QFileDialog QtWidgets))
+(def QLabel (.-QLabel QtWidgets))
+
+(def Qt (.-Qt QtCore))
+
+(defn main []
+  (def app (QApplication (.-argv sys)))
+  (def window (QWidget))
+  (. window setWindowTitle "Dialogs Demo")
+  (. window resize 400 300)
+
+  (def layout (QVBoxLayout window))
+  (def info (QLabel "Click buttons to open dialogs" window))
+  (. layout addWidget info)
+
+  (def msg-btn (QPushButton "MessageBox" window))
+  (. (.-clicked msg-btn) connect
+     (fn []
+       (. QMessageBox information window "Info" "Hello from QMessageBox")))
+  (. layout addWidget msg-btn)
+
+  (def input-btn (QPushButton "InputDialog" window))
+  (. (.-clicked input-btn) connect
+     (fn []
+       (def res (. QInputDialog getText window "Input" "Enter text"))
+       (python/print "input result" res)))
+  (. layout addWidget input-btn)
+
+  (def file-btn (QPushButton "FileDialog" window))
+  (. (.-clicked file-btn) connect
+     (fn []
+       (def res (. QFileDialog getOpenFileName window "Open" "" "All Files (*)"))
+       (python/print "file" res)))
+  (. layout addWidget file-btn)
+
+  (. window show)
+  (. app exec))
+
+(main)

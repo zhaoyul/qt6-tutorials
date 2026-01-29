@@ -1,0 +1,84 @@
+(ns basilisp.examples.ex02_gui.ex03_fonts)
+
+(import* [sys :as sys]
+         [PySide6.QtGui :as QtGui]
+         [PySide6.QtCore :as QtCore])
+
+(def QGuiApplication (.-QGuiApplication QtGui))
+(def QFont (.-QFont QtGui))
+(def QFontMetrics (.-QFontMetrics QtGui))
+(def QFontDatabase (.-QFontDatabase QtGui))
+(def QFontInfo (.-QFontInfo QtGui))
+(def QImage (.-QImage QtGui))
+(def QPainter (.-QPainter QtGui))
+(def QColor (.-QColor QtGui))
+(def Qt (.-Qt QtCore))
+
+(defn explore-system-fonts []
+  (python/print "=== System fonts ===\n")
+  (def families (. QFontDatabase families))
+  (python/print "count" (python/len families))
+  (doseq [f (take 10 (seq families))]
+    (python/print " " f))
+  (def font-family "Arial")
+  (when (. families __contains__ font-family)
+    (python/print "\nstyles for" font-family)
+    (doseq [s (seq (. QFontDatabase styles font-family))]
+      (python/print " " s)))
+  (python/print "\nstandard fonts:")
+  (python/print "general" (. (. QFontDatabase systemFont (.-GeneralFont QFontDatabase)) family))
+  (python/print "fixed" (. (. QFontDatabase systemFont (.-FixedFont QFontDatabase)) family))
+  (python/print "title" (. (. QFontDatabase systemFont (.-TitleFont QFontDatabase)) family)))
+
+(defn demonstrate-qfont []
+  (python/print "\n=== QFont ===\n")
+  (def font1 (QFont "Arial" 12))
+  (python/print "font1" (. font1 family) (. font1 pointSize))
+  (def font2 (QFont))
+  (. font2 setFamily "Times New Roman")
+  (. font2 setPointSize 14)
+  (. font2 setWeight (.-Bold QFont))
+  (. font2 setItalic true)
+  (. font2 setUnderline true)
+  (python/print "font2" (. font2 family) (. font2 pointSize))
+  (def font3 (QFont "Arial"))
+  (. font3 setPixelSize 20)
+  (python/print "pixel size" (. font3 pixelSize)))
+
+(defn demonstrate-metrics []
+  (python/print "\n=== QFontMetrics ===\n")
+  (def font (QFont "Arial" 14))
+  (def fm (QFontMetrics font))
+  (python/print "height" (. fm height))
+  (python/print "ascent" (. fm ascent))
+  (python/print "descent" (. fm descent))
+  (def text "Hello, Qt6!")
+  (def rect (. fm boundingRect text))
+  (python/print "text width" (. fm horizontalAdvance text))
+  (python/print "rect" (. rect x) (. rect y) (. rect width) (. rect height)))
+
+(defn render-font-demo []
+  (python/print "\n=== Render text ===\n")
+  (def img (QImage 400 200 (.-Format_ARGB32 QImage)))
+  (. img fill (QColor 255 255 255 255))
+  (def p (QPainter img))
+  (. p setPen (QColor 30 30 30))
+  (. p setFont (QFont "Arial" 24))
+  (. p drawText 20 50 "Normal")
+  (def bold (QFont "Arial" 24))
+  (. bold setBold true)
+  (. p setFont bold)
+  (. p drawText 20 100 "Bold")
+  (. p end)
+  (. img save "fonts_demo.png")
+  (python/print "saved fonts_demo.png"))
+
+(defn main []
+  (def app (QGuiApplication (.-argv sys)))
+  (explore-system-fonts)
+  (demonstrate-qfont)
+  (demonstrate-metrics)
+  (render-font-demo)
+  0)
+
+(main)

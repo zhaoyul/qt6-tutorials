@@ -1,0 +1,236 @@
+(ns basilisp.examples.ex01_core.ex07_threading)
+
+(import* [sys :as sys]
+         [builtins :as builtins]
+         [time :as time]
+         [threading :as threading]
+         [PySide6.QtCore :as QtCore])
+
+(def QCoreApplication (.-QCoreApplication QtCore))
+(def QObject (.-QObject QtCore))
+(def QThread (.-QThread QtCore))
+(def QRunnable (.-QRunnable QtCore))
+(def QThreadPool (.-QThreadPool QtCore))
+(def QMutex (.-QMutex QtCore))
+(def QReadWriteLock (.-QReadWriteLock QtCore))
+(def Signal (.-Signal QtCore))
+
+(def py-int (.-int builtins))
+(def py-str (.-str builtins))
+
+(def wt-progress (Signal py-int))
+(def wt-result (Signal py-str))
+
+(defn- worker-thread-init [self name parent]
+  ((.-__init__ (python/super (.-__class__ self) self)) parent)
+  (set! (.-_name self) name)
+  (set! (.-_abort self) false)
+  nil)
+
+(defn- worker-thread-abort [self]
+  (set! (.-_abort self) true)
+  nil)
+
+(defn- worker-thread-run [self]
+  (python/print (.-_name self) "start, thread" (.-ident (. threading current_thread)))
+  (loop [i 1]
+    (when (<= i 5)
+      (when (not (.-_abort self))
+        (. QThread msleep 100)
+        (. (.-progress self) emit (* i 20))
+        (recur (+ i 1)))))
+  (. (.-resultReady self) emit (str (.-_name self) " done"))
+  (python/print (.-_name self) "done")
+  nil)
+
+(def WorkerThread
+  (python/type
+   "WorkerThread"
+   (python/tuple [QThread])
+   (python/dict
+    {"__init__" worker-thread-init
+     "progress" wt-progress
+     "resultReady" wt-result
+     "abort" worker-thread-abort
+     "run" worker-thread-run})))
+
+(def w-progress (Signal py-str py-int))
+(def w-finished (Signal py-str))
+
+(defn- worker-do-work [self task]
+  (python/print "Worker task" task "thread" (.-ident (. threading current_thread)))
+  (doseq [i (range 0 3)]
+    (. QThread msleep 100)
+    (. (.-progress self) emit task (* (+ i 1) 33)))
+  (. (.-finished self) emit (str task " result"))
+  nil)
+
+(def Worker
+  (python/type
+   "Worker"
+   (python/tuple [QObject])
+   (python/dict
+    {"progress" w-progress
+     "finished" w-finished
+     "doWork" worker-do-work})))
+
+(defn- task-init [self task-id]
+  ((.-__init__ (python/super (.-__class__ self) self)))
+  (set! (.-_id self) task-id)
+  nil)
+
+(defn- task-run [self]
+  (python/print "Task" (.-_id self) "thread" (.-ident (. threading current_thread)))
+  (. QThread msleep 50)
+  (python/print "Task" (.-_id self) "done")
+  nil)
+
+(def Task
+  (python/type
+   "Task"
+   (python/tuple [QRunnable])
+   (python/dict
+    {"__init__" task-init
+     "run" task-run})))
+
+(defn- counter-init [self]
+  (set! (.-_mutex self) (QMutex))
+  (set! (.-_value self) 0)
+  nil)
+
+(defn- counter-inc [self]
+  (let [m (.-_mutex self)]
+    (. m lock)
+    (try
+      (set! (.-_value self) (+ (.-_value self) 1))
+      (finally
+        (. m unlock))))
+  nil)
+
+(defn- counter-value [self]
+  (let [m (.-_mutex self)]
+    (. m lock)
+    (try
+      (.-_value self)
+      (finally
+        (. m unlock)))))
+
+(def Counter
+  (python/type
+   "Counter"
+   (python/tuple [python/object])
+   (python/dict
+    {"__init__" counter-init
+     "increment" counter-inc
+     "value" counter-value})))
+
+(defn- shared-init [self]
+  (set! (.-_lock self) (QReadWriteLock))
+  (set! (.-_data self) "")
+  nil)
+
+(defn- shared-read [self]
+  (let [l (.-_lock self)]
+    (. l lockForRead)
+    (try
+      (.-_data self)
+      (finally
+        (. l unlock)))))
+
+(defn- shared-write [self data]
+  (let [l (.-_lock self)]
+    (. l lockForWrite)
+    (try
+      (set! (.-_data self) data)
+      (finally
+        (. l unlock))))
+  nil)
+
+(def SharedData
+  (python/type
+   "SharedData"
+   (python/tuple [python/object])
+   (python/dict
+    {"__init__" shared-init
+     "read" shared-read
+     "write" shared-write})))
+
+(defn demonstrate-qthread []
+  (python/print "\n=== QThread subclass ===\n")
+  (python/print "main thread" (.-ident (. threading current_thread)))
+  (def thread (WorkerThread "Worker1" nil))
+  (. (.-progress thread) connect (fn [v] (python/print "progress" v "%")))
+  (. (.-resultReady thread) connect (fn [r] (python/print "result" r)))
+  (. thread start)
+  (. thread wait))
+
+(defn demonstrate-move-to-thread []
+  (python/print "\n=== moveToThread ===\n")
+  (def worker-thread (QThread))
+  (def worker (Worker))
+  (. worker moveToThread worker-thread)
+
+  (. (.-started worker-thread) connect (fn [] (. worker doWork "TaskA")))
+  (. (.-progress worker) connect (fn [task p] (python/print task "progress" p "%")))
+  (. (.-finished worker) connect (fn [r] (python/print "done" r)))
+  (. (.-finished worker) connect (.-quit worker-thread))
+
+  (. worker-thread start)
+
+  (def QEventLoop (.-QEventLoop QtCore))
+  (def local-loop (QEventLoop))
+  (. (.-finished worker-thread) connect (.-quit local-loop))
+  (. local-loop exec))
+
+(defn demonstrate-thread-pool []
+  (python/print "\n=== QThreadPool ===\n")
+  (def pool (. QThreadPool globalInstance))
+  (python/print "max threads" (. pool maxThreadCount))
+  (doseq [i (range 1 6)]
+    (. pool start (Task i)))
+  (. pool waitForDone)
+  (python/print "all tasks done"))
+
+(defn demonstrate-synchronization []
+  (python/print "\n=== Synchronization ===\n")
+  (def counter (Counter))
+  (def threads (python/list))
+  (defn worker []
+    (dotimes [_ 100]
+      (. counter increment)))
+  (doseq [i (range 5)]
+    (def t (threading/Thread ** :target worker :name (str "SyncThread-" i)))
+    (. threads append t)
+    (. t start))
+  (doseq [t (seq threads)]
+    (. t join))
+  (python/print "counter value" (. counter value)))
+
+(defn demonstrate-python-threading []
+  (python/print "\n=== Python threading ===\n")
+  (def results (python/list))
+  (defn worker []
+    (def tid (.-ident (. threading current_thread)))
+    (python/print "python thread" tid)
+    (. time sleep 0.1)
+    (. results append tid))
+  (def threads (python/list))
+  (doseq [i (range 3)]
+    (def t (threading/Thread ** :target worker :name (str "PythonThread-" i)))
+    (. threads append t)
+    (. t start))
+  (doseq [t (seq threads)]
+    (. t join))
+  (python/print "threads done" (python/len results)))
+
+(defn main []
+  (def app (QCoreApplication (.-argv sys)))
+  (python/print "=== PySide6 Threading ===")
+  (demonstrate-qthread)
+  (demonstrate-move-to-thread)
+  (demonstrate-thread-pool)
+  (demonstrate-synchronization)
+  (demonstrate-python-threading)
+  0)
+
+(main)

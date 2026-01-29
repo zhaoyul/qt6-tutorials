@@ -55,3 +55,6 @@ CMakeUserPresets.json
 /clojure/classes/
 /cpp/build/
 /.qt/
+**/.nrepl-port
+**/.clj-kondo/
+**/.lsp/

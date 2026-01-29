@@ -1,0 +1,183 @@
+(ns basilisp.examples.ex03_widgets.ex01_basic_widgets)
+
+(import* [sys :as sys]
+         [PySide6.QtWidgets :as QtWidgets]
+         [PySide6.QtCore :as QtCore])
+
+(def QApplication (.-QApplication QtWidgets))
+(def QWidget (.-QWidget QtWidgets))
+(def QVBoxLayout (.-QVBoxLayout QtWidgets))
+(def QHBoxLayout (.-QHBoxLayout QtWidgets))
+(def QGridLayout (.-QGridLayout QtWidgets))
+(def QGroupBox (.-QGroupBox QtWidgets))
+(def QLabel (.-QLabel QtWidgets))
+(def QPushButton (.-QPushButton QtWidgets))
+(def QCheckBox (.-QCheckBox QtWidgets))
+(def QRadioButton (.-QRadioButton QtWidgets))
+(def QLineEdit (.-QLineEdit QtWidgets))
+(def QTextEdit (.-QTextEdit QtWidgets))
+(def QSpinBox (.-QSpinBox QtWidgets))
+(def QDoubleSpinBox (.-QDoubleSpinBox QtWidgets))
+(def QSlider (.-QSlider QtWidgets))
+(def QProgressBar (.-QProgressBar QtWidgets))
+(def QComboBox (.-QComboBox QtWidgets))
+(def QDateEdit (.-QDateEdit QtWidgets))
+(def QTimeEdit (.-QTimeEdit QtWidgets))
+(def QDial (.-QDial QtWidgets))
+(def QStyle (.-QStyle QtWidgets))
+
+(def Qt (.-Qt QtCore))
+(def QDate (.-QDate QtCore))
+(def QTime (.-QTime QtCore))
+
+(defn make-button-group [parent]
+  (def group (QGroupBox "按钮控件" parent))
+  (def layout (QHBoxLayout group))
+
+  (def normal (QPushButton "普通按钮" parent))
+  (. (.-clicked normal) connect (fn [] (python/print "普通按钮被点击")))
+
+  (def toggle (QPushButton "可选中按钮" parent))
+  (. toggle setCheckable true)
+  (. (.-toggled toggle) connect (fn [v] (python/print "按钮选中状态:" v)))
+
+  (def icon-btn (QPushButton "带图标" parent))
+  (. icon-btn setIcon (. (. parent style) standardIcon (.-SP_DialogOkButton (.-StandardPixmap QStyle))))
+
+  (def check (QCheckBox "复选框" parent))
+  (. (.-stateChanged check) connect (fn [s] (python/print "复选框状态:" s)))
+
+  (def tri (QCheckBox "三态" parent))
+  (. tri setTristate true)
+
+  (def radio-group (QWidget parent))
+  (def radio-layout (QHBoxLayout radio-group))
+  (. radio-layout setContentsMargins 0 0 0 0)
+  (def radio-a (QRadioButton "选项A" parent))
+  (def radio-b (QRadioButton "选项B" parent))
+  (. radio-a setChecked true)
+  (. radio-layout addWidget radio-a)
+  (. radio-layout addWidget radio-b)
+
+  (. layout addWidget normal)
+  (. layout addWidget toggle)
+  (. layout addWidget icon-btn)
+  (. layout addWidget check)
+  (. layout addWidget tri)
+  (. layout addWidget radio-group)
+
+  group)
+
+(defn make-input-group [parent]
+  (def group (QGroupBox "输入控件" parent))
+  (def layout (QGridLayout group))
+
+  (. layout addWidget (QLabel "单行输入:" parent) 0 0)
+  (def line (QLineEdit parent))
+  (. line setPlaceholderText "请输入文字...")
+  (. (.-textChanged line) connect (fn [t] (python/print "输入:" t)))
+  (. layout addWidget line 0 1)
+
+  (. layout addWidget (QLabel "密码输入:" parent) 1 0)
+  (def pass (QLineEdit parent))
+  (. pass setEchoMode (.-Password QLineEdit))
+  (. layout addWidget pass 1 1)
+
+  (. layout addWidget (QLabel "只读:" parent) 2 0)
+  (def readonly (QLineEdit "不可编辑" parent))
+  (. readonly setReadOnly true)
+  (. layout addWidget readonly 2 1)
+
+  (. layout addWidget (QLabel "多行文本:" parent) 3 0)
+  (def text (QTextEdit parent))
+  (. text setPlaceholderText "支持多行和富文本...")
+  (. text setMaximumHeight 80)
+  (. layout addWidget text 3 1)
+
+  group)
+
+(defn make-selection-group [parent]
+  (def group (QGroupBox "选择控件" parent))
+  (def layout (QGridLayout group))
+
+  (. layout addWidget (QLabel "下拉框:" parent) 0 0)
+  (def combo (QComboBox parent))
+  (. combo addItems (python/list ["选项一" "选项二" "选项三"]))
+  (. (.-currentIndexChanged combo) connect (fn [_] (python/print "选择:" (. combo currentText))))
+  (. layout addWidget combo 0 1)
+
+  (. layout addWidget (QLabel "可编辑:" parent) 1 0)
+  (def editable (QComboBox parent))
+  (. editable setEditable true)
+  (. editable addItems (python/list ["预设1" "预设2"]))
+  (. layout addWidget editable 1 1)
+
+  (. layout addWidget (QLabel "日期:" parent) 2 0)
+  (def date (QDateEdit (. QDate currentDate) parent))
+  (. date setCalendarPopup true)
+  (. layout addWidget date 2 1)
+
+  (. layout addWidget (QLabel "时间:" parent) 3 0)
+  (def time (QTimeEdit (. QTime currentTime) parent))
+  (. layout addWidget time 3 1)
+
+  group)
+
+(defn make-numeric-group [parent]
+  (def group (QGroupBox "数值控件" parent))
+  (def layout (QGridLayout group))
+
+  (. layout addWidget (QLabel "整数:" parent) 0 0)
+  (def spin (QSpinBox parent))
+  (. spin setRange 0 100)
+  (. spin setValue 50)
+  (. spin setSuffix " 个")
+  (. layout addWidget spin 0 1)
+
+  (. layout addWidget (QLabel "浮点数:" parent) 1 0)
+  (def dspin (QDoubleSpinBox parent))
+  (. dspin setRange 0.0 10.0)
+  (. dspin setDecimals 2)
+  (. dspin setSingleStep 0.1)
+  (. layout addWidget dspin 1 1)
+
+  (. layout addWidget (QLabel "滑块:" parent) 2 0)
+  (def slider (QSlider (.-Horizontal Qt) parent))
+  (. slider setRange 0 100)
+  (. slider setValue 50)
+  (. layout addWidget slider 2 1)
+
+  (. layout addWidget (QLabel "进度:" parent) 3 0)
+  (def progress (QProgressBar parent))
+  (. progress setRange 0 100)
+  (. progress setValue 75)
+  (. layout addWidget progress 3 1)
+  (. (.-valueChanged slider) connect (fn [v] (. progress setValue v)))
+
+  (. layout addWidget (QLabel "旋钮:" parent) 4 0)
+  (def dial (QDial parent))
+  (. dial setRange 0 100)
+  (. dial setMaximumSize 60 60)
+  (. (.-valueChanged dial) connect (fn [v] (. slider setValue v)))
+  (. layout addWidget dial 4 1 (.-AlignLeft Qt))
+
+  group)
+
+(defn main []
+  (def app (QApplication (.-argv sys)))
+  (def window (QWidget))
+  (python/print "=== PySide6 基础控件示例 ===")
+  (python/print "控制台会显示控件交互信息\n")
+  (. window setWindowTitle "PySide6 Basic Widgets Demo")
+  (. window resize 700 600)
+
+  (def layout (QVBoxLayout window))
+  (. layout addWidget (make-button-group window))
+  (. layout addWidget (make-input-group window))
+  (. layout addWidget (make-selection-group window))
+  (. layout addWidget (make-numeric-group window))
+
+  (. window show)
+  (. app exec))
+
+(main)

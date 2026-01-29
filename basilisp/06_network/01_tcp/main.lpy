@@ -1,0 +1,125 @@
+(ns basilisp.examples.ex06_network.ex01_tcp)
+
+(import* [sys :as sys]
+         [PySide6.QtCore :as QtCore]
+         [PySide6.QtNetwork :as QtNet])
+
+(def QCoreApplication (.-QCoreApplication QtCore))
+(def QObject (.-QObject QtCore))
+(def QTimer (.-QTimer QtCore))
+
+(def QTcpServer (.-QTcpServer QtNet))
+(def QTcpSocket (.-QTcpSocket QtNet))
+(def QHostAddress (.-QHostAddress QtNet))
+(def QAbstractSocket (.-QAbstractSocket QtNet))
+
+(defn- server-init [self port parent]
+  ((.-__init__ (python/super (.-__class__ self) self)) parent)
+  (set! (.-_server self) (QTcpServer self))
+  (. (.-newConnection (.-_server self)) connect (.-_on_new_connection self))
+  (if (. (.-_server self) listen (.-LocalHost QHostAddress) port)
+    (python/print "[server] listen" (. (.-_server self) serverPort))
+    (python/print "[server] listen failed" (. (.-_server self) errorString)))
+  nil)
+
+(defn- server-port [self]
+  (. (.-_server self) serverPort))
+
+(defn- on-new-connection [self]
+  (def client (. (.-_server self) nextPendingConnection))
+  (python/print "[server] new" (. (. client peerAddress) toString) ":" (. client peerPort))
+  (defn on-ready []
+    (def data (. client readAll))
+    (python/print "[server] recv" (. data data))
+    (. client write (. (python/bytes "Echo: " "utf-8") __add__ data)))
+  (defn on-disconnect []
+    (python/print "[server] disconnected")
+    (. client deleteLater))
+  (. (.-readyRead client) connect on-ready)
+  (. (.-disconnected client) connect on-disconnect)
+  nil)
+
+(def EchoServer
+  (python/type
+   "EchoServer"
+   (python/tuple [QObject])
+   (python/dict
+    {"__init__" server-init
+     "port" server-port
+     "_on_new_connection" on-new-connection})))
+
+(defn- client-init [self parent]
+  ((.-__init__ (python/super (.-__class__ self) self)) parent)
+  (set! (.-_socket self) (QTcpSocket self))
+  (set! (.-_message_count self) 0)
+  (. (.-connected (.-_socket self)) connect (.-_on_connected self))
+  (. (.-disconnected (.-_socket self)) connect (.-_on_disconnected self))
+  (. (.-readyRead (.-_socket self)) connect (.-_on_ready_read self))
+  (. (.-errorOccurred (.-_socket self)) connect (.-_on_error self))
+  nil)
+
+(defn- connect-to-server [self host port]
+  (python/print "[client] connect" host ":" port)
+  (. (.-_socket self) connectToHost host port)
+  nil)
+
+(defn- send-message [self message]
+  (when (= (. (.-_socket self) state) (.-ConnectedState QAbstractSocket))
+    (python/print "[client] send" message)
+    (. (.-_socket self) write (. message encode))))
+
+(defn- on-connected [self]
+  (python/print "[client] connected")
+  (set! (.-_timer self) (QTimer self))
+  (. (.-timeout (.-_timer self)) connect (.-_send_next_message self))
+  (. (.-_timer self) start 500)
+  nil)
+
+(defn- send-next [self]
+  (if (< (.-_message_count self) 3)
+    (do
+      (set! (.-_message_count self) (+ (.-_message_count self) 1))
+      (. self send_message (str "message #" (.-_message_count self))))
+    (do
+      (. (.-_timer self) stop)
+      (. (.-_socket self) disconnectFromHost)))
+  nil)
+
+(defn- on-disconnected [self]
+  (python/print "[client] disconnected")
+  (. QCoreApplication quit)
+  nil)
+
+(defn- on-ready-read [self]
+  (def data (. (.-_socket self) readAll))
+  (python/print "[client] recv" (. data data))
+  nil)
+
+(defn- on-error [self error]
+  (python/print "[client] error" error (. (.-_socket self) errorString))
+  nil)
+
+(def TcpClient
+  (python/type
+   "TcpClient"
+   (python/tuple [QObject])
+   (python/dict
+    {"__init__" client-init
+     "connect_to_server" connect-to-server
+     "send_message" send-message
+     "_on_connected" on-connected
+     "_send_next_message" send-next
+     "_on_disconnected" on-disconnected
+     "_on_ready_read" on-ready-read
+     "_on_error" on-error})))
+
+(defn main []
+  (def app (QCoreApplication (.-argv sys)))
+  (python/print "=== TCP Demo ===\n")
+  (def server (EchoServer 0 nil))
+  (def port (. server port))
+  (def client (TcpClient nil))
+  (. QTimer singleShot 100 (fn [] (. client connect_to_server "127.0.0.1" port)))
+  (. app exec))
+
+(main)

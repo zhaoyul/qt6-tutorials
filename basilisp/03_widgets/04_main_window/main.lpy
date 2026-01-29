@@ -1,0 +1,58 @@
+(ns basilisp.examples.ex03_widgets.ex04_main_window)
+
+(import* [sys :as sys]
+         [PySide6.QtWidgets :as QtWidgets]
+         [PySide6.QtGui :as QtGui]
+         [PySide6.QtCore :as QtCore])
+
+(def QApplication (.-QApplication QtWidgets))
+(def QMainWindow (.-QMainWindow QtWidgets))
+(def QWidget (.-QWidget QtWidgets))
+(def QVBoxLayout (.-QVBoxLayout QtWidgets))
+(def QLabel (.-QLabel QtWidgets))
+(def QTextEdit (.-QTextEdit QtWidgets))
+(def QAction (.-QAction QtGui))
+
+(def Qt (.-Qt QtCore))
+
+(defn make-main-window []
+  (def win (QMainWindow))
+  (. win setWindowTitle "MainWindow Demo")
+  (. win resize 800 600)
+
+  (def central (QWidget))
+  (def layout (QVBoxLayout central))
+  (. layout addWidget (QLabel "Central Widget" central))
+  (def editor (QTextEdit central))
+  (. editor setPlainText "Edit text here...")
+  (. layout addWidget editor)
+  (. win setCentralWidget central)
+
+  (def menu (. win menuBar))
+  (def file-menu (. menu addMenu "File"))
+  (def edit-menu (. menu addMenu "Edit"))
+
+  (def open-act (QAction "Open" win))
+  (def save-act (QAction "Save" win))
+  (def quit-act (QAction "Quit" win))
+  (. (.-triggered quit-act) connect (fn [] (. win close)))
+  (. file-menu addAction open-act)
+  (. file-menu addAction save-act)
+  (. file-menu addSeparator)
+  (. file-menu addAction quit-act)
+
+  (def toolbar (. win addToolBar "Main"))
+  (. toolbar addAction open-act)
+  (. toolbar addAction save-act)
+
+  (. (. win statusBar) showMessage "Ready")
+
+  win)
+
+(defn main []
+  (def app (QApplication (.-argv sys)))
+  (def win (make-main-window))
+  (. win show)
+  (. app exec))
+
+(main)

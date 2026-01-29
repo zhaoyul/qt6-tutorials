@@ -1,0 +1,146 @@
+(ns basilisp.examples.ex01_core.ex08_timer)
+
+(import* [sys :as sys]
+         [time :as time]
+         [PySide6.QtCore :as QtCore])
+
+(def QCoreApplication (.-QCoreApplication QtCore))
+(def QObject (.-QObject QtCore))
+(def QTimer (.-QTimer QtCore))
+(def QElapsedTimer (.-QElapsedTimer QtCore))
+(def QDeadlineTimer (.-QDeadlineTimer QtCore))
+(def QThread (.-QThread QtCore))
+(def Qt (.-Qt QtCore))
+
+(defn- timer-demo-init [self parent]
+  ((.-__init__ (python/super (.-__class__ self) self)) parent)
+  (set! (.-_repeat_timer self) nil)
+  (set! (.-_basic_timer_id self) 0)
+  (set! (.-_count self) 0)
+  nil)
+
+(defn- on-repeat-timeout [self]
+  (set! (.-_count self) (+ (.-_count self) 1))
+  (python/print "repeat timer" (.-_count self))
+  (when (>= (.-_count self) 5)
+    (. (.-_repeat_timer self) stop)
+    (python/print "repeat timer stopped")
+    (. QTimer singleShot 100 (fn [] (. (. QCoreApplication instance) quit))))
+  nil)
+
+(defn- on-single-shot [self]
+  (python/print "singleShot fired")
+  nil)
+
+(defn- timer-event [self event]
+  (when (= (. event timerId) (.-_basic_timer_id self))
+    (python/print "basic timer event"))
+  (. (python/super (.-__class__ self) self) timerEvent event))
+
+(defn- demo-qtimer [self]
+  (python/print "\n=== QTimer ===\n")
+  (def t (QTimer self))
+  (set! (.-_repeat_timer self) t)
+  (. (.-timeout t) connect (.-on_repeat_timeout self))
+  (. t start 100)
+  (python/print "repeat timer started"))
+
+(defn- demo-single-shot [self]
+  (python/print "\n=== singleShot ===\n")
+  (. QTimer singleShot 200 (fn [] (python/print "singleShot lambda")))
+  (. QTimer singleShot 300 (.-on_single_shot_timeout self))
+  (def t (QTimer self))
+  (. t setSingleShot true)
+  (. (.-timeout t) connect (fn [] (python/print "QTimer singleShot")))
+  (. t start 250)
+  (python/print "single shots scheduled"))
+
+(defn- demo-timer-types [self]
+  (python/print "\n=== Timer types ===\n")
+  (def precise (QTimer self))
+  (. precise setTimerType (.-PreciseTimer Qt))
+  (python/print "PreciseTimer")
+  (def coarse (QTimer self))
+  (. coarse setTimerType (.-CoarseTimer Qt))
+  (python/print "CoarseTimer")
+  (def very (QTimer self))
+  (. very setTimerType (.-VeryCoarseTimer Qt))
+  (python/print "VeryCoarseTimer"))
+
+(defn- start-basic-timer [self]
+  (python/print "\n=== startTimer ===\n")
+  (set! (.-_basic_timer_id self) (. self startTimer 150))
+  (python/print "basic timer id" (.-_basic_timer_id self))
+  (defn stop-basic []
+    (. self killTimer (.-_basic_timer_id self))
+    (python/print "basic timer stopped"))
+  (. QTimer singleShot 400 stop-basic))
+
+(def TimerDemo
+  (python/type
+   "TimerDemo"
+   (python/tuple [QObject])
+   (python/dict
+    {"__init__" timer-demo-init
+     "on_repeat_timeout" on-repeat-timeout
+     "on_single_shot_timeout" on-single-shot
+     "timerEvent" timer-event
+     "demonstrate_qtimer" demo-qtimer
+     "demonstrate_single_shot" demo-single-shot
+     "demonstrate_timer_types" demo-timer-types
+     "start_basic_timer" start-basic-timer})))
+
+(defn demonstrate-elapsed-timer []
+  (python/print "\n=== QElapsedTimer ===\n")
+  (def t (QElapsedTimer))
+  (. t start)
+  (def total
+    (loop [i 0 acc 0]
+      (if (< i 200000)
+        (recur (+ i 1) (+ acc i))
+        acc)))
+  (python/print "elapsed" (. t elapsed) "ms")
+  (python/print "nsecs" (. t nsecsElapsed))
+  (. t restart)
+  (. QThread msleep 50)
+  (python/print "sleep 50ms" (. t elapsed) "ms")
+  (. t restart)
+  (python/print "expired 100ms" (. t hasExpired 100)))
+
+(defn demonstrate-deadline-timer []
+  (python/print "\n=== QDeadlineTimer ===\n")
+  (def d (QDeadlineTimer 100))
+  (python/print "remaining" (. d remainingTime) "ms")
+  (python/print "expired" (. d hasExpired))
+  (. QThread msleep 50)
+  (python/print "remaining" (. d remainingTime) "ms")
+  (. QThread msleep 60)
+  (python/print "expired" (. d hasExpired))
+  (def never (QDeadlineTimer (.-Forever QDeadlineTimer)))
+  (python/print "never expired" (. never hasExpired)))
+
+(defn demonstrate-python-time []
+  (python/print "\n=== Python time ===\n")
+  (def start (. time time))
+  (def _ (python/sum (range 1000000)))
+  (def elapsed (* (- (. time time) start) 1000))
+  (python/print "elapsed" elapsed "ms")
+  (def start2 (. time perf_counter))
+  (. time sleep 0.05)
+  (def elapsed2 (* (- (. time perf_counter) start2) 1000))
+  (python/print "sleep 50ms" elapsed2 "ms"))
+
+(defn main []
+  (def app (QCoreApplication (.-argv sys)))
+  (python/print "=== PySide6 Timer ===")
+  (def demo (TimerDemo nil))
+  (. demo demonstrate_qtimer)
+  (. demo demonstrate_single_shot)
+  (. demo demonstrate_timer_types)
+  (. demo start_basic_timer)
+  (demonstrate-elapsed-timer)
+  (demonstrate-deadline-timer)
+  (demonstrate-python-time)
+  (. app exec))
+
+(main)

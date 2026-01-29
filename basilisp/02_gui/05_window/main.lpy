@@ -1,0 +1,121 @@
+(ns basilisp.examples.ex02_gui.ex05_window)
+
+(import* [sys :as sys]
+         [PySide6.QtGui :as QtGui]
+         [PySide6.QtCore :as QtCore])
+
+(def QGuiApplication (.-QGuiApplication QtGui))
+(def QWindow (.-QWindow QtGui))
+(def QBackingStore (.-QBackingStore QtGui))
+(def QPainter (.-QPainter QtGui))
+(def QColor (.-QColor QtGui))
+(def QFont (.-QFont QtGui))
+
+(def Qt (.-Qt QtCore))
+(def QSize (.-QSize QtCore))
+(def QRect (.-QRect QtCore))
+
+(defn- render-window [this]
+  (when (. this isExposed)
+    (def rect (QRect 0 0 (. this width) (. this height)))
+    (. (.-_backing_store this) beginPaint rect)
+    (def painter (QPainter (. (.-_backing_store this) paintDevice)))
+    (. painter setRenderHint (.-Antialiasing QPainter))
+    (. painter fillRect rect (QColor 250 250 250))
+    (. painter setPen (.-darkBlue Qt))
+    (. painter setFont (QFont "Arial" 18 (.-Bold QFont)))
+    (. painter drawText 20 40 "PySide6 Window Demo")
+    (. painter setPen (.-black Qt))
+    (. painter setFont (QFont "Arial" 12))
+    (def lines ["1 - Normal" "2 - Maximize" "3 - Minimize" "4 - Fullscreen" "5 - Toggle on top" "6 - Toggle opacity" "I - Window info" "ESC - Quit"])
+    (doseq [[idx line] (map-indexed vector lines)]
+      (. painter drawText 20 (+ 80 (* idx 20)) line))
+    (def y (+ 80 (* (count lines) 20)))
+    (. painter setPen (.-darkGreen Qt))
+    (def state (. this windowState))
+    (. painter drawText 20 (+ y 20) (str "State: " state))
+    (. painter drawText 20 (+ y 40) (str "Size: " (. this width) "x" (. this height)))
+    (. painter drawText 20 (+ y 60) (str "Opacity: " (. this opacity)))
+    (. painter end)
+    (. (.-_backing_store this) endPaint)
+    (. (.-_backing_store this) flush rect)))
+
+(defn- show-window-info [this]
+  (python/print "\n=== Window info ===")
+  (python/print "title" (. this title))
+  (python/print "size" (. (. this size) toTuple))
+  (python/print "pos" (. (. this position) toTuple))
+  (python/print "geometry" (. (. this geometry) getRect))
+  (python/print "min" (. (. this minimumSize) toTuple))
+  (python/print "max" (. (. this maximumSize) toTuple))
+  (python/print "visible" (. this isVisible))
+  (python/print "active" (. this isActive))
+  (python/print "state" (. this windowState))
+  (python/print "opacity" (. this opacity)))
+
+(defn- window-init [self]
+  ((.-__init__ (python/super (.-__class__ self) self)))
+  (set! (.-_backing_store self) (QBackingStore self))
+  (. self setTitle "PySide6 Window Demo")
+  (. self resize 500 400)
+  (. self setMinimumSize (QSize 300 200))
+  (. self setMaximumSize (QSize 800 600))
+  nil)
+
+(defn- window-expose [self event]
+  (when (. self isExposed)
+    (render-window self))
+  nil)
+
+(defn- window-resize [self event]
+  (. (.-_backing_store self) resize (. event size))
+  (render-window self)
+  nil)
+
+(defn- window-key-press [self event]
+  (def key (. event key))
+  (cond
+    (= key (.-Key_1 Qt)) (. self setWindowState (.-WindowNoState Qt))
+    (= key (.-Key_2 Qt)) (. self setWindowState (.-WindowMaximized Qt))
+    (= key (.-Key_3 Qt)) (. self setWindowState (.-WindowMinimized Qt))
+    (= key (.-Key_4 Qt)) (. self setWindowState (.-WindowFullScreen Qt))
+    (= key (.-Key_5 Qt)) (. self setFlags (bit-xor (. self flags) (.-WindowStaysOnTopHint Qt)))
+    (= key (.-Key_6 Qt)) (. self setOpacity (if (> (. self opacity) 0.5) 0.5 1.0))
+    (= key (.-Key_I Qt)) (show-window-info self)
+    (= key (.-Key_Escape Qt)) (. self close)
+    :else nil)
+  (render-window self)
+  nil)
+
+(def Window
+  (python/type
+   "Window"
+   (python/tuple [QWindow])
+   (python/dict
+    {"__init__" window-init
+     "exposeEvent" window-expose
+     "resizeEvent" window-resize
+     "keyPressEvent" window-key-press})))
+
+(defn- make-window []
+  (Window))
+
+(defn show-screen-info []
+  (python/print "=== Screen info ===\n")
+  (def screens (. QGuiApplication screens))
+  (python/print "screen count" (python/len screens))
+  (doseq [[idx screen] (map vector (range 1 (+ 1 (python/len screens))) (seq screens))]
+    (python/print "\nscreen" idx)
+    (python/print "name" (. screen name))
+    (python/print "geometry" (. (. screen geometry) getRect))
+    (python/print "available" (. (. screen availableGeometry) getRect))
+    (python/print "dpi" (. screen logicalDotsPerInch))))
+
+(defn main []
+  (def app (QGuiApplication (.-argv sys)))
+  (show-screen-info)
+  (def win (make-window))
+  (. win show)
+  (. app exec))
+
+(main)

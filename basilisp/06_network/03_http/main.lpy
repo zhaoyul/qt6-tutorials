@@ -1,0 +1,85 @@
+(ns basilisp.examples.ex06_network.ex03_http)
+
+(import* [sys :as sys]
+         [json :as json]
+         [PySide6.QtCore :as QtCore]
+         [PySide6.QtNetwork :as QtNet])
+
+(def QCoreApplication (.-QCoreApplication QtCore))
+(def QObject (.-QObject QtCore))
+(def Slot (.-Slot QtCore))
+(def QTimer (.-QTimer QtCore))
+(def QUrl (.-QUrl QtCore))
+
+(def QNetworkAccessManager (.-QNetworkAccessManager QtNet))
+(def QNetworkRequest (.-QNetworkRequest QtNet))
+(def QNetworkReply (.-QNetworkReply QtNet))
+
+(defn- client-init [self parent]
+  ((.-__init__ (python/super (.-__class__ self) self)) parent)
+  (set! (.-_manager self) (QNetworkAccessManager self))
+  (set! (.-_pending self) 0)
+  nil)
+
+(defn- handle-reply [self reply]
+  (python/print "\n=== reply ===")
+  (if (not= (. reply error) (.-NoError QNetworkReply))
+    (python/print "error" (. reply errorString))
+    (do
+      (def status (. reply attribute (.-HttpStatusCodeAttribute QNetworkRequest)))
+      (def ctype (. reply header (.-ContentTypeHeader QNetworkRequest)))
+      (def data (. reply readAll))
+      (python/print "status" status)
+      (python/print "content-type" ctype)
+      (python/print "bytes" (python/len data))
+      (try
+        (def obj (json/loads (. data data)))
+        (python/print "json" (json/dumps obj :indent 2))
+        (catch python/Exception _
+          (python/print "text" (. (. data data) decode "utf-8" :errors "replace"))))))
+  (. reply deleteLater)
+  (set! (.-_pending self) (- (.-_pending self) 1))
+  (when (= (.-_pending self) 0)
+    (. QTimer singleShot 100 (fn [] (. QCoreApplication quit))))
+  nil)
+
+(defn- get-request [self url]
+  (python/print "\n--- GET ---")
+  (python/print "url" (. url toString))
+  (def req (QNetworkRequest url))
+  (. req setHeader (.-UserAgentHeader QNetworkRequest) "Basilisp-HTTP/1.0")
+  (set! (.-_pending self) (+ (.-_pending self) 1))
+  (def reply (. (.-_manager self) get req))
+  (. (.-finished reply) connect (fn [] (handle-reply self reply)))
+  nil)
+
+(defn- post-json [self url data]
+  (python/print "\n--- POST JSON ---")
+  (python/print "url" (. url toString))
+  (def body (json/dumps data))
+  (def req (QNetworkRequest url))
+  (. req setHeader (.-ContentTypeHeader QNetworkRequest) "application/json")
+  (set! (.-_pending self) (+ (.-_pending self) 1))
+  (def reply (. (.-_manager self) post req (. body encode)))
+  (. (.-finished reply) connect (fn [] (handle-reply self reply)))
+  nil)
+
+(def HttpClient
+  (python/type
+   "HttpClient"
+   (python/tuple [QObject])
+   (python/dict
+    {"__init__" client-init
+     "get" get-request
+     "post_json" post-json
+     "_handle_reply" handle-reply})))
+
+(defn main []
+  (def app (QCoreApplication (.-argv sys)))
+  (python/print "=== HTTP Demo ===\n")
+  (def client (HttpClient nil))
+  (. client get (QUrl "https://httpbin.org/get"))
+  (. client post_json (QUrl "https://httpbin.org/post") (python/dict {"name" "Basilisp" "version" 1}))
+  (. app exec))
+
+(main)

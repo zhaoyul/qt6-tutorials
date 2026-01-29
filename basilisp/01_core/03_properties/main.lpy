@@ -1,0 +1,175 @@
+(ns basilisp.examples.ex01_core.ex03_properties)
+
+(import* [sys :as sys]
+         [builtins :as builtins]
+         [PySide6.QtCore :as QtCore])
+
+(def QObject (.-QObject QtCore))
+(def QCoreApplication (.-QCoreApplication QtCore))
+(def Property (.-Property QtCore))
+(def Signal (.-Signal QtCore))
+(def Slot (.-Slot QtCore))
+
+(def py-float (.-float builtins))
+(def py-int (.-int builtins))
+(def py-str (.-str builtins))
+
+(def width-changed (Signal))
+(def height-changed (Signal))
+(def area-changed (Signal))
+(def perimeter-changed (Signal))
+
+(defn- rect-init [self parent]
+  ((.-__init__ (python/super (.-__class__ self) self)) parent)
+  (set! (.-_width self) 0.0)
+  (set! (.-_height self) 0.0)
+  nil)
+
+(defn- rect-width [self] (.-_width self))
+(defn- rect-set-width [self w]
+  (when (> (python/abs (- (.-_width self) w)) 1.0e-10)
+    (set! (.-_width self) w)
+    (. (.-widthChanged self) emit)
+    (. (.-areaChanged self) emit)
+    (. (.-perimeterChanged self) emit))
+  nil)
+
+(defn- rect-height [self] (.-_height self))
+(defn- rect-set-height [self h]
+  (when (> (python/abs (- (.-_height self) h)) 1.0e-10)
+    (set! (.-_height self) h)
+    (. (.-heightChanged self) emit)
+    (. (.-areaChanged self) emit)
+    (. (.-perimeterChanged self) emit))
+  nil)
+
+(defn- rect-area [self] (* (.-_width self) (.-_height self)))
+(defn- rect-perimeter [self] (* 2 (+ (.-_width self) (.-_height self))))
+(defn- rect-type [self] "Rectangle")
+
+(def Rectangle
+  (python/type
+   "Rectangle"
+   (python/tuple [QObject])
+   (python/dict
+    {"__init__" rect-init
+     "widthChanged" width-changed
+     "heightChanged" height-changed
+     "areaChanged" area-changed
+     "perimeterChanged" perimeter-changed
+     "width" (Property py-float rect-width rect-set-width ** :notify width-changed)
+     "height" (Property py-float rect-height rect-set-height ** :notify height-changed)
+     "area" (Property py-float rect-area ** :notify area-changed)
+     "perimeter" (Property py-float rect-perimeter ** :notify perimeter-changed)
+     "type" (Property py-str rect-type ** :constant true)})))
+
+(def b-width-changed (Signal))
+(def b-height-changed (Signal))
+(def b-area-changed (Signal))
+
+(defn- brect-init [self parent]
+  ((.-__init__ (python/super (.-__class__ self) self)) parent)
+  (set! (.-_width self) 0.0)
+  (set! (.-_height self) 0.0)
+  (set! (.-_area_bindings self) (python/list))
+  (. (.-widthChanged self) connect (.-_update_area self))
+  (. (.-heightChanged self) connect (.-_update_area self))
+  nil)
+
+(defn- brect-width [self] (.-_width self))
+(defn- brect-set-width [self w]
+  (when (> (python/abs (- (.-_width self) w)) 1.0e-10)
+    (set! (.-_width self) w)
+    (. (.-widthChanged self) emit))
+  nil)
+
+(defn- brect-height [self] (.-_height self))
+(defn- brect-set-height [self h]
+  (when (> (python/abs (- (.-_height self) h)) 1.0e-10)
+    (set! (.-_height self) h)
+    (. (.-heightChanged self) emit))
+  nil)
+
+(defn- brect-area [self] (* (.-_width self) (.-_height self)))
+
+(defn- update-area [self]
+  (. (.-areaChanged self) emit)
+  (doseq [cb (seq (.-_area_bindings self))]
+    (cb (brect-area self)))
+  nil)
+
+(defn- subscribe-area [self callback]
+  (. (.-_area_bindings self) append callback)
+  nil)
+
+(def BindableRectangle
+  (python/type
+   "BindableRectangle"
+   (python/tuple [QObject])
+   (python/dict
+    {"__init__" brect-init
+     "widthChanged" b-width-changed
+     "heightChanged" b-height-changed
+     "areaChanged" b-area-changed
+     "width" (Property py-float brect-width brect-set-width ** :notify b-width-changed)
+     "height" (Property py-float brect-height brect-set-height ** :notify b-height-changed)
+     "area" (Property py-float brect-area ** :notify b-area-changed)
+     "_update_area" update-area
+     "subscribe_area" subscribe-area})))
+
+(defn demonstrate-dynamic-typing []
+  (python/print "\n=== Dynamic typing ===")
+  (def v1 42)
+  (def v2 "Hello")
+  (def v3 3.14)
+  (def v4 (python/list ["a" "b" "c"]))
+
+  (python/print "v1" v1 "type" (.-__name__ (python/type v1)))
+  (python/print "v2" v2 "type" (.-__name__ (python/type v2)))
+  (python/print "v3" v3 "type" (.-__name__ (python/type v3)))
+  (python/print "v4" v4 "type" (.-__name__ (python/type v4)))
+
+  (python/print "\nType checks:")
+  (python/print "v1 is int" (python/isinstance v1 py-int))
+  (python/print "v2 is int" (python/isinstance v2 py-int))
+
+  (python/print "\nConvert:")
+  (python/print "'123' -> int" (python/int "123"))
+
+  (defn print-any [value]
+    (python/print "Any value" value "type" (.-__name__ (python/type value))))
+
+  (python/print "\nAny examples:")
+  (print-any 42)
+  (print-any "Hello")
+  (print-any (python/list [1 2 3])))
+
+(defn main []
+  (def app (QCoreApplication (.-argv sys)))
+
+  (python/print "=== PySide6 Property Example ===\n")
+
+  (python/print "-- Basic properties --")
+  (def rect (Rectangle nil))
+  (. (.-areaChanged rect) connect (fn [] (python/print "area changed:" (python/getattr rect "area"))))
+
+  (python/setattr rect "width" 10.0)
+  (python/setattr rect "height" 5.0)
+
+  (python/print "width:" (python/getattr rect "width"))
+  (python/print "height:" (python/getattr rect "height"))
+  (python/print "area:" (python/getattr rect "area"))
+  (python/print "perimeter:" (python/getattr rect "perimeter"))
+  (python/print "type:" (python/getattr rect "type"))
+
+  (python/print "\n-- Bindable properties --")
+  (def brect (BindableRectangle nil))
+  (. brect subscribe_area (fn [area] (python/print "area binding:" area)))
+  (python/setattr brect "width" 3.0)
+  (python/setattr brect "height" 4.0)
+
+  (demonstrate-dynamic-typing)
+
+  0)
+
+(main)

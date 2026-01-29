@@ -1,0 +1,36 @@
+(ns basilisp.examples.ex07_sql.ex01_basics)
+
+(import* [sys :as sys]
+         [PySide6.QtCore :as QtCore]
+         [PySide6.QtSql :as QtSql])
+
+(def QCoreApplication (.-QCoreApplication QtCore))
+(def QSqlDatabase (.-QSqlDatabase QtSql))
+(def QSqlQuery (.-QSqlQuery QtSql))
+
+(defn main []
+  (def app (QCoreApplication (.-argv sys)))
+  (python/print "=== Qt SQL Demo ===\n")
+
+  (def db (. QSqlDatabase addDatabase "QSQLITE"))
+  (. db setDatabaseName ":memory:")
+  (if (. db open)
+    (python/print "db opened")
+    (python/print "db open failed" (. db lastError)))
+
+  (def query (QSqlQuery))
+  (. query exec "CREATE TABLE users(id INTEGER PRIMARY KEY, name TEXT, age INT)")
+  (. query exec "INSERT INTO users(name, age) VALUES('Alice', 25)")
+  (. query exec "INSERT INTO users(name, age) VALUES('Bob', 30)")
+
+  (. query exec "SELECT id, name, age FROM users")
+  (python/print "rows:")
+  (loop []
+    (when (. query next)
+      (python/print " id" (. query value 0) "name" (. query value 1) "age" (. query value 2))
+      (recur)))
+
+  (. db close)
+  0)
+
+(main)

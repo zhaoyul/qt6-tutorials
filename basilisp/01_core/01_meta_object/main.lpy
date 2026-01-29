@@ -1,0 +1,138 @@
+(ns basilisp.examples.ex01_core.ex01_meta_object)
+
+(import* [sys :as sys]
+         [builtins :as builtins]
+         [PySide6.QtCore :as QtCore])
+
+(def QObject (.-QObject QtCore))
+(def QCoreApplication (.-QCoreApplication QtCore))
+(def QMetaObject (.-QMetaObject QtCore))
+(def QMetaMethod (.-QMetaMethod QtCore))
+(def Signal (.-Signal QtCore))
+(def Slot (.-Slot QtCore))
+(def Property (.-Property QtCore))
+
+(def py-str (.-str builtins))
+(def py-int (.-int builtins))
+
+(def name-changed (Signal py-str))
+(def age-changed (Signal py-int))
+
+(defn- person-init [self parent]
+  ((.-__init__ (python/super (.-__class__ self) self)) parent)
+  (set! (.-_name self) "Unknown")
+  (set! (.-_age self) 0)
+  nil)
+
+(defn- get-name [self]
+  (.-_name self))
+
+(defn- set-name [self value]
+  (when (not= (.-_name self) value)
+    (set! (.-_name self) value)
+    (. (.-nameChanged self) emit value))
+  nil)
+
+(defn- get-age [self]
+  (.-_age self))
+
+(defn- set-age [self value]
+  (when (not= (.-_age self) value)
+    (set! (.-_age self) value)
+    (. (.-ageChanged self) emit value))
+  nil)
+
+(defn- introduce [self]
+  (python/print "I am" (.-_name self) ", age" (.-_age self))
+  nil)
+
+(defn- on-birthday [self]
+  (set-age self (+ (.-_age self) 1))
+  (python/print (.-_name self) "birthday, now" (.-_age self))
+  nil)
+
+(def class-info
+  (python/dict {"author" "Qt tutorial"
+                "version" "1.0"}))
+
+(def Person
+  (python/type
+   "Person"
+   (python/tuple [QObject])
+   (python/dict
+    {"__init__" person-init
+     "__class_info__" class-info
+     "nameChanged" name-changed
+     "ageChanged" age-changed
+     "name" (Property py-str get-name set-name ** :notify name-changed)
+     "age" (Property py-int get-age set-age ** :notify age-changed)
+     "introduce" ((Slot) introduce)
+     "onBirthday" ((Slot) on-birthday)})))
+
+(defn- method-type-name [method]
+  (let [mt (. method methodType)
+        mt-enum (.-MethodType QMetaMethod)]
+    (cond
+      (= mt (.-Signal mt-enum)) "Signal"
+      (= mt (.-Slot mt-enum)) "Slot"
+      (= mt (.-Method mt-enum)) "Method"
+      (= mt (.-Constructor mt-enum)) "Constructor"
+      :else "Unknown")))
+
+(defn explore-meta-object [obj]
+  (let [meta (. obj metaObject)]
+    (python/print "\n=== Meta Object ===")
+    (python/print "Class:" (. meta className))
+    (let [super (. meta superClass)]
+      (python/print "Super:" (if super (. super className) "None")))
+
+    (python/print "\n-- Class Info --")
+    (when (python/hasattr obj "__class_info__")
+      (doseq [[k v] (seq (. (.-__class_info__ obj) items))]
+        (python/print (str "  " k ":") v)))
+
+    (python/print "\n-- Properties --")
+    (doseq [i (range (. meta propertyOffset) (. meta propertyCount))]
+      (let [prop (. meta property i)]
+        (python/print "  Property:" (. prop name))
+        (python/print "    Type:" (. prop typeName))
+        (python/print "    Readable:" (. prop isReadable))
+        (python/print "    Writable:" (. prop isWritable))))
+
+    (python/print "\n-- Methods --")
+    (doseq [i (range (. meta methodOffset) (. meta methodCount))]
+      (let [method (. meta method i)]
+        (python/print "  " (method-type-name method) ":" (. method methodSignature))))))
+
+(defn main []
+  (def app (QCoreApplication (.-argv sys)))
+
+  (python/print "=== PySide6 Meta-Object Example ===\n")
+
+  (def person (Person nil))
+  (python/setattr person "name" "Alice")
+  (python/setattr person "age" 25)
+
+  (explore-meta-object person)
+
+  (python/print "\n-- invokeMethod --")
+  (. QMetaObject invokeMethod person "introduce")
+
+  (python/print "\n-- setProperty --")
+  (. person setProperty "name" "Bob")
+  (. person setProperty "age" 30)
+  (python/print "name:" (. person property "name"))
+  (python/print "age:" (. person property "age"))
+
+  (python/print "\n-- dynamic property --")
+  (. person setProperty "hobby" "coding")
+  (python/print "hobby:" (. person property "hobby"))
+
+  (python/print "\n-- type checks --")
+  (python/print "inherits Person:" (. person inherits "Person"))
+  (python/print "inherits QObject:" (. person inherits "QObject"))
+  (python/print "inherits QWidget:" (. person inherits "QWidget"))
+
+  0)
+
+(main)

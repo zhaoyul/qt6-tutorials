@@ -1,0 +1,180 @@
+(ns basilisp.examples.ex10_concurrent.ex01_basics)
+
+(import* [sys :as sys]
+         [builtins :as builtins]
+         [time :as time]
+         [math :as math]
+         [threading :as threading]
+         [asyncio :as asyncio]
+         [concurrent.futures :as futures]
+         [os :as os]
+         [PySide6.QtCore :as QtCore])
+
+(def QCoreApplication (.-QCoreApplication QtCore))
+(def QThread (.-QThread QtCore))
+(def QThreadPool (.-QThreadPool QtCore))
+(def QRunnable (.-QRunnable QtCore))
+(def QObject (.-QObject QtCore))
+(def Signal (.-Signal QtCore))
+(def Slot (.-Slot QtCore))
+
+(def py-int (.-int builtins))
+(def py-str (.-str builtins))
+
+(defn _cpu-intensive [n]
+  (loop [i 0 acc 0.0]
+    (if (< i n)
+      (recur (+ i 1) (+ acc (math/sqrt i)))
+      acc)))
+
+(defn heavy-computation [task-id]
+  (python/print "task" task-id "thread" (.-ident (. threading current_thread)))
+  (. time sleep 0.2)
+  (python/print "task" task-id "done")
+  (str "result-" task-id))
+
+(defn square [n]
+  (. time sleep 0.02)
+  (* n n))
+
+(defn is-even [n]
+  (= 0 (mod n 2)))
+
+(defn demonstrate-thread-pool-executor []
+  (python/print "\n=== ThreadPoolExecutor ===\n")
+  (python/print "main thread" (.-ident (. threading current_thread)))
+  (def executor (futures/ThreadPoolExecutor ** :max_workers 4))
+  (try
+    (def f1 (. executor submit heavy-computation 1))
+    (def f2 (. executor submit (fn [] (do (. time sleep 0.1) 42))))
+    (python/print "waiting...")
+    (python/print "result1" (. f1 result))
+    (python/print "result2" (. f2 result))
+    (finally
+      (. executor shutdown)))
+  nil)
+
+(defn demonstrate-map []
+  (python/print "\n=== map ===\n")
+  (def nums (python/list (range 1 11)))
+  (def executor (futures/ThreadPoolExecutor))
+  (try
+    (def results (python/list (. executor map square nums)))
+    (python/print "squares" results)
+    (finally
+      (. executor shutdown)))
+  nil)
+
+(defn demonstrate-filter []
+  (python/print "\n=== filter ===\n")
+  (def nums (python/list (range 1 11)))
+  (def executor (futures/ThreadPoolExecutor))
+  (try
+    (def future-map (python/dict))
+    (doseq [n (seq nums)]
+      (. future-map __setitem__ (. executor submit is-even n) n))
+    (def evens (python/list))
+    (doseq [f (iterator-seq (. futures as_completed (. future-map keys)))]
+      (def n (. future-map __getitem__ f))
+      (when (. f result)
+        (. evens append n)))
+    (. evens sort)
+    (python/print "evens" evens)
+    (finally
+      (. executor shutdown)))
+  nil)
+
+(defn demonstrate-map-reduce []
+  (python/print "\n=== map-reduce ===\n")
+  (def nums (python/list (range 1 11)))
+  (def executor (futures/ThreadPoolExecutor))
+  (try
+    (def squared (python/list (. executor map square nums)))
+    (python/print "squared" squared)
+    (python/print "sum" (python/sum squared))
+    (finally
+      (. executor shutdown)))
+  nil)
+
+(defn demonstrate-qt-thread-pool []
+  (python/print "\n=== QThreadPool ===\n")
+  (def pool (. QThreadPool globalInstance))
+  (python/print "max" (. pool maxThreadCount))
+  (python/print "active" (. pool activeThreadCount)))
+
+(def ws-finished (Signal py-str))
+(def ws-progress (Signal py-int))
+
+(def WorkerSignals
+  (python/type
+   "WorkerSignals"
+   (python/tuple [QObject])
+   (python/dict
+    {"finished" ws-finished
+     "progress" ws-progress})))
+
+(defn- runnable-init [self task-id]
+  ((.-__init__ (python/super (.-__class__ self) self)))
+  (set! (.-task_id self) task-id)
+  (set! (.-signals self) (WorkerSignals))
+  nil)
+
+(defn- runnable-run [self]
+  (python/print "runnable" (.-task_id self) "thread" (.-ident (. threading current_thread)))
+  (. time sleep 0.3)
+  (. (.-finished (.-signals self)) emit (str "task " (.-task_id self) " done"))
+  nil)
+
+(def RunnableTask
+  (python/type
+   "RunnableTask"
+   (python/tuple [QRunnable])
+   (python/dict
+    {"__init__" runnable-init
+     "run" runnable-run})))
+
+(defn demonstrate-qt-runnable []
+  (python/print "\n=== QRunnable ===\n")
+  (def pool (. QThreadPool globalInstance))
+  (doseq [i (range 1 4)]
+    (def task (RunnableTask i))
+    (. pool start task))
+  (. pool waitForDone)
+  (python/print "runnable done"))
+
+(defn demonstrate-asyncio []
+  (python/print "\n=== asyncio ===\n")
+  (python/print "asyncio demo omitted in Basilisp"))
+
+(defn demonstrate-multiprocessing []
+  (python/print "\n=== ProcessPoolExecutor ===\n")
+  (python/print "cpu" (. os cpu_count))
+  (def nums (python/list [100000 200000 300000]))
+  (def start (. time time))
+  (def executor nil)
+  (try
+    (def executor (futures/ProcessPoolExecutor))
+    (def results (python/list (. executor map _cpu-intensive nums)))
+    (def elapsed (- (. time time) start))
+    (python/print "results" results)
+    (python/print "elapsed" elapsed)
+    (catch python/Exception e
+      (python/print "ProcessPoolExecutor skipped:" e))
+    (finally
+      (when executor
+        (. executor shutdown)))))
+
+(defn main []
+  (def app (QCoreApplication (.-argv sys)))
+  (python/print "=== Concurrent Demo ===")
+  (demonstrate-qt-thread-pool)
+  (demonstrate-qt-runnable)
+  (demonstrate-thread-pool-executor)
+  (demonstrate-map)
+  (demonstrate-filter)
+  (demonstrate-map-reduce)
+  (demonstrate-asyncio)
+  (demonstrate-multiprocessing)
+  0)
+
+(main)

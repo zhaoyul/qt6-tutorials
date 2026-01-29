@@ -1,0 +1,96 @@
+(ns basilisp.examples.ex02_gui.ex04_events)
+
+(import* [sys :as sys]
+         [PySide6.QtGui :as QtGui]
+         [PySide6.QtCore :as QtCore])
+
+(def QGuiApplication (.-QGuiApplication QtGui))
+(def QWindow (.-QWindow QtGui))
+(def QBackingStore (.-QBackingStore QtGui))
+(def QPainter (.-QPainter QtGui))
+(def QColor (.-QColor QtGui))
+(def QFont (.-QFont QtGui))
+
+(def Qt (.-Qt QtCore))
+(def QSize (.-QSize QtCore))
+(def QRect (.-QRect QtCore))
+(def QEvent (.-QEvent QtCore))
+
+(defn- render-now [this]
+  (when (. this isExposed)
+  (def rect (QRect 0 0 (. this width) (. this height)))
+  (. (.-_backing_store this) beginPaint rect)
+  (def painter (QPainter (. (.-_backing_store this) paintDevice)))
+  (. painter setRenderHint (.-Antialiasing QPainter))
+  (. painter fillRect rect (QColor 240 240 240))
+  (. painter setPen (.-darkBlue Qt))
+  (. painter setFont (QFont "Arial" 16 (.-Bold QFont)))
+  (. painter drawText 10 30 "PySide6 GUI Events")
+  (. painter setPen (.-black Qt))
+  (. painter setFont (QFont "Arial" 11))
+  (. painter drawText 10 55 "Press keys, click, move mouse, wheel")
+  (. painter drawText 10 75 "ESC to quit")
+  (. painter setPen (.-darkGreen Qt))
+  (. painter setFont (QFont "Arial" 12))
+  (. painter drawText 10 120 (str "Last event: " (.-_last_event this)))
+  (. painter end)
+  (. (.-_backing_store this) endPaint)
+  (. (.-_backing_store this) flush rect)))
+
+(defn- make-window []
+  (proxy [QWindow] []
+    (init []
+      (proxy-super __init__)
+      (set! (.-_backing_store this) (QBackingStore this))
+      (. this setTitle "PySide6 GUI Events Demo")
+      (. this resize 400 300)
+      (. this setMinimumSize (QSize 200 150))
+      (set! (.-_last_event this) "waiting")
+      this)
+
+    (exposeEvent [event]
+      (when (. this isExposed)
+        (render-now this)))
+
+    (resizeEvent [event]
+      (. (.-_backing_store this) resize (. event size))
+      (set! (.-_last_event this) (str "resize " (. (. event size) width) "x" (. (. event size) height)))
+      (when (. this isExposed)
+        (render-now this)))
+
+    (keyPressEvent [event]
+      (def key (. event key))
+      (set! (.-_last_event this) (str "key " key))
+      (when (= key (.-Key_Escape Qt))
+        (. this close))
+      (render-now this))
+
+    (mousePressEvent [event]
+      (def pos (. (. event position) toPoint))
+      (set! (.-_last_event this) (str "mouse press " (. pos x) "," (. pos y)))
+      (render-now this))
+
+    (mouseMoveEvent [event]
+      (def pos (. (. event position) toPoint))
+      (set! (.-_last_event this) (str "mouse move " (. pos x) "," (. pos y)))
+      (render-now this))
+
+    (wheelEvent [event]
+      (def delta (. event angleDelta))
+      (set! (.-_last_event this) (str "wheel " (. delta x) "," (. delta y)))
+      (render-now this))
+
+    (event [event]
+      (when (= (. event type) (.-Enter QEvent))
+        (python/print "mouse entered"))
+      (when (= (. event type) (.-Leave QEvent))
+        (python/print "mouse left"))
+      (proxy-super event event))))
+
+(defn main []
+  (def app (QGuiApplication (.-argv sys)))
+  (def win (make-window))
+  (. win show)
+  (. app exec))
+
+(main)

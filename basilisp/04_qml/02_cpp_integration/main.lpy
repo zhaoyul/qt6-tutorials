@@ -1,0 +1,127 @@
+(ns basilisp.examples.ex04_qml.ex02_cpp_integration)
+
+(import* [sys :as sys]
+         [builtins :as builtins]
+         [os :as os]
+         [os.path :as path]
+         [PySide6.QtGui :as QtGui]
+         [PySide6.QtQml :as QtQml]
+         [PySide6.QtCore :as QtCore])
+
+(def QGuiApplication (.-QGuiApplication QtGui))
+(def QQmlApplicationEngine (.-QQmlApplicationEngine QtQml))
+(def qmlRegisterType (.-qmlRegisterType QtQml))
+
+(def QObject (.-QObject QtCore))
+(def Property (.-Property QtCore))
+(def Signal (.-Signal QtCore))
+(def Slot (.-Slot QtCore))
+
+(def py-int (.-int builtins))
+(def py-str (.-str builtins))
+
+(def value-changed (Signal))
+(def step-changed (Signal))
+(def limit-reached (Signal py-str))
+
+(defn- counter-init
+  ([self] (counter-init self nil))
+  ([self parent]
+   ((.-__init__ (python/super (.-__class__ self) self)) parent)
+   (set! (.-_value self) 0)
+   (set! (.-_step self) 1)
+   (set! (.-_min_value self) 0)
+   (set! (.-_max_value self) 100)
+   nil))
+
+(defn- get-value [self] (.-_value self))
+(defn- set-value [self val]
+  (when (not= (.-_value self) val)
+    (def clamped (python/max (.-_min_value self) (python/min val (.-_max_value self))))
+    (set! (.-_value self) clamped)
+    (. (.-valueChanged self) emit)
+    (cond
+      (= (.-_value self) (.-_max_value self)) (. (.-limitReached self) emit "max reached")
+      (= (.-_value self) (.-_min_value self)) (. (.-limitReached self) emit "min reached")
+      :else nil))
+  nil)
+
+(defn- get-step [self] (.-_step self))
+(defn- set-step [self val]
+  (when (not= (.-_step self) val)
+    (set! (.-_step self) val)
+    (. (.-stepChanged self) emit))
+  nil)
+
+(defn- display-text [self]
+  (str "Value: " (.-_value self)))
+
+(defn- increment [self]
+  (python/print "[Basilisp] increment")
+  (set-value self (+ (.-_value self) (.-_step self)))
+  nil)
+
+(defn- decrement [self]
+  (python/print "[Basilisp] decrement")
+  (set-value self (- (.-_value self) (.-_step self)))
+  nil)
+
+(defn- reset [self]
+  (python/print "[Basilisp] reset")
+  (set-value self 0)
+  nil)
+
+(defn- format-value [self prefix]
+  (str prefix ": " (.-_value self)))
+
+(def Counter
+  (python/type
+   "Counter"
+   (python/tuple [QObject])
+   (python/dict
+    {"__init__" counter-init
+     "valueChanged" value-changed
+     "stepChanged" step-changed
+     "limitReached" limit-reached
+     "value" (Property py-int get-value set-value ** :notify value-changed)
+     "step" (Property py-int get-step set-step ** :notify step-changed)
+     "displayText" (Property py-str display-text ** :notify value-changed)
+     "increment" ((Slot) increment)
+     "decrement" ((Slot) decrement)
+     "reset" ((Slot) reset)
+     "formatValue" ((Slot py-str ** :result py-str) format-value)})))
+
+(defn main []
+  (def app (QGuiApplication (.-argv sys)))
+  (python/print "=== QML Integration ===\n")
+
+  (def engine (QQmlApplicationEngine))
+
+  (try
+    (qmlRegisterType Counter "PythonCounter" 1 0 "Counter")
+    (python/print "registered Counter")
+    (catch python/Exception e
+      (python/print "register type error" e)))
+
+  (def global-counter (Counter engine))
+  (python/setattr global-counter "value" 50)
+  (. (. engine rootContext) setContextProperty "globalCounter" global-counter)
+  (. (. engine rootContext) setContextProperty "appVersion" "1.0.0 (Basilisp)")
+  (. (. engine rootContext) setContextProperty "debugMode" true)
+
+  (def qml-path (path/join (os/getcwd) "python" "04_qml" "02_cpp_integration" "Main.qml"))
+  (def f (python/open qml-path "r" ** :encoding "utf-8"))
+  (def content (. f read))
+  (. f close)
+  (def content2 (. content replace "import QmlCppIntegration" "import PythonCounter 1.0"))
+  (. engine loadData (. content2 encode "utf-8") (python/str qml-path))
+
+  (when (= (python/len (. engine rootObjects)) 0)
+    (python/print "load failed, fallback")
+    (. engine load (python/str qml-path)))
+
+  (if (= (python/len (. engine rootObjects)) 0)
+    (do (python/print "QML load failed") -1)
+    (. app exec)))
+
+(main)

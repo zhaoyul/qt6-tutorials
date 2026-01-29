@@ -1,0 +1,63 @@
+(ns basilisp.examples.ex03_widgets.ex06_graphics_view)
+
+(import* [sys :as sys]
+         [PySide6.QtWidgets :as QtWidgets]
+         [PySide6.QtGui :as QtGui]
+         [PySide6.QtCore :as QtCore])
+
+(def QApplication (.-QApplication QtWidgets))
+(def QMainWindow (.-QMainWindow QtWidgets))
+(def QGraphicsScene (.-QGraphicsScene QtWidgets))
+(def QGraphicsView (.-QGraphicsView QtWidgets))
+(def QGraphicsRectItem (.-QGraphicsRectItem QtWidgets))
+(def QLabel (.-QLabel QtWidgets))
+
+(def QBrush (.-QBrush QtGui))
+(def QPen (.-QPen QtGui))
+(def QColor (.-QColor QtGui))
+
+(def Qt (.-Qt QtCore))
+
+(defn- view-init [self scene]
+  ((.-__init__ (python/super (.-__class__ self) self)) scene)
+  nil)
+
+(defn- view-wheel [self event]
+  (def delta (. event angleDelta))
+  (if (> (. delta y) 0)
+    (. self scale 1.2 1.2)
+    (. self scale 0.8 0.8))
+  nil)
+
+(def ZoomView
+  (python/type
+   "ZoomView"
+   (python/tuple [QGraphicsView])
+   (python/dict
+    {"__init__" view-init
+     "wheelEvent" view-wheel})))
+
+(defn main []
+  (def app (QApplication (.-argv sys)))
+  (def win (QMainWindow))
+  (. win setWindowTitle "Graphics View Demo")
+
+  (def scene (QGraphicsScene))
+  (. scene setSceneRect -200 -150 400 300)
+
+  (def rect (QGraphicsRectItem -50 -30 100 60))
+  (. rect setBrush (QBrush (QColor 200 80 80)))
+  (. rect setPen (QPen (QColor 20 20 20)))
+  (. rect setFlag (.-ItemIsMovable QGraphicsRectItem) true)
+  (. rect setFlag (.-ItemIsSelectable QGraphicsRectItem) true)
+  (. scene addItem rect)
+
+  (def view (ZoomView scene))
+  (. view setRenderHint (.-Antialiasing (.-QPainter QtGui)))
+
+  (. win setCentralWidget view)
+  (. win resize 800 600)
+  (. win show)
+  (. app exec))
+
+(main)

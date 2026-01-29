@@ -1,0 +1,112 @@
+(ns basilisp.examples.ex09_test.ex01_unit_test)
+
+(import* [sys :as sys]
+         [unittest :as unittest]
+         [PySide6.QtCore :as QtCore]
+         [PySide6.QtTest :as QtTest]
+         [PySide6.QtWidgets :as QtWidgets])
+
+(def QObject (.-QObject QtCore))
+(def Signal (.-Signal QtCore))
+(def QTest (.-QTest QtTest))
+(def QApplication (.-QApplication QtWidgets))
+(def QPushButton (.-QPushButton QtWidgets))
+(def QLineEdit (.-QLineEdit QtWidgets))
+(def Qt (.-Qt QtCore))
+
+(defn- calc-add [self a b] (+ a b))
+(defn- calc-sub [self a b] (- a b))
+(defn- calc-mul [self a b] (* a b))
+(defn- calc-div [self a b]
+  (if (= b 0)
+    (throw (python/ValueError "Division by zero"))
+    (/ a b)))
+(defn- calc-format [self value] (str "Result: " value))
+
+(def Calculator
+  (python/type
+   "Calculator"
+   (python/tuple [python/object])
+   (python/dict
+    {"add" calc-add
+     "subtract" calc-sub
+     "multiply" calc-mul
+     "divide" calc-div
+     "format_result" calc-format})))
+
+(defn- setup-class [cls]
+  (python/print "=== Test suite start ===")
+  (set! (.-calc cls) (Calculator))
+  nil)
+
+(defn- teardown-class [cls]
+  (python/print "=== Test suite end ===")
+  nil)
+
+(defn- setup [self]
+  (python/print "--- test start ---")
+  nil)
+
+(defn- teardown [self]
+  (python/print "--- test end ---")
+  nil)
+
+(defn- test-add [self]
+  (. self assertEqual (. (.-calc self) add 2 3) 5)
+  (. self assertEqual (. (.-calc self) add -1 1) 0))
+
+(defn- test-divide [self]
+  (. self assertEqual (. (.-calc self) divide 10 2) 5.0)
+  (. self assertRaises python/ValueError (fn [] (. (.-calc self) divide 1 0))))
+
+(defn- test-format [self]
+  (def result (. (.-calc self) format_result 42))
+  (. self assertTrue result)
+  (. self assertIn "42" result)
+  (. self assertEqual result "Result: 42"))
+
+(def TestCalculator
+  (python/type
+   "TestCalculator"
+   (python/tuple [unittest/TestCase])
+   (python/dict
+    {"setUpClass" (python/classmethod setup-class)
+     "tearDownClass" (python/classmethod teardown-class)
+     "setUp" setup
+     "tearDown" teardown
+     "test_add" test-add
+     "test_divide" test-divide
+     "test_format" test-format})))
+
+(defn- test-qtest-click [self]
+  (def app (or (. QApplication instance) (QApplication (python/list))))
+  (def btn (QPushButton))
+  (. btn setCheckable true)
+  (. QTest mouseClick btn (.-LeftButton Qt))
+  (. self assertTrue (. btn isChecked)))
+
+(defn- test-qtest-key [self]
+  (def app (or (. QApplication instance) (QApplication (python/list))))
+  (def line (QLineEdit))
+  (. QTest keyClicks line "Hello Qt")
+  (. self assertEqual (. line text) "Hello Qt"))
+
+(def TestQtSpecific
+  (python/type
+   "TestQtSpecific"
+   (python/tuple [unittest/TestCase])
+   (python/dict
+    {"test_qtest_mouse_click" test-qtest-click
+     "test_qtest_key_events" test-qtest-key})))
+
+(defn main []
+  (python/print "=== Unit tests ===\n")
+  (def loader (unittest/TestLoader))
+  (def suite (unittest/TestSuite))
+  (. suite addTests (. loader loadTestsFromTestCase TestCalculator))
+  (. suite addTests (. loader loadTestsFromTestCase TestQtSpecific))
+  (def runner (unittest/TextTestRunner ** :verbosity 2))
+  (def result (. runner run suite))
+  (if (. result wasSuccessful) 0 1))
+
+(. sys exit (main))

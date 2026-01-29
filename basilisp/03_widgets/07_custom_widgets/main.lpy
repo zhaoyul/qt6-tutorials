@@ -1,0 +1,154 @@
+(ns basilisp.examples.ex03_widgets.ex07_custom_widgets)
+
+(import* [sys :as sys]
+         [PySide6.QtWidgets :as QtWidgets]
+         [PySide6.QtGui :as QtGui]
+         [PySide6.QtCore :as QtCore])
+
+(def QApplication (.-QApplication QtWidgets))
+(def QWidget (.-QWidget QtWidgets))
+(def QVBoxLayout (.-QVBoxLayout QtWidgets))
+(def QHBoxLayout (.-QHBoxLayout QtWidgets))
+(def QLabel (.-QLabel QtWidgets))
+(def QSlider (.-QSlider QtWidgets))
+
+(def QPainter (.-QPainter QtGui))
+(def QPen (.-QPen QtGui))
+(def QBrush (.-QBrush QtGui))
+(def QColor (.-QColor QtGui))
+(def QPainterPath (.-QPainterPath QtGui))
+
+(def Qt (.-Qt QtCore))
+
+(defn- circular-init [self]
+  ((.-__init__ (python/super (.-__class__ self) self)))
+  (set! (.-_value self) 25)
+  (set! (.-_max self) 100)
+  nil)
+
+(defn- circular-set [self value]
+  (set! (.-_value self) value)
+  (. self update)
+  nil)
+
+(defn- circular-paint [self event]
+  (def p (QPainter self))
+  (. p setRenderHint (.-Antialiasing QPainter))
+  (def rect (. self rect))
+  (def size (min (. rect width) (. rect height)))
+  (def pad 10)
+  (def r (.-_value self))
+  (def maxv (.-_max self))
+  (def angle (* 360.0 (/ r maxv)))
+  (. p setPen (QPen (QColor 220 220 220) 10))
+  (. p drawEllipse pad pad (- size (* 2 pad)) (- size (* 2 pad)))
+  (. p setPen (QPen (QColor 50 150 250) 10))
+  (. p drawArc pad pad (- size (* 2 pad)) (- size (* 2 pad)) 90 -(* angle 16))
+  (. p end)
+  nil)
+
+(def CircularProgress
+  (python/type
+   "CircularProgress"
+   (python/tuple [QWidget])
+   (python/dict
+    {"__init__" circular-init
+     "setValue" circular-set
+     "paintEvent" circular-paint})))
+
+(defn- toggle-init [self]
+  ((.-__init__ (python/super (.-__class__ self) self)))
+  (set! (.-_checked self) false)
+  (. self setFixedSize 60 30)
+  nil)
+
+(defn- toggle-mouse [self event]
+  (set! (.-_checked self) (not (.-_checked self)))
+  (. self update)
+  nil)
+
+(defn- toggle-paint [self event]
+  (def p (QPainter self))
+  (. p setRenderHint (.-Antialiasing QPainter))
+  (def rect (. self rect))
+  (def on? (.-_checked self))
+  (def bg (if on? (QColor 60 180 75) (QColor 180 180 180)))
+  (. p setPen (QPen bg))
+  (. p setBrush (QBrush bg))
+  (. p drawRoundedRect rect 15 15)
+  (def knob-x (if on? 30 0))
+  (. p setBrush (QBrush (QColor 255 255 255)))
+  (. p drawEllipse (+ knob-x 2) 2 26 26)
+  (. p end)
+  nil)
+
+(def ToggleSwitch
+  (python/type
+   "ToggleSwitch"
+   (python/tuple [QWidget])
+   (python/dict
+    {"__init__" toggle-init
+     "mousePressEvent" toggle-mouse
+     "paintEvent" toggle-paint})))
+
+(defn- rating-init [self]
+  ((.-__init__ (python/super (.-__class__ self) self)))
+  (set! (.-_rating self) 3)
+  (. self setFixedSize 160 30)
+  nil)
+
+(defn- rating-mouse [self event]
+  (def x (. (. event position) x))
+  (def new-rating (+ 1 (python/int (/ x 30))))
+  (set! (.-_rating self) (min 5 (max 1 new-rating)))
+  (. self update)
+  nil)
+
+(defn- rating-paint [self event]
+  (def p (QPainter self))
+  (. p setRenderHint (.-Antialiasing QPainter))
+  (doseq [i (range 5)]
+    (def filled (< i (.-_rating self)))
+    (def color (if filled (QColor 255 200 0) (QColor 220 220 220)))
+    (. p setPen (QPen color))
+    (. p setBrush (QBrush color))
+    (. p drawEllipse (+ 5 (* i 30)) 5 20 20))
+  (. p end)
+  nil)
+
+(def StarRating
+  (python/type
+   "StarRating"
+   (python/tuple [QWidget])
+   (python/dict
+    {"__init__" rating-init
+     "mousePressEvent" rating-mouse
+     "paintEvent" rating-paint})))
+
+(defn main []
+  (def app (QApplication (.-argv sys)))
+  (def window (QWidget))
+  (. window setWindowTitle "Custom Widgets Demo")
+  (def layout (QVBoxLayout window))
+
+  (def progress (CircularProgress))
+  (def slider (QSlider (.-Horizontal Qt)))
+  (. slider setRange 0 100)
+  (. slider setValue 25)
+  (. (.-valueChanged slider) connect (fn [v] (. progress setValue v)))
+
+  (def toggle (ToggleSwitch))
+  (def rating (StarRating))
+
+  (. layout addWidget (QLabel "Circular Progress"))
+  (. layout addWidget progress)
+  (. layout addWidget slider)
+  (. layout addWidget (QLabel "Toggle Switch"))
+  (. layout addWidget toggle)
+  (. layout addWidget (QLabel "Star Rating"))
+  (. layout addWidget rating)
+
+  (. window show)
+  (. app exec))
+
+(main)

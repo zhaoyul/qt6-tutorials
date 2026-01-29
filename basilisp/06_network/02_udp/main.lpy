@@ -1,0 +1,106 @@
+(ns basilisp.examples.ex06_network.ex02_udp)
+
+(import* [sys :as sys]
+         [PySide6.QtCore :as QtCore]
+         [PySide6.QtNetwork :as QtNet])
+
+(def QCoreApplication (.-QCoreApplication QtCore))
+(def QObject (.-QObject QtCore))
+(def QTimer (.-QTimer QtCore))
+
+(def QUdpSocket (.-QUdpSocket QtNet))
+(def QHostAddress (.-QHostAddress QtNet))
+
+(defn- receiver-init [self port parent]
+  ((.-__init__ (python/super (.-__class__ self) self)) parent)
+  (set! (.-_socket self) (QUdpSocket self))
+  (set! (.-_received_count self) 0)
+  (if (. (.-_socket self) bind (.-LocalHost QHostAddress) port)
+    (python/print "[recv] bound" (. (.-_socket self) localPort))
+    (python/print "[recv] bind failed" (. (.-_socket self) errorString)))
+  (. (.-readyRead (.-_socket self)) connect (.-_on_ready_read self))
+  nil)
+
+(defn- receiver-port [self]
+  (. (.-_socket self) localPort))
+
+(defn- receiver-ready [self]
+  (loop []
+    (when (. (.-_socket self) hasPendingDatagrams)
+      (def datagram (. (.-_socket self) receiveDatagram))
+      (python/print "[recv] from" (. (. datagram senderAddress) toString) ":" (. datagram senderPort)
+                    "data" (. (. datagram data) data))
+      (def reply (. (python/bytes "ACK: " "utf-8") __add__ (. datagram data)))
+      (. (.-_socket self) writeDatagram reply (. datagram senderAddress) (. datagram senderPort))
+      (set! (.-_received_count self) (+ (.-_received_count self) 1))
+      (when (>= (.-_received_count self) 3)
+        (. QTimer singleShot 500 (fn [] (. QCoreApplication quit))))
+      (recur)))
+  nil)
+
+(def UdpReceiver
+  (python/type
+   "UdpReceiver"
+   (python/tuple [QObject])
+   (python/dict
+    {"__init__" receiver-init
+     "port" receiver-port
+     "_on_ready_read" receiver-ready})))
+
+(defn- sender-init [self parent]
+  ((.-__init__ (python/super (.-__class__ self) self)) parent)
+  (set! (.-_socket self) (QUdpSocket self))
+  (set! (.-_send_count self) 0)
+  (. (.-_socket self) bind)
+  (python/print "[send] bound" (. (.-_socket self) localPort))
+  (. (.-readyRead (.-_socket self)) connect (.-_on_ready_read self))
+  nil)
+
+(defn- sender-ready [self]
+  (loop []
+    (when (. (.-_socket self) hasPendingDatagrams)
+      (def datagram (. (.-_socket self) receiveDatagram))
+      (python/print "[send] reply" (. (. datagram data) data))
+      (recur)))
+  nil)
+
+(defn- sender-send [self host port data]
+  (python/print "[send]" host ":" port "->" data)
+  (. (.-_socket self) writeDatagram (. data encode) (QHostAddress host) port)
+  nil)
+
+(defn- sender-start [self target-port]
+  (set! (.-_target_port self) target-port)
+  (set! (.-_timer self) (QTimer self))
+  (. (.-timeout (.-_timer self)) connect (.-_send_next self))
+  (. (.-_timer self) start 300)
+  nil)
+
+(defn- sender-next [self]
+  (if (< (.-_send_count self) 3)
+    (do
+      (set! (.-_send_count self) (+ (.-_send_count self) 1))
+      (. self send_to "127.0.0.1" (.-_target_port self) (str "UDP #" (.-_send_count self))))
+    (. (.-_timer self) stop))
+  nil)
+
+(def UdpSender
+  (python/type
+   "UdpSender"
+   (python/tuple [QObject])
+   (python/dict
+    {"__init__" sender-init
+     "_on_ready_read" sender-ready
+     "send_to" sender-send
+     "start_sending" sender-start
+     "_send_next" sender-next})))
+
+(defn main []
+  (def app (QCoreApplication (.-argv sys)))
+  (python/print "=== UDP Demo ===\n")
+  (def receiver (UdpReceiver 0 nil))
+  (def sender (UdpSender nil))
+  (. QTimer singleShot 100 (fn [] (. sender start_sending (. receiver port))))
+  (. app exec))
+
+(main)

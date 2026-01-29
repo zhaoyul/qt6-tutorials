@@ -1,0 +1,22 @@
+(ns basilisp.examples.ex04_qml.ex01_basics)
+
+(import* [sys :as sys]
+         [os :as os]
+         [os.path :as path]
+         [PySide6.QtGui :as QtGui]
+         [PySide6.QtQml :as QtQml])
+
+(def QGuiApplication (.-QGuiApplication QtGui))
+(def QQmlApplicationEngine (.-QQmlApplicationEngine QtQml))
+
+(defn main []
+  (def app (QGuiApplication (.-argv sys)))
+  (python/print "=== QML Basics ===\n")
+  (def engine (QQmlApplicationEngine))
+  (def qml-path (path/join (os/getcwd) "python" "04_qml" "01_basics" "Main.qml"))
+  (. engine load (python/str qml-path))
+  (when (> (python/len (. engine rootObjects)) 0)
+    (python/print "QML loaded"))
+  (. app exec))
+
+(main)

@@ -1,0 +1,130 @@
+(ns basilisp.examples.ex01_core.ex02_signals_slots)
+
+(import* [sys :as sys]
+         [builtins :as builtins]
+         [PySide6.QtCore :as QtCore])
+
+(def QObject (.-QObject QtCore))
+(def QCoreApplication (.-QCoreApplication QtCore))
+(def Signal (.-Signal QtCore))
+(def QTimer (.-QTimer QtCore))
+(def Qt (.-Qt QtCore))
+
+(def py-int (.-int builtins))
+
+(def value-changed (Signal py-int))
+(def limit-reached (Signal))
+
+(defn- counter-init [self parent]
+  ((.-__init__ (python/super (.-__class__ self) self)) parent)
+  (set! (.-_value self) 0)
+  nil)
+
+(defn- counter-value [self]
+  (.-_value self))
+
+(defn- counter-increment [self]
+  (set! (.-_value self) (+ (.-_value self) 1))
+  (. (.-valueChanged self) emit (.-_value self))
+  (when (>= (.-_value self) 10)
+    (. (.-limitReached self) emit))
+  nil)
+
+(defn- counter-decrement [self]
+  (set! (.-_value self) (- (.-_value self) 1))
+  (. (.-valueChanged self) emit (.-_value self))
+  nil)
+
+(defn- counter-set-value [self value]
+  (when (not= (.-_value self) value)
+    (set! (.-_value self) value)
+    (. (.-valueChanged self) emit (.-_value self)))
+  nil)
+
+(def Counter
+  (python/type
+   "Counter"
+   (python/tuple [QObject])
+   (python/dict
+    {"__init__" counter-init
+     "valueChanged" value-changed
+     "limitReached" limit-reached
+     "value" (python/property counter-value)
+     "increment" counter-increment
+     "decrement" counter-decrement
+     "setValue" counter-set-value})))
+
+(defn- display-init [self name parent]
+  ((.-__init__ (python/super (.-__class__ self) self)) parent)
+  (set! (.-_name self) name)
+  nil)
+
+(defn- display-show [self value]
+  (python/print (.-_name self) "value:" value)
+  nil)
+
+(defn- display-limit [self]
+  (python/print (.-_name self) "limit reached")
+  nil)
+
+(def Display
+  (python/type
+   "Display"
+   (python/tuple [QObject])
+   (python/dict
+    {"__init__" display-init
+     "showValue" display-show
+     "onLimitReached" display-limit})))
+
+(defn main []
+  (def app (QCoreApplication (.-argv sys)))
+
+  (python/print "=== PySide6 Signals/Slots Example ===\n")
+
+  (def counter (Counter nil))
+  (def display1 (Display "Display1" nil))
+  (def display2 (Display "Display2" nil))
+
+  (python/print "-- direct connect --")
+  (. (.-valueChanged counter) connect (.-showValue display1))
+
+  (python/print "-- lambda connect --")
+  (. (.-valueChanged counter) connect (fn [value] (python/print "lambda value:" value)))
+
+  (python/print "-- one signal many slots --")
+  (. (.-valueChanged counter) connect (.-showValue display2))
+
+  (def counter2 (Counter nil))
+  (. (.-limitReached counter) connect (.-increment counter2))
+  (. (.-valueChanged counter2)
+     connect
+     (fn [v] (python/print "counter2 triggered value:" v)))
+
+  (python/print "\n-- increment --")
+  (. counter increment)
+  (. counter increment)
+
+  (python/print "\n-- set value --")
+  (. counter setValue 9)
+
+  (python/print "\n-- trigger limit --")
+  (. counter increment)
+
+  (python/print "\n-- disconnect display2 --")
+  (. (.-valueChanged counter) disconnect (.-showValue display2))
+  (. counter increment)
+
+  (python/print "\n-- connection types --")
+  (python/print "Qt.AutoConnection, Qt.DirectConnection, Qt.QueuedConnection, Qt.UniqueConnection")
+  (python/print "UniqueConnection requires a Qt meta slot; skipping in Basilisp demo")
+
+  (python/print "\n-- QTimer.singleShot --")
+  (defn on-timeout []
+    (python/print "100ms later")
+    (. app quit))
+
+  (. QTimer singleShot 100 on-timeout)
+
+  (. app exec))
+
+(main)

@@ -1,0 +1,133 @@
+(ns basilisp.examples.ex01_core.ex06_event_loop)
+
+(import* [sys :as sys]
+         [builtins :as builtins]
+         [PySide6.QtCore :as QtCore])
+
+(def QCoreApplication (.-QCoreApplication QtCore))
+(def QObject (.-QObject QtCore))
+(def QEvent (.-QEvent QtCore))
+(def QTimer (.-QTimer QtCore))
+(def Signal (.-Signal QtCore))
+
+(def py-str (.-str builtins))
+
+(def CUSTOM_EVENT_TYPE (. QEvent registerEventType))
+
+(defn- custom-event-init [self message]
+  ((.-__init__ (python/super (.-__class__ self) self)) (. QEvent Type CUSTOM_EVENT_TYPE))
+  (set! (.-_message self) message)
+  nil)
+
+(defn- custom-event-message [self]
+  (.-_message self))
+
+(def CustomEvent
+  (python/type
+   "CustomEvent"
+   (python/tuple [QEvent])
+   (python/dict
+    {"__init__" custom-event-init
+     "message" custom-event-message})))
+
+(def custom-received (Signal py-str))
+
+(defn- receiver-event [self event]
+  (if (= (. event type) (. QEvent Type CUSTOM_EVENT_TYPE))
+    (do
+      (when (python/isinstance event CustomEvent)
+        (python/print "custom event:" (. event message))
+        (. (.-customEventReceived self) emit (. event message)))
+      true)
+    (. (python/super (.-__class__ self) self) event event)))
+
+(def EventReceiver
+  (python/type
+   "EventReceiver"
+   (python/tuple [QObject])
+   (python/dict
+    {"customEventReceived" custom-received
+     "event" receiver-event})))
+
+(defn- filter-event [self watched event]
+  (if (= (. event type) (. QEvent Type CUSTOM_EVENT_TYPE))
+    (do
+      (def obj-name (. watched objectName))
+      (python/print "filter got event from" (if obj-name obj-name "unnamed"))
+      false)
+    (. (python/super (.-__class__ self) self) eventFilter watched event)))
+
+(def EventFilter
+  (python/type
+   "EventFilter"
+   (python/tuple [QObject])
+   (python/dict
+    {"eventFilter" filter-event})))
+
+(defn demonstrate-event-posting []
+  (python/print "\n=== Event posting ===\n")
+  (def receiver (EventReceiver))
+  (. receiver setObjectName "TestReceiver")
+
+  (def filter-obj (EventFilter))
+  (. receiver installEventFilter filter-obj)
+
+  (. (.-customEventReceived receiver) connect
+     (fn [msg] (python/print "signal received:" msg)))
+
+  (python/print "-- postEvent --")
+  (def app (. QCoreApplication instance))
+  (. app postEvent receiver (CustomEvent "async 1"))
+  (. app postEvent receiver (CustomEvent "async 2"))
+  (python/print "events posted")
+  (. app processEvents)
+
+  (python/print "\n-- sendEvent --")
+  (def sync-event (CustomEvent "sync"))
+  (python/print "before")
+  (. app sendEvent receiver sync-event)
+  (python/print "after"))
+
+(defn demonstrate-queued-invoke []
+  (python/print "\n=== Queued invoke ===\n")
+  (defn queued []
+    (python/print "queued call"))
+  (. QTimer singleShot 0 queued)
+  (python/print "queued scheduled")
+  (. QCoreApplication processEvents))
+
+(defn main []
+  (def app (QCoreApplication (.-argv sys)))
+  (. app setApplicationName "EventLoopDemo")
+
+  (python/print "=== PySide6 Event Loop ===")
+  (python/print "name:" (. QCoreApplication applicationName))
+  (python/print "dir:" (. QCoreApplication applicationDirPath))
+  (python/print "file:" (. QCoreApplication applicationFilePath))
+  (python/print "args:" (. QCoreApplication arguments))
+
+  (demonstrate-event-posting)
+  (demonstrate-queued-invoke)
+
+  (python/print "\n-- timer control --")
+  (def counter (python/dict {"value" 0}))
+
+  (defn on-timeout []
+    (def v (+ (. counter __getitem__ "value") 1))
+    (. counter __setitem__ "value" v)
+    (python/print "timer tick" v))
+
+  (def timer (QTimer))
+  (. (.-timeout timer) connect on-timeout)
+  (. timer start 100)
+
+  (defn quit-app []
+    (python/print "\nquit")
+    (. QCoreApplication quit))
+
+  (. QTimer singleShot 550 quit-app)
+
+  (python/print "enter event loop...")
+  (. app exec))
+
+(main)

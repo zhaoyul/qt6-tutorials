@@ -1,0 +1,178 @@
+(ns basilisp.examples.ex02_gui.ex01_painting)
+
+(import* [sys :as sys]
+         [PySide6.QtGui :as QtGui]
+         [PySide6.QtCore :as QtCore])
+
+(def QGuiApplication (.-QGuiApplication QtGui))
+(def QImage (.-QImage QtGui))
+(def QPainter (.-QPainter QtGui))
+(def QPen (.-QPen QtGui))
+(def QBrush (.-QBrush QtGui))
+(def QPainterPath (.-QPainterPath QtGui))
+(def QLinearGradient (.-QLinearGradient QtGui))
+(def QRadialGradient (.-QRadialGradient QtGui))
+(def QConicalGradient (.-QConicalGradient QtGui))
+(def QFont (.-QFont QtGui))
+(def QColor (.-QColor QtGui))
+
+(def Qt (.-Qt QtCore))
+(def QPoint (.-QPoint QtCore))
+(def QRect (.-QRect QtCore))
+
+(defn draw-basic-shapes [p]
+  (. p setPen (QPen (.-black Qt) 2))
+  (. p setBrush (.-cyan Qt))
+  (. p drawRect 10 10 80 60)
+
+  (. p setBrush (.-magenta Qt))
+  (. p drawRoundedRect 100 10 80 60 10 10)
+
+  (. p setBrush (.-yellow Qt))
+  (. p drawEllipse 200 10 80 60)
+
+  (. p setBrush (.-green Qt))
+  (. p drawEllipse (QPoint 340 40) 30 30))
+
+(defn draw-lines [p]
+  (def y 100)
+  (def pen (QPen (.-blue Qt) 3))
+  (. pen setStyle (.-SolidLine Qt))
+  (. p setPen pen)
+  (. p drawLine 10 y 180 y)
+
+  (. pen setStyle (.-DashLine Qt))
+  (. p setPen pen)
+  (. p drawLine 10 (+ y 20) 180 (+ y 20))
+
+  (. pen setStyle (.-DotLine Qt))
+  (. p setPen pen)
+  (. p drawLine 10 (+ y 40) 180 (+ y 40))
+
+  (. pen setStyle (.-DashDotLine Qt))
+  (. p setPen pen)
+  (. p drawLine 10 (+ y 60) 180 (+ y 60))
+
+  (. pen setStyle (.-SolidLine Qt))
+  (. pen setWidth 10)
+  (. pen setCapStyle (.-FlatCap Qt))
+  (. p setPen pen)
+  (. p drawLine 200 y 280 y)
+  (. pen setCapStyle (.-RoundCap Qt))
+  (. p setPen pen)
+  (. p drawLine 200 (+ y 30) 280 (+ y 30))
+  (. pen setCapStyle (.-SquareCap Qt))
+  (. p setPen pen)
+  (. p drawLine 200 (+ y 60) 280 (+ y 60)))
+
+(defn draw-gradients [p]
+  (def y 200)
+  (def linear (QLinearGradient 10 y 90 (+ y 60)))
+  (. linear setColorAt 0 (.-red Qt))
+  (. linear setColorAt 0.5 (.-yellow Qt))
+  (. linear setColorAt 1 (.-green Qt))
+  (. p setBrush linear)
+  (. p drawRect 10 y 80 60)
+
+  (def radial (QRadialGradient 150 (+ y 30) 40))
+  (. radial setColorAt 0 (.-white Qt))
+  (. radial setColorAt 1 (.-blue Qt))
+  (. p setBrush radial)
+  (. p drawEllipse 110 y 80 60)
+
+  (def conical (QConicalGradient 250 (+ y 30) 0))
+  (. conical setColorAt 0 (.-red Qt))
+  (. conical setColorAt 0.33 (.-green Qt))
+  (. conical setColorAt 0.66 (.-blue Qt))
+  (. conical setColorAt 1 (.-red Qt))
+  (. p setBrush conical)
+  (. p drawEllipse 210 y 80 60))
+
+(defn draw-path [p]
+  (def y 300)
+  (def path (QPainterPath))
+  (. path moveTo 10 (+ y 50))
+  (. path lineTo 50 y)
+  (. path lineTo 90 (+ y 50))
+  (. path closeSubpath)
+  (. p setPen (QPen (.-darkGreen Qt) 2))
+  (. p setBrush (.-lightGray Qt))
+  (. p drawPath path)
+
+  (def bezier (QPainterPath))
+  (. bezier moveTo 110 (+ y 50))
+  (. bezier cubicTo 130 y 170 y 190 (+ y 50))
+  (. p setPen (QPen (.-darkMagenta Qt) 3))
+  (. p setBrush (.-NoBrush Qt))
+  (. p drawPath bezier)
+
+  (def text-path (QPainterPath))
+  (def font (QFont "Arial" 24 (.-Bold QFont)))
+  (. text-path addText 210 (+ y 40) font "Qt6")
+  (. p setPen (.-NoPen Qt))
+  (. p setBrush (.-darkBlue Qt))
+  (. p drawPath text-path))
+
+(defn draw-with-transform [p]
+  (def y 400)
+  (. p save)
+  (. p translate 50 (+ y 30))
+  (. p setPen (QPen (.-black Qt) 2))
+  (. p setBrush (.-red Qt))
+  (. p drawRect -20 -15 40 30)
+  (. p rotate 30)
+  (. p setBrush (QColor 0 255 0 128))
+  (. p drawRect -20 -15 40 30)
+  (. p restore)
+
+  (. p save)
+  (. p translate 150 (+ y 30))
+  (. p scale 1.5 0.8)
+  (. p setBrush (.-blue Qt))
+  (. p drawEllipse -25 -25 50 50)
+  (. p restore))
+
+(defn draw-text [p]
+  (def y 480)
+  (. p setPen (.-black Qt))
+  (. p setFont (QFont "Arial" 12))
+  (. p drawText 10 (+ y 20) "Normal Text")
+  (. p setFont (QFont "Arial" 12 (.-Bold QFont)))
+  (. p drawText 120 (+ y 20) "Bold Text")
+  (def italic (QFont "Arial" 12))
+  (. italic setItalic true)
+  (. p setFont italic)
+  (. p drawText 220 (+ y 20) "Italic Text")
+
+  (. p setFont (QFont "Arial" 10))
+  (def rect (QRect 10 (+ y 30) 150 40))
+  (. p drawRect rect)
+  (. p drawText rect (bit-or (.-AlignCenter Qt) (.-TextWordWrap Qt))
+     "Centered text"))
+
+(defn main []
+  (def app (QGuiApplication (.-argv sys)))
+  (python/print "=== PySide6 2D Painting ===\n")
+
+  (def image (QImage 400 550 (.-Format_ARGB32 QImage)))
+  (. image fill (.-white Qt))
+
+  (def painter (QPainter image))
+  (. painter setRenderHint (.-Antialiasing QPainter))
+  (. painter setRenderHint (.-TextAntialiasing QPainter))
+
+  (draw-basic-shapes painter)
+  (draw-lines painter)
+  (draw-gradients painter)
+  (draw-path painter)
+  (draw-with-transform painter)
+  (draw-text painter)
+
+  (. painter end)
+
+  (def filename "painting_demo.png")
+  (when (. image save filename)
+    (python/print "saved" filename))
+  0)
+
+(main)

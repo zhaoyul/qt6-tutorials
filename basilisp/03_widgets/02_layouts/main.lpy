@@ -1,0 +1,92 @@
+(ns basilisp.examples.ex03_widgets.ex02_layouts)
+
+(import* [sys :as sys]
+         [PySide6.QtWidgets :as QtWidgets]
+         [PySide6.QtCore :as QtCore])
+
+(def QApplication (.-QApplication QtWidgets))
+(def QMainWindow (.-QMainWindow QtWidgets))
+(def QWidget (.-QWidget QtWidgets))
+(def QVBoxLayout (.-QVBoxLayout QtWidgets))
+(def QHBoxLayout (.-QHBoxLayout QtWidgets))
+(def QGridLayout (.-QGridLayout QtWidgets))
+(def QFormLayout (.-QFormLayout QtWidgets))
+(def QStackedLayout (.-QStackedLayout QtWidgets))
+(def QPushButton (.-QPushButton QtWidgets))
+(def QLabel (.-QLabel QtWidgets))
+(def QLineEdit (.-QLineEdit QtWidgets))
+(def QTextEdit (.-QTextEdit QtWidgets))
+(def QGroupBox (.-QGroupBox QtWidgets))
+(def QTabWidget (.-QTabWidget QtWidgets))
+(def QSplitter (.-QSplitter QtWidgets))
+(def QFrame (.-QFrame QtWidgets))
+
+(def Qt (.-Qt QtCore))
+
+(defn color-label [text color]
+  (def label (QLabel text))
+  (. label setStyleSheet (str "background-color: " color "; padding: 10px; border: 1px solid gray;"))
+  (. label setAlignment (.-AlignCenter Qt))
+  label)
+
+(defn vbox-demo []
+  (def w (QWidget))
+  (def layout (QVBoxLayout w))
+  (. layout addWidget (color-label "Item 1" "#ffcccc"))
+  (. layout addWidget (color-label "Item 2" "#ccffcc"))
+  (. layout addWidget (color-label "Item 3" "#ccccff"))
+  (. layout setStretch 2 2)
+  (. layout addStretch 1)
+  (. layout addWidget (color-label "Bottom" "#ffccff"))
+  w)
+
+(defn hbox-demo []
+  (def w (QWidget))
+  (def layout (QHBoxLayout w))
+  (. layout addWidget (color-label "Left" "#ffcccc"))
+  (. layout addStretch 1)
+  (. layout addWidget (color-label "Center" "#ccffcc"))
+  (. layout addStretch 1)
+  (. layout addWidget (color-label "Right" "#ccccff"))
+  w)
+
+(defn grid-demo []
+  (def w (QWidget))
+  (def layout (QGridLayout w))
+  (. layout addWidget (color-label "(0,0)" "#ffcccc") 0 0)
+  (. layout addWidget (color-label "(0,1)" "#ccffcc") 0 1)
+  (. layout addWidget (color-label "(0,2)" "#ccccff") 0 2)
+  (. layout addWidget (color-label "(1,0)" "#ffffcc") 1 0)
+  (. layout addWidget (color-label "span" "#ffccff") 1 1 1 2)
+  (. layout setColumnStretch 1 1)
+  (. layout setColumnStretch 2 2)
+  w)
+
+(defn form-demo []
+  (def w (QWidget))
+  (def layout (QFormLayout w))
+  (. layout addRow "User:" (QLineEdit))
+  (. layout addRow "Password:" (QLineEdit))
+  (. layout addRow "Email:" (QLineEdit))
+  (def bio (QTextEdit))
+  (. bio setMaximumHeight 80)
+  (. layout addRow "Bio:" bio)
+  (. layout setLabelAlignment (.-AlignRight Qt))
+  (. layout setFormAlignment (bit-or (.-AlignLeft Qt) (.-AlignTop Qt)))
+  w)
+
+(defn main []
+  (def app (QApplication (.-argv sys)))
+  (def window (QMainWindow))
+  (. window setWindowTitle "Layouts Demo")
+  (. window resize 700 500)
+  (def tabs (QTabWidget))
+  (. tabs addTab (vbox-demo) "VBox")
+  (. tabs addTab (hbox-demo) "HBox")
+  (. tabs addTab (grid-demo) "Grid")
+  (. tabs addTab (form-demo) "Form")
+  (. window setCentralWidget tabs)
+  (. window show)
+  (. app exec))
+
+(main)

@@ -1,0 +1,81 @@
+(ns basilisp.examples.ex02_gui.ex02_images)
+
+(import* [sys :as sys]
+         [PySide6.QtGui :as QtGui]
+         [PySide6.QtCore :as QtCore])
+
+(def QGuiApplication (.-QGuiApplication QtGui))
+(def QImage (.-QImage QtGui))
+(def QImageReader (.-QImageReader QtGui))
+(def QImageWriter (.-QImageWriter QtGui))
+(def QPixmap (.-QPixmap QtGui))
+(def QColor (.-QColor QtGui))
+(def QPainter (.-QPainter QtGui))
+(def QFont (.-QFont QtGui))
+(def QTransform (.-QTransform QtGui))
+(def Qt (.-Qt QtCore))
+
+(defn create-image []
+  (python/print "\n=== Create image ===\n")
+  (def img (QImage 200 150 (.-Format_RGB32 QImage)))
+  (. img fill (.-white Qt))
+  (python/print "size" (. (. img size) toTuple))
+  (python/print "depth" (. img depth))
+  (python/print "format" (. img format))
+
+  (doseq [y (range (. img height))]
+    (doseq [x (range (. img width))]
+      (def r (python/int (* x 255 (/ 1.0 (. img width)))))
+      (def g (python/int (* y 255 (/ 1.0 (. img height)))))
+      (. img setPixelColor x y (QColor r g 128))))
+
+  (. img save "gradient.png")
+  (python/print "saved gradient.png"))
+
+(defn manipulate-pixels []
+  (python/print "\n=== Pixels ===\n")
+  (def img (QImage 100 100 (.-Format_ARGB32 QImage)))
+  (. img fill (.-white Qt))
+  (doseq [i (range 50)]
+    (. img setPixelColor i i (QColor 255 0 0 255)))
+  (doseq [y (range 50 (. img height))]
+    (doseq [x (range 50 (. img width))]
+      (. img setPixelColor x y (QColor 0 0 255 128))))
+  (def c (. img pixelColor 25 25))
+  (python/print "pixel 25,25" (. c red) (. c green) (. c blue) (. c alpha))
+  (. img save "pixels.png")
+  (python/print "saved pixels.png"))
+
+(defn image-transform []
+  (python/print "\n=== Transform ===\n")
+  (def original (QImage 100 80 (.-Format_RGB32 QImage)))
+  (def painter (QPainter original))
+  (. painter fillRect (. original rect) (.-white Qt))
+  (. painter setPen (.-blue Qt))
+  (def font (QFont "Arial" 20))
+  (. painter setFont font)
+  (. painter drawText (. original rect) (.-AlignCenter Qt) "Qt6")
+  (. painter end)
+  (. original save "original.png")
+
+  (def scaled (. original scaled 200 160 (.-KeepAspectRatio Qt) (.-SmoothTransformation Qt)))
+  (. scaled save "scaled.png")
+
+  (def mirrored (. original mirrored true false))
+  (. mirrored save "mirrored.png")
+
+  (def t (QTransform))
+  (. t rotate 45)
+  (def rotated (. original transformed t (.-SmoothTransformation Qt)))
+  (. rotated save "rotated.png")
+  (python/print "saved transforms"))
+
+(defn main []
+  (def app (QGuiApplication (.-argv sys)))
+  (python/print "=== PySide6 Images ===")
+  (create-image)
+  (manipulate-pixels)
+  (image-transform)
+  0)
+
+(main)
