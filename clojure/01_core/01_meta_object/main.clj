@@ -1,18 +1,16 @@
 #!/usr/bin/env clojure -M
 ;; PySide6 元对象系统示例 (Clojure + libpython-clj)
 
-(require '[libpython-clj2.python :as py])
+(require '[libpython-clj2.python :as py]
+         '[libpython-clj2.require :refer [require-python]])
 
 ;; 初始化 Python
 (py/initialize!)
 
-;; 导入 PySide6 模块
-(def QtCore (py/import-module "PySide6.QtCore"))
-
-;; 获取类
+;; 导入 PySide6 模块与类
+(require-python '[PySide6.QtCore :as QtCore :bind-ns])
 (def QObject (py/get-attr QtCore "QObject"))
 (def QCoreApplication (py/get-attr QtCore "QCoreApplication"))
-(def QMetaMethod (py/get-attr QtCore "QMetaMethod"))
 
 (defn print-meta-object-info
   "打印 QObject 的元对象信息"
@@ -57,12 +55,9 @@
   "演示信号连接"
   []
   (println "\n=== 信号连接测试 ===")
-  (let [sender (QObject)]
-
-    ;; 定义槽函数
-    (defn on-destroyed [obj]
-      (println (str "对象被销毁: " obj)))
-
+  (let [sender (QObject)
+        on-destroyed (fn [obj]
+                       (println (str "对象被销毁: " obj)))]
     ;; 连接信号
     (py/call-attr (py/get-attr sender "destroyed") "connect" on-destroyed)
 
@@ -78,10 +73,8 @@
   (println "=== PySide6 元对象系统示例 (Clojure) ===")
 
   ;; 创建 QCoreApplication (控制台程序，无 GUI)
-  (def app (py/run-simple-string "from PySide6.QtCore import QCoreApplication
-app = QCoreApplication([])"))
-
-  (let [obj (QObject)]
+  (let [app (QCoreApplication (py/->py-list []))
+        obj (QObject)]
     (print-meta-object-info obj))
 
   (demonstrate-dynamic-properties)

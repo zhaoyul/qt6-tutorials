@@ -2,14 +2,17 @@
 ;; PySide6 QML 与 Python 集成示例 (Clojure + libpython-clj)
 ;; 对应 C++ 的 04_cpp_integration 示例
 
-(require '[libpython-clj2.python :as py])
+(require '[libpython-clj2.python :as py]
+         '[libpython-clj2.require :refer [require-python]])
 
 (py/initialize!)
 
 ;; 导入模块
-(def QtCore (py/import-module "PySide6.QtCore"))
-(def QtGui (py/import-module "PySide6.QtGui"))
-(def QtQml (py/import-module "PySide6.QtQml"))
+(require-python '[PySide6.QtCore :as QtCore :bind-ns])
+(require-python :from "04_qml/04_cpp_integration"
+                '[embedded :as py-embedded :bind-ns :reload])
+(require-python '[PySide6.QtGui :as QtGui :bind-ns])
+(require-python '[PySide6.QtQml :as QtQml :bind-ns])
 
 ;; 获取类
 (def QGuiApplication (py/get-attr QtGui "QGuiApplication"))
@@ -19,71 +22,9 @@
 (def qmlRegisterType (py/get-attr QtQml "qmlRegisterType"))
 
 ;; 定义 Counter 类 (通过 Python 代码注入，避免 py/fn 兼容问题)
-(py/run-simple-string "
-from PySide6.QtCore import QObject, Property, Signal, Slot
+(py/call-attr py-embedded "run_block_1")
 
-class Counter(QObject):
-    valueChanged = Signal()
-    stepChanged = Signal()
-    limitReached = Signal(str)
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._value = 0
-        self._step = 1
-        self._min_value = 0
-        self._max_value = 100
-
-    @Property(int, notify=valueChanged)
-    def value(self):
-        return self._value
-
-    @value.setter
-    def value(self, val):
-        if self._value != val:
-            self._value = max(self._min_value, min(val, self._max_value))
-            self.valueChanged.emit()
-            if self._value == self._max_value:
-                self.limitReached.emit('已达到最大值!')
-            elif self._value == self._min_value:
-                self.limitReached.emit('已达到最小值!')
-
-    @Property(int, notify=stepChanged)
-    def step(self):
-        return self._step
-
-    @step.setter
-    def step(self, s):
-        if self._step != s:
-            self._step = s
-            self.stepChanged.emit()
-
-    @Property(str, notify=valueChanged)
-    def displayText(self):
-        return f'当前值: {self._value}'
-
-    @Slot()
-    def increment(self):
-        print('[Clojure/Python] increment() 被调用')
-        self.value = self._value + self._step
-
-    @Slot()
-    def decrement(self):
-        print('[Clojure/Python] decrement() 被调用')
-        self.value = self._value - self._step
-
-    @Slot()
-    def reset(self):
-        print('[Clojure/Python] reset() 被调用')
-        self.value = 0
-
-    @Slot(str, result=str)
-    def formatValue(self, prefix):
-        return f'{prefix}: {self._value}'
-")
-
-(def MainModule (py/import-module "__main__"))
-(def Counter (py/get-attr MainModule "Counter"))
+(def Counter (py/get-attr py-embedded "Counter"))
 
 (defn -main
   "主函数"

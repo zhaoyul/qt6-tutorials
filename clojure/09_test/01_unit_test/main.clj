@@ -4,20 +4,25 @@
 ;; 使用 Python 的 unittest 框架进行单元测试
 ;; 展示了数据驱动测试、异常测试、基准测试等特性
 
-(require '[libpython-clj2.python :as py])
+(require '[libpython-clj2.python :as py]
+         '[libpython-clj2.require :refer [require-python]])
 
 ;; 初始化 Python
 (py/initialize!)
 
 ;; 导入 Python 模块
-(def unittest (py/import-module "unittest"))
-(def timeit (py/import-module "timeit"))
-(def QtWidgets (py/import-module "PySide6.QtWidgets"))
-(def QtTest (py/import-module "PySide6.QtTest"))
-(def QtCore (py/import-module "PySide6.QtCore"))
+(require-python '[unittest :as unittest :bind-ns])
+(require-python '[builtins :as builtins :bind-ns])
+(require-python :from "09_test/01_unit_test"
+                '[embedded :as py-embedded :bind-ns :reload])
+(require-python '[timeit :as timeit :bind-ns])
+(require-python '[PySide6.QtWidgets :as QtWidgets :bind-ns])
+(require-python '[PySide6.QtTest :as QtTest :bind-ns])
+(require-python '[PySide6.QtCore :as QtCore :bind-ns])
 
 ;; 获取类
 (def TestCase (py/get-attr unittest "TestCase"))
+(def ValueError (py/get-attr builtins "ValueError"))
 (def QApplication (py/get-attr QtWidgets "QApplication"))
 (def QPushButton (py/get-attr QtWidgets "QPushButton"))
 (def QLineEdit (py/get-attr QtWidgets "QLineEdit"))
@@ -41,7 +46,7 @@
 (defn- calc-divide [self a b]
   "除法"
   (if (= b 0)
-    (throw (py/->py-exception Exception "Division by zero"))
+    (throw (Exception. "Division by zero"))
     (/ a b)))
 
 (defn- calc-format-result [self value]
@@ -49,29 +54,8 @@
   (str "Result: " value))
 
 ;; 创建 Calculator 类
-(def Calculator
-  (py/run-simple-string
-   "class Calculator:
-    def __init__(self):
-        pass
-    
-    def add(self, a, b):
-        return a + b
-    
-    def subtract(self, a, b):
-        return a - b
-    
-    def multiply(self, a, b):
-        return a * b
-    
-    def divide(self, a, b):
-        if b == 0:
-            raise ValueError('Division by zero')
-        return a / b
-    
-    def format_result(self, value):
-        return f'Result: {value}'
-"))
+(py/call-attr py-embedded "run_block_1")
+(def Calculator (py/get-attr py-embedded "Calculator"))
 
 ;; ========== 测试类 ==========
 
@@ -123,8 +107,9 @@
     (py/call-attr self "assertEqual" (py/call-attr calc "divide" 10 2) 5.0)
     (py/call-attr self "assertEqual" (py/call-attr calc "divide" 7 2) 3.5)
     ;; 测试异常
-    (py/call-attr self "assertRaises" ValueError 
-                  (py/->py-fn (fn [] (py/call-attr calc "divide" 1 0))))))
+    (py/call-attr self "assertRaises" ValueError
+                  (py/get-attr calc "divide")
+                  1 0)))
 
 ;; 数据驱动测试
 (defn- test-add-data-driven [self]
@@ -162,94 +147,23 @@
 ;; 基准测试
 (defn- test-benchmark [self]
   "基准测试"
-  (let [benchmark-fn (py/->py-fn 
-                       (fn []
-                         (doseq [i (range 1000)]
-                           (str i))))
-        timer (py/call-attr timeit "Timer" benchmark-fn)
-        elapsed (py/call-attr timer "timeit" 10)]
+  (let [stmt "for i in range(1000):\n    str(i)"
+        elapsed (py/call-attr-kw timeit "timeit" [stmt] {"number" 10})]
     (println (format "\n基准测试耗时: %.4fs" elapsed))))
 
 ;; ========== 创建测试类 (使用 Python 代码) ==========
 
 (def TestCalculator
-  (py/run-simple-string
-   "import unittest
-
-class TestCalculator(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        print('=== 测试套件开始 ===')
-        cls.calc = Calculator()
-    
-    @classmethod
-    def tearDownClass(cls):
-        print('=== 测试套件结束 ===')
-    
-    def setUp(self):
-        print('--- 测试开始 ---')
-    
-    def tearDown(self):
-        print('--- 测试结束 ---')
-    
-    def test_add(self):
-        self.assertEqual(self.calc.add(2, 3), 5)
-        self.assertEqual(self.calc.add(-1, 1), 0)
-        self.assertEqual(self.calc.add(0, 0), 0)
-    
-    def test_subtract(self):
-        self.assertEqual(self.calc.subtract(5, 3), 2)
-        self.assertEqual(self.calc.subtract(3, 5), -2)
-    
-    def test_multiply(self):
-        self.assertEqual(self.calc.multiply(3, 4), 12)
-        self.assertEqual(self.calc.multiply(-2, 3), -6)
-        self.assertEqual(self.calc.multiply(0, 100), 0)
-    
-    def test_divide(self):
-        self.assertEqual(self.calc.divide(10, 2), 5.0)
-        self.assertEqual(self.calc.divide(7, 2), 3.5)
-        with self.assertRaises(ValueError):
-            self.calc.divide(1, 0)
-    
-    def test_add_data_driven(self):
-        test_cases = [
-            (2, 3, 5, 'positive'),
-            (-2, -3, -5, 'negative'),
-            (-2, 5, 3, 'mixed'),
-            (0, 0, 0, 'zero'),
-            (1000000, 2000000, 3000000, 'large'),
-        ]
-        for a, b, expected, name in test_cases:
-            with self.subTest(name=name, a=a, b=b):
-                self.assertEqual(self.calc.add(a, b), expected)
-    
-    def test_format_result(self):
-        result = self.calc.format_result(42)
-        self.assertTrue(result)
-        self.assertIn('42', result)
-        self.assertEqual(result, 'Result: 42')
-        self.assertTrue(result.startswith('Result'), 'Should start with \"Result\"')
-    
-    def test_floating_point(self):
-        result = 0.1 + 0.2
-        self.assertAlmostEqual(result, 0.3, places=7)
-    
-    def test_benchmark(self):
-        import timeit
-        def benchmark_func():
-            for i in range(1000):
-                str(i)
-        elapsed = timeit.timeit(benchmark_func, number=10)
-        print(f'\\n基准测试耗时: {elapsed:.4f}s')
-"))
+  (do
+    (py/call-attr py-embedded "run_block_2")
+    (py/get-attr py-embedded "TestCalculator")))
 
 ;; ========== PySide6/Qt 特定测试 ==========
 
 (defn- test-qtest-mouse-click [self]
   "测试鼠标点击 (GUI测试示例)"
   (let [existing (py/call-attr QApplication "instance")
-        app (or existing (QApplication []))
+        app (or existing (QApplication (py/->py-list [])))
         button (QPushButton)]
     (py/call-attr button "setCheckable" true)
     ;; 使用 QTest 模拟点击
@@ -259,7 +173,7 @@ class TestCalculator(unittest.TestCase):
 (defn- test-qtest-key-events [self]
   "测试键盘事件"
   (let [existing (py/call-attr QApplication "instance")
-        app (or existing (QApplication []))
+        app (or existing (QApplication (py/->py-list [])))
         line-edit (QLineEdit)]
     ;; 模拟按键
     (py/call-attr QTest "keyClicks" line-edit "Hello Qt")
@@ -269,26 +183,18 @@ class TestCalculator(unittest.TestCase):
 
 ;; 创建 Qt 特定测试类
 (def TestQtSpecific
-  (py/run-simple-string
-   "from PySide6.QtWidgets import QApplication, QPushButton, QLineEdit
-from PySide6.QtTest import QTest
-from PySide6.QtCore import Qt
-import unittest
+  (do
+    (py/call-attr py-embedded "run_block_3")
+    (py/get-attr py-embedded "TestQtSpecific")))
 
-class TestQtSpecific(unittest.TestCase):
-    def test_qtest_mouse_click(self):
-        app = QApplication.instance() or QApplication([])
-        button = QPushButton()
-        button.setCheckable(True)
-        QTest.mouseClick(button, Qt.LeftButton)
-        self.assertTrue(button.isChecked())
-    
-    def test_qtest_key_events(self):
-        app = QApplication.instance() or QApplication([])
-        line_edit = QLineEdit()
-        QTest.keyClicks(line_edit, 'Hello Qt')
-        self.assertEqual(line_edit.text(), 'Hello Qt')
-"))
+(defn- macos?
+  []
+  (.startsWith (System/getProperty "os.name") "Mac"))
+
+(defn- run-qt-widget-tests?
+  []
+  (or (not (macos?))
+      (some? (System/getenv "QT_WIDGET_TESTS"))))
 
 ;; ========== 主函数 ==========
 
@@ -299,14 +205,19 @@ class TestQtSpecific(unittest.TestCase):
   (println "使用 Python unittest 框架")
   (println "也展示了 PySide6.QtTest 的特定功能\n")
   
-  ;; 确保 QApplication 存在 (某些 Qt 测试需要)
-  (let [existing (py/call-attr QApplication "instance")]
-    (when-not existing
-      (QApplication [])))
+  (let [run-qt? (run-qt-widget-tests?)]
+    (when run-qt?
+      ;; 确保 QApplication 存在 (某些 Qt 测试需要)
+      (let [existing (py/call-attr QApplication "instance")]
+        (when-not existing
+          (QApplication (py/->py-list [])))))
+    (when-not run-qt?
+      (println "跳过 Qt Widgets/QTest 测试 (macOS 非主线程限制). 设置 QT_WIDGET_TESTS=1 可强制启用。")))
   
   ;; 获取测试类
-  (def TestCalculatorClass (py/get-item (py/import-module "__main__") "TestCalculator"))
-  (def TestQtSpecificClass (py/get-item (py/import-module "__main__") "TestQtSpecific"))
+  (def TestCalculatorClass TestCalculator)
+  (when (run-qt-widget-tests?)
+    (def TestQtSpecificClass TestQtSpecific))
   
   ;; 运行测试
   (let [loader (py/call-attr unittest "TestLoader")
@@ -316,8 +227,9 @@ class TestQtSpecific(unittest.TestCase):
     ;; 加载测试类
     (py/call-attr suite "addTests"
                   (py/call-attr loader "loadTestsFromTestCase" TestCalculator))
-    (py/call-attr suite "addTests"
-                  (py/call-attr loader "loadTestsFromTestCase" TestQtSpecific))
+    (when (run-qt-widget-tests?)
+      (py/call-attr suite "addTests"
+                    (py/call-attr loader "loadTestsFromTestCase" TestQtSpecific)))
     
     ;; 运行
     (let [result (py/call-attr runner "run" suite)]

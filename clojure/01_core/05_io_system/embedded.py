@@ -1,0 +1,31 @@
+def run_block_1():
+    exec(r"""
+from PySide6.QtCore import QCoreApplication, QFileInfo, QDir
+import sys
+
+# 初始化应用
+if not QCoreApplication.instance():
+    _app = QCoreApplication(sys.argv)
+
+# 文件信息
+print('=== 文件信息 ===')
+fi = QFileInfo('/etc/hosts')
+print(f'文件名: {fi.fileName()}')
+print(f'路径: {fi.path()}')
+print(f'大小: {fi.size()} bytes')
+print(f'存在: {fi.exists()}')
+print(f'可读: {fi.isReadable()}')
+print(f'可写: {fi.isWritable()}')
+
+# 目录操作
+print('\n=== 目录操作 ===')
+d = QDir('/tmp')
+print(f'当前路径: {d.path()}')
+print(f'绝对路径: {d.absolutePath()}')
+
+# 路径操作
+print('\n=== 路径操作 ===')
+print(f'主目录: {QDir.homePath()}')
+print(f'临时目录: {QDir.tempPath()}')
+print(f'根目录: {QDir.rootPath()}')
+""", globals())

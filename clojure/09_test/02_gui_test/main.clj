@@ -1,14 +1,17 @@
 #!/usr/bin/env clojure -M
 ;; PySide6 GUI 测试示例 (Clojure + libpython-clj)
 
-(require '[libpython-clj2.python :as py])
+(require '[libpython-clj2.python :as py]
+         '[libpython-clj2.require :refer [require-python]])
 
 ;; 初始化 Python
 (py/initialize!)
 
 ;; 导入 PySide6 模块
-(def QtWidgets (py/import-module "PySide6.QtWidgets"))
-(def unittest (py/import-module "unittest"))
+(require-python '[PySide6.QtWidgets :as QtWidgets :bind-ns])
+(require-python :from "09_test/02_gui_test"
+                '[embedded :as py-embedded :bind-ns :reload])
+(require-python '[unittest :as unittest :bind-ns])
 
 ;; 获取类
 (def QApplication (py/get-attr QtWidgets "QApplication"))
@@ -19,6 +22,20 @@
 ;; 测试应用实例
 (def test-app (atom nil))
 
+(defn- macos?
+  []
+  (.startsWith (System/getProperty "os.name") "Mac"))
+
+(defn- started-on-first-thread?
+  []
+  (= "1" (System/getenv "JAVA_STARTED_ON_FIRST_THREAD_")))
+
+(defn- ensure-macos-gui-thread
+  []
+  (when (and (macos?) (not (started-on-first-thread?)))
+    (println "macOS 需要使用 -XstartOnFirstThread 运行此 GUI 测试，已跳过。")
+    (System/exit 0)))
+
 (defn- setup-class [cls]
   "类级别初始化"
   (println "=== GUI 测试开始 ===")
@@ -26,7 +43,7 @@
   (let [existing (py/call-attr QApplication "instance")]
     (if existing
       (reset! test-app existing)
-      (reset! test-app (QApplication []))))
+      (reset! test-app (QApplication (py/->py-list [])))))
   nil)
 
 (defn- teardown-class [cls]
@@ -56,40 +73,21 @@
                   (py/call-attr widget "isVisible"))))
 
 ;; 创建测试类
-(def TestGuiDemo
-  (py/run-simple-string
-   "from PySide6.QtWidgets import QApplication, QPushButton, QWidget
-import unittest
-
-class TestGuiDemo(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.app = QApplication.instance() or QApplication([])
-    
-    def test_button_text(self):
-        button = QPushButton()
-        button.setText('Hello')
-        self.assertEqual(button.text(), 'Hello')
-    
-    def test_show_hide_widget(self):
-        widget = QWidget()
-        widget.show()
-        self.assertTrue(widget.isVisible())
-        widget.hide()
-        self.assertFalse(widget.isVisible())
-"))
+(py/call-attr py-embedded "run_block_1")
+(def TestGuiDemo (py/get-attr py-embedded "TestGuiDemo"))
 
 (defn -main
   "主函数"
   [& args]
   (println "=== PySide6 GUI 测试示例 (Clojure) ===\n")
-  
+
+  (ensure-macos-gui-thread)
   ;; 创建 QApplication (GUI 程序需要)
-  (def app (py/run-simple-string "from PySide6.QtWidgets import QApplication
-app = QApplication.instance() or QApplication([])"))
+  (py/call-attr py-embedded "run_block_2")
+  (def app (py/get-attr py-embedded "app"))
   
   ;; 获取测试类
-  (def TestGuiDemoClass (py/get-item (py/import-module "__main__") "TestGuiDemo"))
+  (def TestGuiDemoClass TestGuiDemo)
   
   ;; 运行测试
   (let [loader (py/call-attr unittest "TestLoader")

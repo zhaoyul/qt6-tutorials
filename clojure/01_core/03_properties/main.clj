@@ -1,12 +1,15 @@
 #!/usr/bin/env clojure -M
 ;; PySide6 属性系统示例 (Clojure + libpython-clj)
 
-(require '[libpython-clj2.python :as py])
+(require '[libpython-clj2.python :as py]
+         '[libpython-clj2.require :refer [require-python]])
 
 (py/initialize!)
 
 ;; 导入模块
-(def QtCore (py/import-module "PySide6.QtCore"))
+(require-python '[PySide6.QtCore :as QtCore :bind-ns])
+(require-python :from "01_core/03_properties"
+                '[embedded :as py-embedded :bind-ns :reload])
 
 ;; 获取类
 (def QObject (py/get-attr QtCore "QObject"))
@@ -14,12 +17,7 @@
 (def QCoreApplication (py/get-attr QtCore "QCoreApplication"))
 
 ;; 初始化 QCoreApplication
-(py/run-simple-string "
-from PySide6.QtCore import QCoreApplication
-import sys
-if not QCoreApplication.instance():
-    _app = QCoreApplication(sys.argv)
-")
+(py/call-attr py-embedded "run_block_1")
 
 (defn demonstrate-dynamic-properties
   "动态属性操作"
@@ -46,40 +44,9 @@ if not QCoreApplication.instance():
   (println "\n=== 属性变化通知 ===")
   
   ;; 创建带属性的 Python 类
-  (py/run-simple-string "
-from PySide6.QtCore import QObject, Property, Signal
-
-class Person(QObject):
-    nameChanged = Signal(str)
-    ageChanged = Signal(int)
-    
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._name = ''
-        self._age = 0
-    
-    def get_name(self):
-        return self._name
-    
-    def set_name(self, value):
-        if self._name != value:
-            self._name = value
-            self.nameChanged.emit(value)
-    
-    def get_age(self):
-        return self._age
-    
-    def set_age(self, value):
-        if self._age != value:
-            self._age = value
-            self.ageChanged.emit(value)
-    
-    name = Property(str, get_name, set_name, notify=nameChanged)
-    age = Property(int, get_age, set_age, notify=ageChanged)
-")
+  (py/call-attr py-embedded "run_block_2")
   
-  (let [module (py/add-module "__main__")
-        person-class (py/get-item (py/module-dict module) "Person")
+  (let [person-class (py/get-attr py-embedded "Person")
         person (person-class)]
     
     ;; 连接信号

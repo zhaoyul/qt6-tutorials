@@ -1,12 +1,15 @@
 #!/usr/bin/env clojure -M
 ;; PySide6 多线程示例 (Clojure + libpython-clj)
 
-(require '[libpython-clj2.python :as py])
+(require '[libpython-clj2.python :as py]
+         '[libpython-clj2.require :refer [require-python]])
 
 (py/initialize!)
 
 ;; 导入模块
-(def QtCore (py/import-module "PySide6.QtCore"))
+(require-python '[PySide6.QtCore :as QtCore :bind-ns])
+(require-python :from "01_core/07_threading"
+                '[embedded :as py-embedded :bind-ns :reload])
 
 ;; 获取类
 (def QObject (py/get-attr QtCore "QObject"))
@@ -20,32 +23,9 @@
   (println "\n=== QThread 继承方式 ===")
   
   ;; 定义 Worker 类（通过 Python）
-  (py/run-simple-string "
-from PySide6.QtCore import QThread, Signal
-import time
-
-class WorkerThread(QThread):
-    progress = Signal(int)
-    resultReady = Signal(str)
-    
-    def __init__(self, name, parent=None):
-        super().__init__(parent)
-        self._name = name
-        self._abort = False
-    
-    def run(self):
-        print(f'{self._name} 开始工作')
-        for i in range(1, 6):
-            if self._abort:
-                break
-            self.msleep(100)
-            self.progress.emit(i * 20)
-        self.resultReady.emit(f'{self._name} 完成')
-        print(f'{self._name} 工作完成')
-")
+  (py/call-attr py-embedded "run_block_1")
   
-  (let [worker-module (py/add-module "__main__")
-        worker-class (py/get-item (py/module-dict worker-module) "WorkerThread")
+  (let [worker-class (py/get-attr py-embedded "WorkerThread")
         thread (worker-class "Worker1")]
     
     ;; 连接信号
@@ -63,23 +43,9 @@ class WorkerThread(QThread):
   []
   (println "\n=== QThreadPool 方式 ===")
   
-  (py/run-simple-string "
-from PySide6.QtCore import QRunnable, QThread
-
-class Task(QRunnable):
-    def __init__(self, task_id):
-        super().__init__()
-        self._id = task_id
-    
-    def run(self):
-        import threading
-        print(f'Task {self._id} 运行在线程: {threading.current_thread().ident}')
-        QThread.msleep(50)
-        print(f'Task {self._id} 完成')
-")
+  (py/call-attr py-embedded "run_block_2")
   
-  (let [module (py/add-module "__main__")
-        task-class (py/get-item (py/module-dict module) "Task")
+  (let [task-class (py/get-attr py-embedded "Task")
         pool (py/call-attr QThreadPool "globalInstance")]
     
     (println (str "最大线程数: " (py/call-attr pool "maxThreadCount")))
@@ -97,12 +63,7 @@ class Task(QRunnable):
   (println "=== PySide6 多线程示例 (Clojure) ===")
   
   ;; 初始化 QCoreApplication
-  (py/run-simple-string "
-from PySide6.QtCore import QCoreApplication
-import sys
-if not QCoreApplication.instance():
-    _app = QCoreApplication(sys.argv)
-")
+  (py/call-attr py-embedded "run_block_3")
   
   (demonstrate-qthread-inheritance)
   (demonstrate-threadpool)

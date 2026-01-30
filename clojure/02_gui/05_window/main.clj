@@ -2,12 +2,15 @@
 ;; PySide6 窗口系统示例 (Clojure + libpython-clj)
 ;; 注意：macOS GUI 必须在主线程运行，这里使用控制台演示窗口属性
 
-(require '[libpython-clj2.python :as py])
+(require '[libpython-clj2.python :as py]
+         '[libpython-clj2.require :refer [require-python]])
 
 (py/initialize!)
 
 ;; 导入模块
-(def QtCore (py/import-module "PySide6.QtCore"))
+(require-python '[PySide6.QtCore :as QtCore :bind-ns])
+(require-python :from "02_gui/05_window"
+                '[embedded :as py-embedded :bind-ns :reload])
 
 ;; 获取类
 (def QCoreApplication (py/get-attr QtCore "QCoreApplication"))
@@ -15,12 +18,7 @@
 (def QRect (py/get-attr QtCore "QRect"))
 
 ;; 初始化 QCoreApplication
-(py/run-simple-string "
-from PySide6.QtCore import QCoreApplication
-import sys
-if not QCoreApplication.instance():
-    _app = QCoreApplication(sys.argv)
-")
+(py/call-attr py-embedded "run_block_1")
 
 (defn demonstrate-qt-constants
   "Qt 常量演示"
@@ -72,18 +70,7 @@ if not QCoreApplication.instance():
   (println "\n=== 屏幕信息 ===")
   
   ;; 使用 Python 代码获取屏幕信息
-  (py/run-simple-string "
-from PySide6.QtGui import QGuiApplication
-from PySide6.QtCore import QCoreApplication
-import sys
-
-# 注意：需要 QGuiApplication 才能获取屏幕信息
-# 这里仅演示代码
-print('屏幕信息需要 QGuiApplication')
-print('主屏幕几何: 屏幕的像素尺寸')
-print('可用几何: 排除菜单栏后的可用区域')
-print('DPI: 每英寸点数')
-print('设备像素比: 视网膜显示屏为 2.0')")
+  (py/call-attr py-embedded "run_block_2")
   
   (println "屏幕信息代码示例已输出"))
 

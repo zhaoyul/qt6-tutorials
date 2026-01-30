@@ -1,18 +1,31 @@
 #!/usr/bin/env clojure -M
 ;; PySide6 SQL 数据库连接示例 (Clojure + libpython-clj)
 
-(require '[libpython-clj2.python :as py])
+(require '[libpython-clj2.python :as py]
+         '[libpython-clj2.require :refer [require-python]])
 
 (py/initialize!)
 
 ;; 导入模块
-(def QtSql (py/import-module "PySide6.QtSql"))
-(def QtCore (py/import-module "PySide6.QtCore"))
+(require-python '[PySide6.QtSql :as QtSql :bind-ns])
+(require-python :from "07_sql/01_connection"
+                '[embedded :as py-embedded :bind-ns :reload])
+(require-python '[PySide6.QtCore :as QtCore :bind-ns])
 
 ;; 获取类
 (def QSqlDatabase (py/get-attr QtSql "QSqlDatabase"))
 (def QSqlQuery (py/get-attr QtSql "QSqlQuery"))
 (def QSqlError (py/get-attr QtSql "QSqlError"))
+(def QCoreApplication (py/get-attr QtCore "QCoreApplication"))
+
+(defn- qtsql-available?
+  []
+  (seq (py/call-attr QSqlDatabase "drivers")))
+
+(defn- ensure-core-app
+  []
+  (let [existing (py/call-attr QCoreApplication "instance")]
+    (or existing (QCoreApplication (py/->py-list [])))))
 
 (defn show-available-drivers
   "显示可用数据库驱动"
@@ -45,7 +58,7 @@
   []
   (println "\n=== 创建表 ===\n")
   
-  (def query (py/call-attr QSqlQuery "__new__" QSqlQuery))
+  (def query (QSqlQuery))
   
   ;; 删除旧表
   (py/call-attr query "exec" "DROP TABLE IF EXISTS users")
@@ -85,7 +98,7 @@
   []
   (println "\n=== 插入数据 ===\n")
   
-  (def query (py/call-attr QSqlQuery "__new__" QSqlQuery))
+  (def query (QSqlQuery))
   
   ;; 方式1: 直接执行
   (py/call-attr query "exec" "INSERT INTO users (name, email, age) VALUES ('张三', 'zhang@example.com', 25)")
@@ -126,7 +139,7 @@
   []
   (println "\n=== 查询数据 ===\n")
   
-  (def query (py/call-attr QSqlQuery "__new__" QSqlQuery))
+  (def query (QSqlQuery))
   
   ;; 简单查询
   (println "--- 所有用户 ---")
@@ -189,7 +202,7 @@
   []
   (println "\n=== 更新和删除 ===\n")
   
-  (def query (py/call-attr QSqlQuery "__new__" QSqlQuery))
+  (def query (QSqlQuery))
   
   ;; 更新
   (py/call-attr query "prepare" "UPDATE users SET age = age + 1 WHERE name = ?")
@@ -211,7 +224,7 @@
   (println "\n=== 事务处理 ===\n")
   
   (def db (py/call-attr QSqlDatabase "database"))
-  (def query (py/call-attr QSqlQuery "__new__" QSqlQuery))
+  (def query (QSqlQuery))
   
   ;; 开始事务
   (py/call-attr db "transaction")
@@ -237,7 +250,7 @@
   []
   (println "\n=== 记录信息 ===\n")
   
-  (def query (py/call-attr-kw QSqlQuery "__new__" [QSqlQuery] {"args" ["SELECT * FROM users LIMIT 1"]}))
+  (def query (QSqlQuery "SELECT * FROM users LIMIT 1"))
   (def record (py/call-attr query "record"))
   
   (println (str "字段数量: " (py/call-attr record "count")))
@@ -248,30 +261,26 @@
 (defn -main
   [& args]
   (println "=== PySide6 SQL 数据库连接示例 (Clojure) ===")
-  
+
+  (ensure-core-app)
   (show-available-drivers)
-  
-  (when-not (create-connection)
-    (System/exit 1))
-  
-  (create-tables)
-  (insert-data)
-  (query-data)
-  (update-and-delete)
-  (demonstrate-transactions)
-  (show-record-info)
-  
-  ;; 清理
-  (py/run-simple-string "
-import os
-from PySide6.QtSql import QSqlDatabase
-db = QSqlDatabase.database()
-db.close()
-if os.path.exists('demo.db'):
-    os.remove('demo.db')
-    print('\\n测试数据库已删除')
-")
-  
-  (println "\n=== 完成 ==="))
+
+  (if (qtsql-available?)
+    (do
+      (when-not (create-connection)
+        (System/exit 1))
+      
+      (create-tables)
+      (insert-data)
+      (query-data)
+      (update-and-delete)
+      (demonstrate-transactions)
+      (show-record-info)
+      
+      ;; 清理
+      (py/call-attr py-embedded "run_block_1")
+      
+      (println "\n=== 完成 ==="))
+    (println "Qt SQL 驱动不可用，跳过演示")))
 
 (-main)

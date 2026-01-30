@@ -1,13 +1,16 @@
 #!/usr/bin/env clojure -M
 ;; PySide6 布局管理示例 (Clojure + libpython-clj)
 
-(require '[libpython-clj2.python :as py])
+(require '[libpython-clj2.python :as py]
+         '[libpython-clj2.require :refer [require-python]])
 
 (py/initialize!)
 
 ;; 导入模块
-(def QtWidgets (py/import-module "PySide6.QtWidgets"))
-(def QtCore (py/import-module "PySide6.QtCore"))
+(require-python '[PySide6.QtWidgets :as QtWidgets :bind-ns])
+(require-python :from "03_widgets/02_layouts"
+                '[embedded :as py-embedded :bind-ns :reload])
+(require-python '[PySide6.QtCore :as QtCore :bind-ns])
 
 ;; 获取类
 (def QWidget (py/get-attr QtWidgets "QWidget"))
@@ -139,12 +142,7 @@
   (println "=== PySide6 布局管理示例 (Clojure) ===")
 
   ;; 初始化 QApplication
-  (py/run-simple-string "
-from PySide6.QtWidgets import QApplication
-import sys
-if not QApplication.instance():
-    _app = QApplication(sys.argv)
-")
+  (py/call-attr py-embedded "run_block_1")
 
   (create-vbox-demo)
   (create-hbox-demo)

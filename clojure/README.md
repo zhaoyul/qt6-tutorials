@@ -88,40 +88,40 @@ clojure -M 01_core/01_meta_object/main.clj
 
 ### 01_core - 核心功能
 
-| 示例 | 说明 |
-|------|------|
-| `01_meta_object` | QObject 元对象信息、动态属性、信号连接 |
-| `02_signals_slots` | 信号槽连接、自定义信号、多槽连接 |
-| `03_properties` | 动态属性、属性变化通知 |
-| `04_containers` | QStringList、QSettings、容器操作 |
-| `05_io_system` | QFile、QDir、文件信息、路径操作 |
-| `06_event_loop` | 事件循环、定时器事件、自定义事件 |
-| `07_threading` | QThread、QThreadPool、多线程任务 |
-| `08_timer` | QTimer、单次/重复定时器、精确计时 |
+| 示例               | 说明                                   |
+|--------------------|----------------------------------------|
+| `01_meta_object`   | QObject 元对象信息、动态属性、信号连接 |
+| `02_signals_slots` | 信号槽连接、自定义信号、多槽连接       |
+| `03_properties`    | 动态属性、属性变化通知                 |
+| `04_containers`    | QStringList、QSettings、容器操作       |
+| `05_io_system`     | QFile、QDir、文件信息、路径操作        |
+| `06_event_loop`    | 事件循环、定时器事件、自定义事件       |
+| `07_threading`     | QThread、QThreadPool、多线程任务       |
+| `08_timer`         | QTimer、单次/重复定时器、精确计时      |
 
 ### 03_widgets - 控件
 
-| 示例 | 说明 |
-|------|------|
+| 示例         | 说明                                               |
+|--------------|----------------------------------------------------|
 | `02_layouts` | QVBoxLayout、QHBoxLayout、QGridLayout、QFormLayout |
-| `03_dialogs` | 消息框、输入框、文件对话框 |
+| `03_dialogs` | 消息框、输入框、文件对话框                         |
 
 ### 06_network - 网络
 
-| 示例 | 说明 |
-|------|------|
+| 示例      | 说明                                           |
+|-----------|------------------------------------------------|
 | `03_http` | QNetworkAccessManager、HTTP GET/POST、异步请求 |
 
 ### 07_sql - 数据库
 
-| 示例 | 说明 |
-|------|------|
+| 示例        | 说明                               |
+|-------------|------------------------------------|
 | `01_basics` | SQLite、SQL 查询、事务处理、Qt SQL |
 
 ### 10_concurrent - 并发
 
-| 示例 | 说明 |
-|------|------|
+| 示例        | 说明                                               |
+|-------------|----------------------------------------------------|
 | `01_basics` | QThreadPool、Runnable、ThreadPoolExecutor、asyncio |
 
 ## libpython-clj 快速参考
@@ -134,7 +134,8 @@ clojure -M 01_core/01_meta_object/main.clj
 
 ### 导入模块
 ```clojure
-(def QtCore (py/import-module "PySide6.QtCore"))
+(require '[libpython-clj2.require :refer [require-python]])
+(require-python '[PySide6.QtCore :as QtCore :bind-ns])
 ```
 
 ### 获取类
@@ -161,7 +162,7 @@ clojure -M 01_core/01_meta_object/main.clj
 
 | Python | Clojure (libpython-clj) |
 |--------|------------------------|
-| `from PySide6 import QtCore` | `(def QtCore (py/import-module "PySide6.QtCore"))` |
+| `from PySide6 import QtCore` | `(require-python '[PySide6.QtCore :as QtCore :bind-ns])` |
 | `QObject()` | `(def QObject (py/get-attr QtCore "QObject"))` then `(QObject)` |
 | `obj.setProperty(k, v)` | `(py/call-attr obj "setProperty" k v)` |
 | `button.clicked.connect(slot)` | `(py/call-attr (py/get-attr button "clicked") "connect" slot)` |
@@ -171,4 +172,4 @@ clojure -M 01_core/01_meta_object/main.clj
 1. **QCoreApplication 创建**：在 macOS 上，通过 Python 代码创建避免 GUI 初始化问题
 2. **信号槽**：始终先获取信号对象 `(py/get-attr obj "signal")` 再调用 `connect`
 3. **线程等待**：使用带超时的 `wait`，如 `(py/call-attr thread "wait" 2000)`
-4. **嵌入 Python**：只在需要自定义 Python 类时使用 `py/run-simple-string`
+4. **嵌入 Python**：优先拆成独立 `.py` 文件，用 `require-python :from ...` 加载

@@ -58,5 +58,5 @@ CMakeUserPresets.json
 **/.nrepl-port
 **/.clj-kondo/
 **/.lsp/
-/python/04_qml/04_cpp_integration/__pycache__/
+**/__pycache__/
 /clojure/python.edn

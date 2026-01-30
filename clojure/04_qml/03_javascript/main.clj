@@ -6,14 +6,15 @@
 ;; - Inline JavaScript functions
 ;; - Timer-based JavaScript execution
 
-(require '[libpython-clj2.python :as py])
+(require '[libpython-clj2.python :as py]
+         '[libpython-clj2.require :refer [require-python]])
 
 (py/initialize!)
 
 ;; 导入模块
-(def QtGui (py/import-module "PySide6.QtGui"))
-(def QtCore (py/import-module "PySide6.QtCore"))
-(def QtQml (py/import-module "PySide6.QtQml"))
+(require-python '[PySide6.QtGui :as QtGui :bind-ns])
+(require-python '[PySide6.QtCore :as QtCore :bind-ns])
+(require-python '[PySide6.QtQml :as QtQml :bind-ns])
 
 ;; 获取类
 (def QGuiApplication (py/get-attr QtGui "QGuiApplication"))

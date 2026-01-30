@@ -1,24 +1,24 @@
 #!/usr/bin/env clojure -M
 ;; PySide6 信号与槽示例 (Clojure + libpython-clj)
 
-(require '[libpython-clj2.python :as py])
+(require '[libpython-clj2.python :as py]
+         '[libpython-clj2.require :refer [require-python]])
 
 (py/initialize!)
 
 ;; 导入模块
-(def QtCore (py/import-module "PySide6.QtCore"))
+(require-python '[PySide6.QtCore :as QtCore :bind-ns])
+(require-python :from "01_core/02_signals_slots"
+                '[signals_slots :as signals :bind-ns :reload])
+(require-python :from "01_core/02_signals_slots"
+                '[signals_slots :as signals :bind-ns :reload])
 
 ;; 获取类
 (def QObject (py/get-attr QtCore "QObject"))
 (def QCoreApplication (py/get-attr QtCore "QCoreApplication"))
 
 ;; 初始化 QCoreApplication（必须先创建才能使用信号槽）
-(py/run-simple-string "
-from PySide6.QtCore import QCoreApplication, QObject, Signal, Slot
-import sys
-if not QCoreApplication.instance():
-    _app = QCoreApplication(sys.argv)
-")
+(py/call-attr signals "ensure_app")
 
 (defn demonstrate-basic-connection
   "基本信号槽连接 - 使用 QObject 的内置信号"
@@ -45,29 +45,8 @@ if not QCoreApplication.instance():
   []
   (println "\n=== 自定义信号（通过 Python 类）===")
 
-  ;; 使用 Python 代码定义带信号的类
-  (py/run-simple-string "
-from PySide6.QtCore import QObject, Signal
-
-class Communicate(QObject):
-    speak = Signal(str)
-    countChanged = Signal(int)
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._count = 0
-
-    def speak_message(self, message):
-        self.speak.emit(message)
-
-    def increment(self):
-        self._count += 1
-        self.countChanged.emit(self._count)
-")
-
   ;; 获取类并实例化
-  (let [comm-module (py/add-module "__main__")
-        comm-class (py/get-item (py/module-dict comm-module) "Communicate")
+  (let [comm-class (py/get-attr signals "Communicate")
         comm (comm-class)]
 
     ;; 连接信号
@@ -110,18 +89,7 @@ class Communicate(QObject):
   []
   (println "\n=== 带参数的信号 ===")
 
-  (py/run-simple-string "
-from PySide6.QtCore import QObject, Signal
-
-class ValueEmitter(QObject):
-    valueChanged = Signal(int, str)
-
-    def emit_value(self, num, text):
-        self.valueChanged.emit(num, text)
-")
-
-  (let [module (py/add-module "__main__")
-        emitter-class (py/get-item (py/module-dict module) "ValueEmitter")
+  (let [emitter-class (py/get-attr signals "ValueEmitter")
         emitter (emitter-class)]
 
     ;; 连接带参数的信号

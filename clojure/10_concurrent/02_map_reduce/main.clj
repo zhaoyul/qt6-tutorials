@@ -5,39 +5,23 @@
 ;; 1. Map: Apply a function to each element in a collection
 ;; 2. Reduce: Combine the results into a single value
 
-(require '[libpython-clj2.python :as py])
+(require '[libpython-clj2.python :as py]
+         '[libpython-clj2.require :refer [require-python]])
 
 (py/initialize!)
 
+(require-python :from "10_concurrent/02_map_reduce"
+                '[embedded :as py-embedded :bind-ns :reload])
+
 ;; 初始化 QCoreApplication
-(py/run-simple-string "
-from PySide6.QtCore import QCoreApplication
-import sys
-if not QCoreApplication.instance():
-    _app = QCoreApplication(sys.argv)
-")
+(py/call-attr py-embedded "run_block_1")
 
 (defn -main
   [& args]
   (println "Map-Reduce demo")
   
   ;; 使用 ThreadPoolExecutor 替代 QtConcurrent::mappedReduced
-  (py/run-simple-string "
-from concurrent.futures import ThreadPoolExecutor
-
-def square(value):
-    return value * value
-
-numbers = list(range(1, 11))
-
-with ThreadPoolExecutor() as executor:
-    # Map phase
-    mapped_results = list(executor.map(square, numbers))
-    # Reduce phase
-    result = sum(mapped_results)
-
-print(f'Sum of squares: {result}')
-")
+  (py/call-attr py-embedded "run_block_2")
   
   (println "Done"))
 

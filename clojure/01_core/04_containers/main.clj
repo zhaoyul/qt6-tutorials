@@ -1,12 +1,13 @@
 #!/usr/bin/env clojure -M
 ;; PySide6 容器类示例 (Clojure + libpython-clj)
 
-(require '[libpython-clj2.python :as py])
+(require '[libpython-clj2.python :as py]
+         '[libpython-clj2.require :refer [require-python]])
 
 (py/initialize!)
 
 ;; 导入模块
-(def QtCore (py/import-module "PySide6.QtCore"))
+(require-python '[PySide6.QtCore :as QtCore :bind-ns])
 
 (defn demonstrate-list-operations
   "列表操作"
