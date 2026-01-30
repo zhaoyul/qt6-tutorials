@@ -59,3 +59,4 @@ CMakeUserPresets.json
 **/.clj-kondo/
 **/.lsp/
 /python/04_qml/04_cpp_integration/__pycache__/
+/clojure/python.edn
