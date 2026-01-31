@@ -915,20 +915,139 @@ basilisp run main.lpy
 
 --------------
 
-** 8.4 本章小结
+** 8.4 跨越边界--在 Clojure 中继承 PySide6 类
+
+在使用 =libpython-clj= 调用 Python 库时, 绝大多数情况下我们只需要当个"使用者"(调用函数, 读取属性). 但在 GUI 开发中, 我们经常需要当"定义者"--我们需要继承 =QWidget= 来创建自定义组件, 或者继承 =QThread= 来处理后台任务.
+
+在 PySide6 中, 这碰到了一个特殊的壁垒: *Shiboken*.
+
+*** 8.4.1 为什么标准的 =py/create-class= 会失败?
+
+如果你尝试用 =libpython-clj= 标准的 =create-class= 宏去继承一个 PySide6 类(例如 =QObject= 或 =QWidget=), 你可能会遇到令人困惑的错误, 比如初始化时 =self= 为 =nil=, 或者奇怪的 =ArityException=.
+
+#+BEGIN_SRC clojure
+;; ⚠️ 错误示范: 这通常行不通
+(def MyWidget
+  (py/create-class "MyWidget"
+                   [QtWidgets/QWidget]
+                   {"__init__" (fn [self] ...)}))
+#+END_SRC
+
+**** 原因分析: 元类冲突 (Metaclass Conflict)
+
+Python 中的类是由元类(Metaclass)创建的.
+- 普通的 Python 类默认使用 =type= 作为元类.
+- =libpython-clj= 的 =create-class= 默认也使用 =type= 机制.
+- *但是*, PySide6 的类(如 =QWidget=)是由一个特殊的元类 =Shiboken.ObjectType= 创建的.
+
+*Shiboken* 是 PySide6 的底层绑定生成器. 它要求对象在创建时必须遵循特定的 C++ 内存绑定流程. 当你用普通的 =type= 方式去继承 =QWidget= 时, Python 创建了一个只有"壳"的对象, 底层的 C++ 指针没有正确初始化. 因此, 当 =__init__= 被调用时, 对象处于损坏状态.
+
+*** 8.4.2 解决方案: 混合定义策略 (The Hybrid Approach)
+
+为了解决这个问题, 最稳健的方法是 *"Python 定义结构, Clojure 定义逻辑"*, 或者直接在 Python 侧完成类的定义.
+
+利用 =libpython-clj= 的 =py/run-simple-string= 功能, 让 Python 解释器在它原本的环境中去处理类的定义. 这样, Python 会自动检测到父类是 =QWidget=, 从而自动使用正确的 =Shiboken.ObjectType= 元类.
+
+**** 范式: 在字符串中定义类
+
+这是目前在 Clojure 中继承 PySide6 组件的"最佳实践".
+
+#+BEGIN_SRC clojure
+(ns my-app.gui.custom-widget
+  (:require [libpython-clj2.python :as py]))
+
+(def QtWidgets (py/import-module "PySide6.QtWidgets"))
+
+;; 1. 在 Python 环境中定义类结构
+;; 这一步解决了元类和 super() 调用的一切问题
+(py/run-simple-string
+ "
+from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout
+
+class MyCustomWidget(QWidget):
+    def __init__(self, title_text, parent=None):
+        # Python 能够正确处理 super() 和 Shiboken 初始化
+        super().__init__(parent)
+
+        self.layout = QVBoxLayout(self)
+        self.label = QLabel(title_text)
+        self.layout.addWidget(self.label)
+
+        # 我们可以在这里预留钩子, 供 Clojure 注入逻辑
+        self._clj_handler = None
+
+    def set_clj_handler(self, handler):
+        self._clj_handler = handler
+
+    def mousePressEvent(self, event):
+        # 覆盖事件, 并尝试调用 Clojure 侧的处理器
+        if self._clj_handler:
+            self._clj_handler(event)
+        super().mousePressEvent(event)
+ ")
+
+;; 2. 将定义好的类映射回 Clojure
+(def MyCustomWidget
+  (py/get-attr (py/import-module "__main__") "MyCustomWidget"))
+
+;; 3. 在 Clojure 中使用
+(defn on-widget-click [event]
+  (println "Clojure 捕获到了点击事件!" event))
+
+(defn create-instance []
+  (let [widget (MyCustomWidget "你好, Clojure!")]
+    ;; 注入 Clojure 函数
+    (py/call-attr widget "set_clj_handler" on-widget-click)
+    widget))
+#+END_SRC
+
+*** 8.4.3 另一种思路: 组合优于继承 (Composition over Inheritance)
+
+在很多场景下, 我们习惯性地想要继承, 但其实并没有必要. Clojure 是一种函数式语言, 我们更倾向于 *组合*.
+
+如果你的目的仅仅是把几个控件拼装在一起, 可以写一个 Clojure 函数来"组装"原生组件, 而不是创建一个新的类.
+
+#+BEGIN_SRC clojure
+(defn make-user-panel [username]
+  (let [panel (QtWidgets/QWidget.)  ;; 直接实例化原生类
+        layout (QtWidgets/QVBoxLayout. panel)
+        label (QtWidgets/QLabel. (str "User: " username))]
+
+    (py/call-attr layout "addWidget" label)
+    (py/call-attr panel "setLayout" layout)
+
+    ;; 返回配置好的实例
+    panel))
+#+END_SRC
+
+*** 8.4.4 总结
+
+| 场景                             | 推荐方案                                                                          |
+|----------------------------------+-----------------------------------------------------------------------------------|
+| *简单的 UI 拼装*                   | *组合模式*: 直接实例化 =QWidget= 并通过函数配置.                                      |
+| *必须重写虚函数* (如 =paintEvent=)   | *混合定义*: 使用 =py/run-simple-string= 在 Python 侧定义类骨架.                       |
+| *需要创建自定义信号*               | *混合定义*: 信号 (=Signal=) 必须在类定义时作为类属性声明, Clojure 动态创建极其困难.   |
+
+记住: *不要试图在 Clojure 的 =create-class= 中与 Shiboken 搏斗*, 把类的定义权交给 Python, 把业务逻辑的控制权留在 Clojure.
+
+--------------
+
+** 8.5 本章小结
 
 本章介绍了 Qt 的高级主题:
 
-| 主题     | 关键内容                  | 应用场景     |
-|----------+---------------------------+--------------|
-| 并发编程 | QtConcurrent, QThreadPool | 多线程任务   |
-| 3D 图形  | Qt3D, Entity-Component    | 3D 可视化    |
-| 综合项目 | Todo App                  | 完整应用开发 |
+| 主题       | 关键内容                       | 应用场景         |
+|------------+--------------------------------+------------------|
+| 并发编程   | QtConcurrent, QThreadPool      | 多线程任务       |
+| 3D 图形    | Qt3D, Entity-Component         | 3D 可视化        |
+| 综合项目   | Todo App                       | 完整应用开发     |
+| 跨语言继承 | Shiboken, py/run-simple-string | Clojure GUI 开发 |
 
 通过本章的学习, 你应该能够:
 
 - 使用 QtConcurrent 编写高效的多线程代码
 - 创建简单的 3D 场景
 - 构建完整的 Qt 应用程序
+- 在 Clojure 中正确继承 PySide6 类
 
 在下一章中, 我们将提供额外的参考资料和附录.

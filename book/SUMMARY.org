@@ -137,7 +137,11 @@
   - Python 实现
   - Clojure 实现
   - Basilisp 实现
-- 8.4 本章小结
+- 8.4 跨越边界——在 Clojure 中继承 PySide6 类
+  - 为什么标准的 py/create-class 会失败
+  - 解决方案：混合定义策略
+  - 组合优于继承
+- 8.5 本章小结
 
 *** 第9章：附录
 - 9.1 跨语言 API 对照表
