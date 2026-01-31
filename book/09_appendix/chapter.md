@@ -1,0 +1,368 @@
+# 第9章：附录
+
+## 9.1 跨语言 API 对照表
+
+### 核心类对照
+
+| C++ | Python (PySide6) | Clojure | Basilisp | 功能说明 |
+|-----|-----------------|---------|----------|----------|
+| `QObject` | `PySide6.QtCore.QObject` | `QtCore/QObject` | `QObject` | 所有 Qt 对象的基类 |
+| `QString` | `str` | `str` | `str` | 字符串类型 |
+| `QList<T>` | `list` | `list`/`vector` | `list`/`vector` | 列表/数组 |
+| `QMap<K,V>` | `dict` | `hash-map` | `hash-map` | 字典/映射 |
+| `QVariant` | `QVariant` | `QVariant` | `QVariant` | 通用值容器 |
+| `QDateTime` | `QDateTime` | `QDateTime` | `QDateTime` | 日期时间 |
+
+### GUI 类对照
+
+| C++ | Python (PySide6) | Clojure | Basilisp | 功能说明 |
+|-----|-----------------|---------|----------|----------|
+| `QApplication` | `QApplication` | `QtWidgets/QApplication` | `QApplication` | 应用实例 |
+| `QWidget` | `QWidget` | `QtWidgets/QWidget` | `QWidget` | 控件基类 |
+| `QPushButton` | `QPushButton` | `QtWidgets/QPushButton` | `QPushButton` | 按钮 |
+| `QLabel` | `QLabel` | `QtWidgets/QLabel` | `QLabel` | 标签 |
+| `QLineEdit` | `QLineEdit` | `QtWidgets/QLineEdit` | `QLineEdit` | 单行输入 |
+| `QTextEdit` | `QTextEdit` | `QtWidgets/QTextEdit` | `QTextEdit` | 多行文本 |
+| `QComboBox` | `QComboBox` | `QtWidgets/QComboBox` | `QComboBox` | 下拉框 |
+| `QSlider` | `QSlider` | `QtWidgets/QSlider` | `QSlider` | 滑块 |
+| `QProgressBar` | `QProgressBar` | `QtWidgets/QProgressBar` | `QProgressBar` | 进度条 |
+| `QTableView` | `QTableView` | `QtWidgets/QTableView` | `QTableView` | 表格视图 |
+| `QMainWindow` | `QMainWindow` | `QtWidgets/QMainWindow` | `QMainWindow` | 主窗口 |
+
+### 信号与槽对照
+
+| C++ | Python | Clojure | Basilisp |
+|-----|--------|---------|----------|
+| `signals:` / `slots:` | `Signal` / `@Slot` | `Signal` / 方法绑定 | `Signal` / `@Slot` |
+| `emit signal()` | `signal.emit()` | `(py/call-attr obj "signal.emit" value)` | `(.emit (.signal obj) value)` |
+| `connect()` | `signal.connect(slot)` | `(py/call-attr signal "connect" slot)` | `(.connect signal slot)` |
+| `disconnect()` | `signal.disconnect()` | `(py/call-attr signal "disconnect")` | `(.disconnect signal)` |
+
+### 属性对照
+
+| C++ | Python | Clojure | Basilisp |
+|-----|--------|---------|----------|
+| `Q_PROPERTY(type name READ ...)` | `@Property(type, ...)` | 通过 `py/set-attr!` | `@Property` 装饰器 |
+| `setProperty()` | `setProperty()` | `(py/call-attr obj "setProperty" ...)` | `(.setProperty obj ...)` |
+| `property()` | `property()` | `(py/call-attr obj "property" ...)` | `(.property obj ...)` |
+
+---
+
+## 9.2 常见问题与解决方案
+
+### Q1: 如何在 Qt 中处理中文显示？
+
+**C++:**
+```cpp
+// 在 main.cpp 中设置编码
+#include <QTextCodec>
+
+int main(int argc, char *argv[])
+{
+    QApplication app(argc, argv);
+    
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    QTextCodec::setCodecForLocale(QTextCodec::codecForName("UTF-8"));
+#endif
+    
+    // 使用 QStringLiteral 或 tr()
+    QLabel label(QStringLiteral("你好，世界！"));
+    
+    return app.exec();
+}
+```
+
+**Python:**
+```python
+# Python 3 默认使用 UTF-8，通常不需要额外设置
+label = QLabel("你好，世界！")
+```
+
+### Q2: 如何打包发布 Qt 应用程序？
+
+**C++ (使用 windeployqt/macdeployqt):**
+```bash
+# Windows
+windeployqt myapp.exe
+
+# macOS
+macdeployqt MyApp.app -dmg
+
+# Linux (需要手动复制依赖)
+ldd myapp | grep Qt
+```
+
+**Python (使用 PyInstaller):**
+```bash
+pip install pyinstaller
+pyinstaller --onefile --windowed --add-data "resources;resources" main.py
+```
+
+### Q3: 如何调试信号与槽连接问题？
+
+**C++:**
+```cpp
+// 在 main.cpp 中启用调试输出
+#include <QDebug>
+qputenv("QT_DEBUG_PLUGINS", QByteArray("1"));
+
+// 检查连接是否成功
+bool connected = connect(sender, &Sender::signal, receiver, &Receiver::slot);
+qDebug() << "Connection result:" << connected;
+```
+
+**所有语言:**
+```cpp
+// 运行时检查信号连接
+if (QObject::connect(...)) {
+    qDebug() << "Connected successfully";
+} else {
+    qDebug() << "Connection failed";
+}
+```
+
+### Q4: 如何处理线程安全问题？
+
+**C++:**
+```cpp
+// 使用信号槽跨线程通信
+// 或使用 QMutex
+QMutex mutex;
+{
+    QMutexLocker locker(&mutex);
+    // 访问共享数据
+}
+```
+
+**Python:**
+```python
+from PySide6.QtCore import QMutex, QMutexLocker
+
+mutex = QMutex()
+
+with QMutexLocker(mutex):
+    # 访问共享数据
+    pass
+```
+
+### Q5: 如何自定义窗口样式？
+
+**所有语言 (使用样式表):**
+```css
+/* 应用程序全局样式 */
+QMainWindow {
+    background-color: #f5f5f5;
+}
+
+QPushButton {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+}
+
+QPushButton:hover {
+    background-color: #2980b9;
+}
+
+QPushButton:pressed {
+    background-color: #21618c;
+}
+
+QLineEdit {
+    border: 1px solid #ddd;
+    padding: 6px;
+    border-radius: 3px;
+}
+
+QLineEdit:focus {
+    border-color: #3498db;
+}
+```
+
+---
+
+## 9.3 性能优化建议
+
+### 1. 避免频繁的信号发射
+
+```cpp
+// 不好的做法
+for (int i = 0; i < 1000; ++i) {
+    value = i;
+    emit valueChanged(value);  // 发射1000次信号
+}
+
+// 好的做法
+for (int i = 0; i < 1000; ++i) {
+    value = i;
+}
+emit valueChanged(value);  // 只发射1次信号
+```
+
+### 2. 使用适当的容器
+
+```cpp
+// 访问模式决定容器选择
+QVector<int> randomAccess;  // 随机访问
+QList<int> frequentInsert;  // 频繁插入删除
+QSet<QString> uniqueItems;  // 唯一值
+QHash<QString, int> fastLookup;  // 快速查找
+```
+
+### 3. 延迟加载和虚拟列表
+
+```cpp
+// 大数据集使用模型/视图架构
+QAbstractListModel *model = new MyListModel();
+QListView *view = new QListView();
+view->setModel(model);
+view->setUniformItemSizes(true);  // 优化性能
+```
+
+### 4. 使用缓存
+
+```cpp
+class ImageCache
+{
+public:
+    QPixmap getImage(const QString &path)
+    {
+        if (!cache.contains(path)) {
+            cache.insert(path, QPixmap(path));
+        }
+        return cache[path];
+    }
+private:
+    QCache<QString, QPixmap> cache;
+};
+```
+
+---
+
+## 9.4 推荐学习资源
+
+### 官方文档
+- [Qt 6 官方文档](https://doc.qt.io/qt-6/)
+- [Qt for Python (PySide6) 文档](https://doc.qt.io/qtforpython-6/)
+- [Qt 示例和教程](https://doc.qt.io/qt-6/qtexamplesandtutorials.html)
+
+### 书籍
+- 《C++ GUI Qt 4 编程》（中文版）
+- 《Mastering Qt 5》
+- 《Qt5 开发及实例》
+
+### 在线资源
+- [Qt 博客](https://www.qt.io/blog)
+- [Qt 论坛](https://forum.qt.io/)
+- [Stack Overflow - Qt 标签](https://stackoverflow.com/questions/tagged/qt)
+
+### 视频教程
+- [Qt 官方 YouTube 频道](https://www.youtube.com/user/QtStudios)
+- [PySide6 教程系列](https://www.youtube.com/results?search_query=pyside6+tutorial)
+
+---
+
+## 9.5 项目文件组织结构建议
+
+```
+my-qt-project/
+├── CMakeLists.txt          # C++ 项目使用
+├── setup.py                # Python 项目使用
+├── requirements.txt        # Python 依赖
+├── deps.edn                # Clojure 依赖
+├── pyproject.toml          # Basilisp 依赖
+│
+├── src/                    # 源代码
+│   ├── main.cpp            # C++ 入口
+│   ├── main.py             # Python 入口
+│   ├── main.clj            # Clojure 入口
+│   ├── main.lpy            # Basilisp 入口
+│   ├── core/               # 核心模块
+│   ├── gui/                # GUI 模块
+│   ├── models/             # 数据模型
+│   └── utils/              # 工具函数
+│
+├── resources/              # 资源文件
+│   ├── images/
+│   ├── icons/
+│   ├── qml/                # QML 文件
+│   └── styles/             # 样式表
+│
+├── tests/                  # 测试代码
+│   ├── unit/
+│   ├── integration/
+│   └── test_main.cpp       # 或 test_main.py
+│
+├── docs/                   # 文档
+│   ├── api/
+│   └── user-guide/
+│
+├── scripts/                # 脚本工具
+│   ├── build.sh
+│   ├── run.sh
+│   └── deploy.sh
+│
+└── README.md
+```
+
+---
+
+## 9.6 版本兼容性说明
+
+| Qt 版本 | C++ 标准 | Python 版本 | 主要变化 |
+|---------|----------|-------------|----------|
+| Qt 6.0+ | C++17 | Python 3.9+ | 全新架构，移除 Qt 5 废弃 API |
+| Qt 6.2+ | C++17 | Python 3.9+ | LTS 版本，增加 Qt Quick 3D |
+| Qt 6.4+ | C++17 | Python 3.10+ | 增强 QML，改进 3D 支持 |
+| Qt 6.5+ | C++17 | Python 3.11+ | 当前推荐 LTS 版本 |
+| Qt 6.6+ | C++17 | Python 3.11+ | 新图形 API，改进 QML |
+
+---
+
+## 9.7 全书总结
+
+通过本书的学习，你已经掌握了：
+
+### 核心知识
+1. **Qt Core** - 元对象系统、信号与槽、属性、容器、I/O、事件循环、多线程、定时器
+2. **Qt GUI** - 2D 绘图、图像处理、字体、事件处理、窗口系统
+3. **Qt Widgets** - 基础控件、布局、对话框、主窗口、视图组件、自定义控件
+4. **QML & Quick** - 声明式 UI、动画、状态管理、C++/Python 集成
+5. **功能扩展** - 网络编程、数据库、多媒体、测试框架
+6. **高级主题** - 并发编程、3D 图形、完整项目开发
+
+### 跨语言开发能力
+- **C++** - 原生性能，完整 Qt 功能
+- **Python** - 快速开发，丰富生态
+- **Clojure** - 函数式编程，REPL 驱动
+- **Basilisp** - Python 生态 + Lisp 优雅
+
+### 下一步学习建议
+
+1. **深入某个领域**
+   - 游戏开发：Qt 3D, OpenGL
+   - 嵌入式：Qt for MCU, Qt Quick
+   - 数据可视化：Qt Charts, Qt Data Visualization
+
+2. **参与开源项目**
+   - 为 Qt 贡献代码
+   - 参与 PySide6 开发
+   - 创建自己的 Qt 库
+
+3. **实际项目练习**
+   - 文本编辑器
+   - 图片浏览器
+   - 音乐播放器
+   - 简单的 IDE
+
+---
+
+感谢阅读本书！祝你在 Qt 开发之旅中取得成功！
+
+---
+
+**本书作者：** AI Assistant  
+**版本：** 1.0  
+**最后更新：** 2026-01-31

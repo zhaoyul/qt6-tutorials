@@ -1,0 +1,844 @@
+# 第7章：功能扩展模块
+
+本章介绍 Qt 的功能扩展模块，包括网络编程、数据库操作、多媒体处理和测试框架。
+
+---
+
+## 7.1 网络编程（Qt Network）
+
+### 7.1.1 TCP 通信
+
+```cpp
+// [C++] TCP 服务器
+#include <QTcpServer>
+#include <QTcpSocket>
+#include <QDebug>
+
+class TcpServer : public QTcpServer
+{
+    Q_OBJECT
+public:
+    TcpServer(QObject *parent = nullptr) : QTcpServer(parent)
+    {
+        connect(this, &QTcpServer::newConnection, this, &TcpServer::onNewConnection);
+    }
+    
+    bool start(quint16 port)
+    {
+        return listen(QHostAddress::Any, port);
+    }
+    
+private slots:
+    void onNewConnection()
+    {
+        QTcpSocket *socket = nextPendingConnection();
+        qDebug() << "Client connected:" << socket->peerAddress().toString();
+        
+        connect(socket, &QTcpSocket::readyRead, [socket]() {
+            QByteArray data = socket->readAll();
+            qDebug() << "Received:" << data;
+            
+            // 发送响应
+            socket->write("Echo: " + data);
+        });
+        
+        connect(socket, &QTcpSocket::disconnected, [socket]() {
+            qDebug() << "Client disconnected";
+            socket->deleteLater();
+        });
+    }
+};
+
+// [C++] TCP 客户端
+#include <QTcpSocket>
+
+class TcpClient : public QObject
+{
+    Q_OBJECT
+public:
+    TcpClient(QObject *parent = nullptr) : QObject(parent)
+    {
+        socket = new QTcpSocket(this);
+        
+        connect(socket, &QTcpSocket::connected, this, []() {
+            qDebug() << "Connected to server";
+        });
+        
+        connect(socket, &QTcpSocket::readyRead, this, [this]() {
+            QByteArray data = socket->readAll();
+            qDebug() << "Received from server:" << data;
+        });
+        
+        connect(socket, QOverload<QAbstractSocket::SocketError>::of(&QTcpSocket::error),
+                this, [](QAbstractSocket::SocketError error) {
+            qDebug() << "Socket error:" << error;
+        });
+    }
+    
+    void connectToHost(const QString &host, quint16 port)
+    {
+        socket->connectToHost(host, port);
+    }
+    
+    void send(const QByteArray &data)
+    {
+        if (socket->state() == QAbstractSocket::ConnectedState) {
+            socket->write(data);
+        }
+    }
+    
+private:
+    QTcpSocket *socket;
+};
+```
+
+```python
+# [Python] TCP 服务器和客户端
+from PySide6.QtNetwork import QTcpServer, QTcpSocket, QHostAddress
+from PySide6.QtCore import QObject, Signal, Slot
+
+class TcpServer(QObject):
+    client_connected = Signal(str)
+    data_received = Signal(bytes)
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.server = QTcpServer(self)
+        self.server.newConnection.connect(self.on_new_connection)
+        self.clients = []
+    
+    def start(self, port):
+        return self.server.listen(QHostAddress.Any, port)
+    
+    @Slot()
+    def on_new_connection(self):
+        socket = self.server.nextPendingConnection()
+        self.clients.append(socket)
+        self.client_connected.emit(socket.peerAddress().toString())
+        
+        socket.readyRead.connect(lambda: self.on_ready_read(socket))
+        socket.disconnected.connect(lambda: self.on_disconnected(socket))
+    
+    def on_ready_read(self, socket):
+        data = socket.readAll()
+        self.data_received.emit(data)
+        socket.write(b"Echo: " + data)
+    
+    def on_disconnected(self, socket):
+        self.clients.remove(socket)
+        socket.deleteLater()
+
+class TcpClient(QObject):
+    connected = Signal()
+    disconnected = Signal()
+    data_received = Signal(bytes)
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.socket = QTcpSocket(self)
+        self.socket.connected.connect(self.connected)
+        self.socket.disconnected.connect(self.disconnected)
+        self.socket.readyRead.connect(self.on_ready_read)
+    
+    def connect_to_host(self, host, port):
+        self.socket.connectToHost(host, port)
+    
+    def send(self, data):
+        if self.socket.state() == QTcpSocket.ConnectedState:
+            self.socket.write(data)
+    
+    @Slot()
+    def on_ready_read(self):
+        data = self.socket.readAll()
+        self.data_received.emit(data)
+```
+
+### 7.1.2 HTTP 请求
+
+```cpp
+// [C++] HTTP 客户端
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QJsonDocument>
+#include <QJsonObject>
+
+class HttpClient : public QObject
+{
+    Q_OBJECT
+public:
+    HttpClient(QObject *parent = nullptr) : QObject(parent)
+    {
+        manager = new QNetworkAccessManager(this);
+    }
+    
+    void get(const QString &url)
+    {
+        QNetworkRequest request(QUrl(url));
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+        
+        QNetworkReply *reply = manager->get(request);
+        
+        connect(reply, &QNetworkReply::finished, [reply]() {
+            if (reply->error() == QNetworkReply::NoError) {
+                QByteArray data = reply->readAll();
+                qDebug() << "Response:" << data;
+            } else {
+                qDebug() << "Error:" << reply->errorString();
+            }
+            reply->deleteLater();
+        });
+    }
+    
+    void post(const QString &url, const QJsonObject &json)
+    {
+        QNetworkRequest request(QUrl(url));
+        request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+        
+        QJsonDocument doc(json);
+        QByteArray data = doc.toJson();
+        
+        QNetworkReply *reply = manager->post(request, data);
+        
+        connect(reply, &QNetworkReply::finished, [reply]() {
+            if (reply->error() == QNetworkReply::NoError) {
+                qDebug() << "Response:" << reply->readAll();
+            }
+            reply->deleteLater();
+        });
+    }
+    
+private:
+    QNetworkAccessManager *manager;
+};
+```
+
+```python
+# [Python] HTTP 客户端
+from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest
+from PySide6.QtCore import QUrl, QObject, Signal
+import json
+
+class HttpClient(QObject):
+    response_received = Signal(bytes)
+    error_occurred = Signal(str)
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.manager = QNetworkAccessManager(self)
+    
+    def get(self, url):
+        request = QNetworkRequest(QUrl(url))
+        reply = self.manager.get(request)
+        reply.finished.connect(lambda: self._handle_reply(reply))
+    
+    def post(self, url, data):
+        request = QNetworkRequest(QUrl(url))
+        request.setHeader(QNetworkRequest.ContentTypeHeader, "application/json")
+        
+        json_data = json.dumps(data).encode()
+        reply = self.manager.post(request, json_data)
+        reply.finished.connect(lambda: self._handle_reply(reply))
+    
+    def _handle_reply(self, reply):
+        if reply.error() == reply.NetworkError.NoError:
+            data = reply.readAll()
+            self.response_received.emit(data)
+        else:
+            self.error_occurred.emit(reply.errorString())
+        reply.deleteLater()
+```
+
+### 7.1.3 WebSocket
+
+```cpp
+// [C++] WebSocket 客户端
+#include <QWebSocket>
+
+class WebSocketClient : public QObject
+{
+    Q_OBJECT
+public:
+    WebSocketClient(QObject *parent = nullptr) : QObject(parent)
+    {
+        socket = new QWebSocket();
+        
+        connect(socket, &QWebSocket::connected, this, [this]() {
+            qDebug() << "WebSocket connected";
+            socket->sendTextMessage("Hello Server!");
+        });
+        
+        connect(socket, &QWebSocket::textMessageReceived, 
+                this, [](const QString &message) {
+            qDebug() << "Received:" << message;
+        });
+        
+        connect(socket, &QWebSocket::disconnected, this, [this]() {
+            qDebug() << "WebSocket disconnected";
+        });
+    }
+    
+    void connectToServer(const QUrl &url)
+    {
+        socket->open(url);
+    }
+    
+    void sendMessage(const QString &message)
+    {
+        socket->sendTextMessage(message);
+    }
+    
+private:
+    QWebSocket *socket;
+};
+```
+
+---
+
+## 7.2 数据库操作（Qt SQL）
+
+### 7.2.1 数据库连接
+
+```cpp
+// [C++] 数据库连接
+#include <QSqlDatabase>
+#include <QSqlQuery>
+#include <QSqlError>
+#include <QDebug>
+
+bool initDatabase()
+{
+    // 添加 SQLite 数据库
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+    db.setDatabaseName("mydatabase.db");
+    
+    // 或者 MySQL
+    // QSqlDatabase db = QSqlDatabase::addDatabase("QMYSQL");
+    // db.setHostName("localhost");
+    // db.setDatabaseName("mydb");
+    // db.setUserName("user");
+    // db.setPassword("password");
+    
+    if (!db.open()) {
+        qDebug() << "Error opening database:" << db.lastError().text();
+        return false;
+    }
+    
+    qDebug() << "Database opened successfully";
+    return true;
+}
+```
+
+```python
+# [Python] 数据库连接
+from PySide6.QtSql import QSqlDatabase, QSqlQuery, QSqlError
+
+def init_database():
+    # SQLite
+    db = QSqlDatabase.addDatabase("QSQLITE")
+    db.setDatabaseName("mydatabase.db")
+    
+    # MySQL
+    # db = QSqlDatabase.addDatabase("QMYSQL")
+    # db.setHostName("localhost")
+    # db.setDatabaseName("mydb")
+    # db.setUserName("user")
+    # db.setPassword("password")
+    
+    if not db.open():
+        print(f"Error: {db.lastError().text()}")
+        return False
+    
+    print("Database opened successfully")
+    return True
+```
+
+### 7.2.2 SQL 操作
+
+```cpp
+// [C++] SQL 操作
+#include <QSqlQuery>
+#include <QSqlError>
+#include <QVariant>
+
+class DatabaseManager : public QObject
+{
+    Q_OBJECT
+public:
+    bool createTable()
+    {
+        QSqlQuery query;
+        bool success = query.exec(
+            "CREATE TABLE IF NOT EXISTS users ("
+            "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+            "name TEXT NOT NULL,"
+            "email TEXT UNIQUE,"
+            "age INTEGER,"
+            "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+            ")"
+        );
+        
+        if (!success) {
+            qDebug() << "Create table error:" << query.lastError().text();
+        }
+        return success;
+    }
+    
+    bool insertUser(const QString &name, const QString &email, int age)
+    {
+        QSqlQuery query;
+        query.prepare("INSERT INTO users (name, email, age) VALUES (:name, :email, :age)");
+        query.bindValue(":name", name);
+        query.bindValue(":email", email);
+        query.bindValue(":age", age);
+        
+        if (!query.exec()) {
+            qDebug() << "Insert error:" << query.lastError().text();
+            return false;
+        }
+        return true;
+    }
+    
+    bool updateUser(int id, const QString &name, const QString &email)
+    {
+        QSqlQuery query;
+        query.prepare("UPDATE users SET name = :name, email = :email WHERE id = :id");
+        query.bindValue(":name", name);
+        query.bindValue(":email", email);
+        query.bindValue(":id", id);
+        
+        return query.exec();
+    }
+    
+    bool deleteUser(int id)
+    {
+        QSqlQuery query;
+        query.prepare("DELETE FROM users WHERE id = :id");
+        query.bindValue(":id", id);
+        return query.exec();
+    }
+    
+    void queryUsers()
+    {
+        QSqlQuery query("SELECT id, name, email, age FROM users");
+        
+        while (query.next()) {
+            int id = query.value(0).toInt();
+            QString name = query.value(1).toString();
+            QString email = query.value(2).toString();
+            int age = query.value(3).toInt();
+            
+            qDebug() << "User:" << id << name << email << age;
+        }
+    }
+    
+    QVariantMap getUserById(int id)
+    {
+        QSqlQuery query;
+        query.prepare("SELECT * FROM users WHERE id = :id");
+        query.bindValue(":id", id);
+        
+        QVariantMap user;
+        if (query.exec() && query.next()) {
+            user["id"] = query.value("id");
+            user["name"] = query.value("name");
+            user["email"] = query.value("email");
+            user["age"] = query.value("age");
+        }
+        return user;
+    }
+};
+```
+
+### 7.2.3 模型/视图集成
+
+```cpp
+// [C++] SQL 模型
+#include <QSqlTableModel>
+#include <QSqlQueryModel>
+#include <QTableView>
+
+void setupSqlModel(QWidget *parent)
+{
+    // 表格模型
+    QSqlTableModel *model = new QSqlTableModel(parent);
+    model->setTable("users");
+    model->setEditStrategy(QSqlTableModel::OnFieldChange);
+    model->select();
+    
+    // 设置表头
+    model->setHeaderData(0, Qt::Horizontal, "ID");
+    model->setHeaderData(1, Qt::Horizontal, "Name");
+    model->setHeaderData(2, Qt::Horizontal, "Email");
+    model->setHeaderData(3, Qt::Horizontal, "Age");
+    
+    // 过滤
+    model->setFilter("age > 18");
+    model->select();
+    
+    // 排序
+    model->setSort(1, Qt::AscendingOrder);
+    model->select();
+    
+    // 关联到视图
+    QTableView *view = new QTableView(parent);
+    view->setModel(model);
+    view->show();
+}
+```
+
+---
+
+## 7.3 多媒体处理（Qt Multimedia）
+
+### 7.3.1 音频播放
+
+```cpp
+// [C++] 音频播放
+#include <QMediaPlayer>
+#include <QAudioOutput>
+
+class AudioPlayer : public QObject
+{
+    Q_OBJECT
+public:
+    AudioPlayer(QObject *parent = nullptr) : QObject(parent)
+    {
+        player = new QMediaPlayer(this);
+        audioOutput = new QAudioOutput(this);
+        player->setAudioOutput(audioOutput);
+        
+        connect(player, &QMediaPlayer::positionChanged, 
+                this, [](qint64 pos) {
+            qDebug() << "Position:" << pos;
+        });
+        
+        connect(player, &QMediaPlayer::mediaStatusChanged,
+                this, [](QMediaPlayer::MediaStatus status) {
+            if (status == QMediaPlayer::EndOfMedia) {
+                qDebug() << "Playback finished";
+            }
+        });
+    }
+    
+    void play(const QString &filePath)
+    {
+        player->setSource(QUrl::fromLocalFile(filePath));
+        player->play();
+    }
+    
+    void pause()
+    {
+        player->pause();
+    }
+    
+    void stop()
+    {
+        player->stop();
+    }
+    
+    void setVolume(float volume)  // 0.0 to 1.0
+    {
+        audioOutput->setVolume(volume);
+    }
+    
+    void seek(qint64 position)
+    {
+        player->setPosition(position);
+    }
+    
+private:
+    QMediaPlayer *player;
+    QAudioOutput *audioOutput;
+};
+```
+
+### 7.3.2 视频播放
+
+```cpp
+// [C++] 视频播放
+#include <QMediaPlayer>
+#include <QVideoWidget>
+
+class VideoPlayer : public QWidget
+{
+    Q_OBJECT
+public:
+    VideoPlayer(QWidget *parent = nullptr) : QWidget(parent)
+    {
+        player = new QMediaPlayer(this);
+        videoWidget = new QVideoWidget(this);
+        
+        player->setVideoOutput(videoWidget);
+        
+        QVBoxLayout *layout = new QVBoxLayout(this);
+        layout->addWidget(videoWidget);
+        
+        // 控制按钮
+        QHBoxLayout *controls = new QHBoxLayout();
+        QPushButton *playBtn = new QPushButton("Play");
+        QPushButton *pauseBtn = new QPushButton("Pause");
+        QSlider *positionSlider = new QSlider(Qt::Horizontal);
+        
+        connect(playBtn, &QPushButton::clicked, player, &QMediaPlayer::play);
+        connect(pauseBtn, &QPushButton::clicked, player, &QMediaPlayer::pause);
+        
+        controls->addWidget(playBtn);
+        controls->addWidget(pauseBtn);
+        controls->addWidget(positionSlider);
+        
+        layout->addLayout(controls);
+    }
+    
+    void loadVideo(const QString &filePath)
+    {
+        player->setSource(QUrl::fromLocalFile(filePath));
+    }
+    
+private:
+    QMediaPlayer *player;
+    QVideoWidget *videoWidget;
+};
+```
+
+### 7.3.3 摄像头
+
+```cpp
+// [C++] 摄像头访问
+#include <QCamera>
+#include <QMediaCaptureSession>
+#include <QVideoWidget>
+#include <QImageCapture>
+
+class CameraWidget : public QWidget
+{
+    Q_OBJECT
+public:
+    CameraWidget(QWidget *parent = nullptr) : QWidget(parent)
+    {
+        // 获取默认摄像头
+        camera = new QCamera(this);
+        
+        captureSession = new QMediaCaptureSession(this);
+        captureSession->setCamera(camera);
+        
+        videoWidget = new QVideoWidget(this);
+        captureSession->setVideoOutput(videoWidget);
+        
+        imageCapture = new QImageCapture(this);
+        captureSession->setImageCapture(imageCapture);
+        
+        QVBoxLayout *layout = new QVBoxLayout(this);
+        layout->addWidget(videoWidget);
+        
+        QPushButton *captureBtn = new QPushButton("Capture");
+        connect(captureBtn, &QPushButton::clicked, this, &CameraWidget::takePhoto);
+        layout->addWidget(captureBtn);
+        
+        camera->start();
+    }
+    
+    void takePhoto()
+    {
+        imageCapture->captureToFile("photo.jpg");
+    }
+    
+private:
+    QCamera *camera;
+    QMediaCaptureSession *captureSession;
+    QVideoWidget *videoWidget;
+    QImageCapture *imageCapture;
+};
+```
+
+---
+
+## 7.4 测试框架（Qt Test）
+
+### 7.4.1 单元测试
+
+```cpp
+// [C++] 单元测试
+#include <QTest>
+#include <QObject>
+#include "calculator.h"
+
+class TestCalculator : public QObject
+{
+    Q_OBJECT
+    
+private slots:
+    void initTestCase()
+    {
+        // 在所有测试之前执行
+        calc = new Calculator();
+    }
+    
+    void cleanupTestCase()
+    {
+        // 在所有测试之后执行
+        delete calc;
+    }
+    
+    void init()
+    {
+        // 每个测试之前执行
+        calc->clear();
+    }
+    
+    void cleanup()
+    {
+        // 每个测试之后执行
+    }
+    
+    void testAdd()
+    {
+        QCOMPARE(calc->add(2, 3), 5);
+        QCOMPARE(calc->add(-1, 1), 0);
+        QCOMPARE(calc->add(0, 0), 0);
+    }
+    
+    void testSubtract()
+    {
+        QCOMPARE(calc->subtract(5, 3), 2);
+        QCOMPARE(calc->subtract(0, 5), -5);
+    }
+    
+    void testMultiply()
+    {
+        QVERIFY(calc->multiply(2, 3) == 6);
+        QVERIFY(calc->multiply(0, 100) == 0);
+    }
+    
+    void testDivide()
+    {
+        QCOMPARE(calc->divide(6, 2), 3);
+        QCOMPARE(calc->divide(5, 2), 2.5);
+        
+        // 测试异常
+        QVERIFY_EXCEPTION_THROWN(calc->divide(1, 0), std::invalid_argument);
+    }
+    
+    void testBenchmark()
+    {
+        QBENCHMARK {
+            calc->add(1000000, 2000000);
+        }
+    }
+    
+private:
+    Calculator *calc;
+};
+
+QTEST_MAIN(TestCalculator)
+#include "test_calculator.moc"
+```
+
+```python
+# [Python] 单元测试
+import unittest
+from PySide6.QtTest import QTest
+from PySide6.QtCore import Qt
+from calculator import Calculator
+
+class TestCalculator(unittest.TestCase):
+    def setUp(self):
+        self.calc = Calculator()
+    
+    def tearDown(self):
+        pass
+    
+    def test_add(self):
+        self.assertEqual(self.calc.add(2, 3), 5)
+        self.assertEqual(self.calc.add(-1, 1), 0)
+    
+    def test_subtract(self):
+        self.assertEqual(self.calc.subtract(5, 3), 2)
+    
+    def test_multiply(self):
+        self.assertEqual(self.calc.multiply(2, 3), 6)
+    
+    def test_divide(self):
+        self.assertEqual(self.calc.divide(6, 2), 3)
+        with self.assertRaises(ValueError):
+            self.calc.divide(1, 0)
+
+if __name__ == '__main__':
+    unittest.main()
+```
+
+### 7.4.2 GUI 测试
+
+```cpp
+// [C++] GUI 测试
+#include <QTest>
+#include <QPushButton>
+#include <QLineEdit>
+#include <QLabel>
+
+class TestGui : public QObject
+{
+    Q_OBJECT
+    
+private slots:
+    void testButtonClick()
+    {
+        QPushButton button("Click me");
+        QSignalSpy spy(&button, &QPushButton::clicked);
+        
+        QTest::mouseClick(&button, Qt::LeftButton);
+        
+        QCOMPARE(spy.count(), 1);
+    }
+    
+    void testLineEdit()
+    {
+        QLineEdit lineEdit;
+        
+        // 模拟键盘输入
+        QTest::keyClicks(&lineEdit, "Hello Qt");
+        QCOMPARE(lineEdit.text(), QString("Hello Qt"));
+        
+        // 模拟特定按键
+        QTest::keyClick(&lineEdit, Qt::Key_A, Qt::ControlModifier);
+        QCOMPARE(lineEdit.selectedText(), QString("Hello Qt"));
+    }
+    
+    void testMouseEvents()
+    {
+        QWidget widget;
+        widget.resize(200, 200);
+        widget.show();
+        
+        // 模拟鼠标点击
+        QTest::mouseClick(&widget, Qt::LeftButton, Qt::NoModifier, QPoint(10, 10));
+        
+        // 模拟鼠标拖拽
+        QTest::mousePress(&widget, Qt::LeftButton, Qt::NoModifier, QPoint(50, 50));
+        QTest::mouseMove(&widget, QPoint(100, 100));
+        QTest::mouseRelease(&widget, Qt::LeftButton, Qt::NoModifier, QPoint(100, 100));
+    }
+};
+
+QTEST_MAIN(TestGui)
+#include "test_gui.moc"
+```
+
+---
+
+## 7.5 本章小结
+
+本章介绍了 Qt 的功能扩展模块：
+
+| 主题 | 关键类 | 主要用途 |
+|------|--------|----------|
+| TCP | `QTcpServer`, `QTcpSocket` | 网络通信 |
+| HTTP | `QNetworkAccessManager` | Web 请求 |
+| WebSocket | `QWebSocket` | 实时通信 |
+| 数据库 | `QSqlDatabase`, `QSqlQuery` | 数据持久化 |
+| 音频 | `QMediaPlayer` | 音频播放 |
+| 视频 | `QVideoWidget` | 视频播放 |
+| 摄像头 | `QCamera` | 图像捕获 |
+| 测试 | `QTest` | 自动化测试 |
+
+这些模块扩展了 Qt 的应用场景，使开发者能够构建功能丰富的应用程序。

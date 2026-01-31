@@ -1,0 +1,166 @@
+# 第1章：前言与介绍
+
+## 1.1 什么是 Qt？
+
+Qt（发音同 "cute"）是一个跨平台的 C++ 应用程序开发框架，最初由挪威的 Trolltech 公司于 1991 年开发。经过三十多年的发展，Qt 已经成为世界上最流行的 GUI 开发框架之一。
+
+Qt6 是 Qt 框架的最新主要版本，于 2020 年发布，带来了：
+- 全新的图形架构（RHI - Rendering Hardware Interface）
+- 改进的 CMake 支持
+- 更好的 C++17 兼容性
+- 模块化的包管理系统
+
+## 1.2 Qt 的架构
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    应用层 (Application)                      │
+├─────────────────────────────────────────────────────────────┤
+│  Qt Widgets  │  Qt Quick/QML  │  Qt 3D  │  Qt Charts        │
+├─────────────────────────────────────────────────────────────┤
+│              Qt GUI (图形用户界面)                            │
+├─────────────────────────────────────────────────────────────┤
+│  Qt Core │ Qt Network │ Qt SQL │ Qt Multimedia │ Qt Test    │
+├─────────────────────────────────────────────────────────────┤
+│              Qt Platform Abstraction                        │
+├─────────────────────────────────────────────────────────────┤
+│     Windows    │    macOS    │    Linux    │    Mobile     │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## 1.3 四种语言的 Qt 实现方式
+
+### C++ (原生 Qt)
+
+C++ 是 Qt 的原生语言，拥有最完整的功能和最优秀的性能。
+
+```cpp
+// C++ 示例
+#include <QApplication>
+#include <QPushButton>
+
+int main(int argc, char *argv[])
+{
+    QApplication app(argc, argv);
+    
+    QPushButton button("Hello Qt!");
+    button.show();
+    
+    return app.exec();
+}
+```
+
+### Python (PySide6)
+
+PySide6 是 Qt for Python 的官方绑定，提供了近乎完整的 Qt 功能。
+
+```python
+# Python 示例
+from PySide6.QtWidgets import QApplication, QPushButton
+
+app = QApplication([])
+
+button = QPushButton("Hello Qt!")
+button.show()
+
+app.exec()
+```
+
+### Clojure (clj-polyglot)
+
+Clojure 通过 libpython-clj 调用 PySide6，将 Lisp 的优雅与 Qt 的强大结合起来。
+
+```clojure
+;; Clojure 示例
+(require '[libpython-clj2.python :as py])
+(py/initialize!)
+
+(def QtWidgets (py/import-module "PySide6.QtWidgets"))
+(def QApplication (py/get-item QtWidgets "QApplication"))
+(def QPushButton (py/get-item QtWidgets "QPushButton"))
+
+(def app (QApplication (py/list [])))
+(def button (QPushButton "Hello Qt!"))
+(py/call-attr button "show")
+(py/call-attr app "exec")
+```
+
+### Basilisp
+
+Basilisp 是一个基于 Python 生态的 Lisp 实现，可以直接导入 PySide6。
+
+```clojure
+;; Basilisp 示例
+(ns hello-qt
+  (:import [PySide6.QtWidgets QApplication QPushButton]))
+
+(defn -main []
+  (let [app (QApplication [])
+        button (QPushButton "Hello Qt!")]
+    (.show button)
+    (.exec app)))
+
+(-main)
+```
+
+## 1.4 各语言优缺点对比
+
+| 特性 | C++ | Python | Clojure | Basilisp |
+|------|-----|--------|---------|----------|
+| **性能** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐ |
+| **开发效率** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
+| **内存占用** | 低 | 中 | 中 | 中 |
+| **启动速度** | 快 | 慢 | 慢 | 慢 |
+| **Qt 功能完整度** | 100% | ~95% | ~90% | ~90% |
+| **学习曲线** | 陡峭 | 平缓 | 陡峭 | 中等 |
+| **生态丰富度** | 丰富 | 极丰富 | 中等 | 丰富 |
+
+## 1.5 适用场景建议
+
+- **C++**：游戏开发、嵌入式系统、高性能应用、大型桌面软件
+- **Python**：数据可视化工具、科学计算应用、快速原型、内部工具
+- **Clojure**：函数式编程爱好者、并发密集应用、REPL 驱动开发
+- **Basilisp**：Lisp 爱好者且需要 Python 生态、教育项目
+
+## 1.6 本书约定
+
+### 代码示例格式
+
+本书中的所有代码示例都遵循以下格式：
+
+```cpp
+// [C++ 版本]
+// 文件: main.cpp
+// 说明: 这是一个 C++ 示例
+```
+
+```python
+# [Python 版本]
+# 文件: main.py
+# 说明: 这是一个 Python 示例
+```
+
+```clojure
+;; [Clojure 版本]
+;; 文件: main.clj
+;; 说明: 这是一个 Clojure 示例
+```
+
+```clojure
+;; [Basilisp 版本]
+;; 文件: main.lpy
+;; 说明: 这是一个 Basilisp 示例
+```
+
+### 运行环境
+
+- **操作系统**：Windows 11 / macOS 14+ / Ubuntu 22.04+
+- **Qt 版本**：Qt 6.5+
+- **C++ 编译器**：GCC 11+ / Clang 14+ / MSVC 2022+
+- **Python 版本**：3.10+
+- **Clojure 版本**：1.11+
+- **Basilisp 版本**：0.3+
+
+---
+
+在下一章中，我们将详细介绍四种语言的开发环境搭建。

@@ -1,0 +1,924 @@
+# 第8章：高级主题
+
+本章介绍 Qt 的高级主题，包括并发编程、3D 图形和一个综合项目实战。
+
+---
+
+## 8.1 并发编程（Qt Concurrent）
+
+Qt Concurrent 模块提供了高级的多线程 API，无需直接使用线程和锁。
+
+### 8.1.1 QtConcurrent::run
+
+```cpp
+// [C++] 在后台线程运行函数
+#include <QtConcurrent>
+#include <QFuture>
+#include <QFutureWatcher>
+#include <QDebug>
+
+// 耗时的计算函数
+int heavyComputation(int value)
+{
+    // 模拟耗时操作
+    QThread::sleep(2);
+    return value * value;
+}
+
+void concurrentExample()
+{
+    // 在后台线程运行函数
+    QFuture<int> future = QtConcurrent::run(heavyComputation, 42);
+    
+    // 使用 QFutureWatcher 监听结果
+    QFutureWatcher<int> *watcher = new QFutureWatcher<int>();
+    
+    QObject::connect(watcher, &QFutureWatcher<int>::finished, [watcher]() {
+        int result = watcher->result();
+        qDebug() << "Result:" << result;  // 1764
+        watcher->deleteLater();
+    });
+    
+    watcher->setFuture(future);
+    
+    // 检查状态
+    if (future.isRunning()) {
+        qDebug() << "Computation is running...";
+    }
+    
+    // 等待完成（阻塞）
+    // future.waitForFinished();
+    
+    // 获取结果（如果已完成）
+    // int result = future.result();
+}
+```
+
+```python
+# [Python] 并发执行
+from PySide6.QtCore import QThreadPool, QRunnable, QObject, Signal
+from concurrent.futures import ThreadPoolExecutor
+import time
+
+class Worker(QRunnable):
+    def __init__(self, func, *args, **kwargs):
+        super().__init__()
+        self.func = func
+        self.args = args
+        self.kwargs = kwargs
+    
+    def run(self):
+        result = self.func(*self.args, **self.kwargs)
+        print(f"Result: {result}")
+
+def heavy_computation(value):
+    time.sleep(2)
+    return value * value
+
+# 使用 Qt 线程池
+pool = QThreadPool.globalInstance()
+worker = Worker(heavy_computation, 42)
+pool.start(worker)
+```
+
+### 8.1.2 Map-Reduce 模式
+
+```cpp
+// [C++] Map-Reduce
+#include <QtConcurrent>
+#include <QList>
+
+int mapFunction(int value)
+{
+    return value * value;
+}
+
+void reduceFunction(int &result, int partial)
+{
+    result += partial;
+}
+
+void mapReduceExample()
+{
+    QList<int> numbers = {1, 2, 3, 4, 5};
+    
+    // 普通 map - 对每个元素应用函数
+    QFuture<int> mapped = QtConcurrent::mapped(numbers, mapFunction);
+    mapped.waitForFinished();
+    // 结果: [1, 4, 9, 16, 25]
+    
+    // map-reduce - 先映射再归约
+    QFuture<int> total = QtConcurrent::mappedReduced(numbers, mapFunction, reduceFunction);
+    total.waitForFinished();
+    // 结果: 55 (1 + 4 + 9 + 16 + 25)
+    
+    // 过滤
+    auto isEven = [](int value) { return value % 2 == 0; };
+    QFuture<int> filtered = QtConcurrent::filtered(numbers, isEven);
+    filtered.waitForFinished();
+    // 结果: [2, 4]
+}
+```
+
+### 8.1.3 线程池和任务
+
+```cpp
+// [C++] QThreadPool 和 QRunnable
+#include <QThreadPool>
+#include <QRunnable>
+#include <QMutex>
+#include <QDebug>
+
+class Task : public QRunnable
+{
+public:
+    Task(int id) : m_id(id) {}
+    
+    void run() override
+    {
+        qDebug() << "Task" << m_id << "started in thread" << QThread::currentThreadId();
+        
+        // 模拟工作
+        QThread::sleep(1);
+        
+        qDebug() << "Task" << m_id << "finished";
+    }
+    
+private:
+    int m_id;
+};
+
+void threadPoolExample()
+{
+    // 创建线程池
+    QThreadPool pool;
+    pool.setMaxThreadCount(4);  // 最大并发线程数
+    
+    // 提交任务
+    for (int i = 0; i < 10; ++i) {
+        Task *task = new Task(i);
+        task->setAutoDelete(true);  // 完成后自动删除
+        pool.start(task);
+    }
+    
+    // 等待所有任务完成
+    pool.waitForDone();
+}
+```
+
+---
+
+## 8.2 3D 图形（Qt 3D）
+
+Qt 3D 提供了用于创建 3D 应用程序的框架。
+
+### 8.2.1 基础 3D 场景
+
+```qml
+// [QML] 3D 场景
+import QtQuick
+import Qt3D.Core
+import Qt3D.Render
+import Qt3D.Input
+import Qt3D.Extras
+
+Entity {
+    id: sceneRoot
+    
+    // 渲染设置
+    RenderSettings {
+        id: renderSettings
+        activeFrameGraph: ForwardRenderer {
+            camera: camera
+            clearColor: "#2c3e50"
+        }
+    }
+    
+    // 输入设置
+    InputSettings { id: inputSettings }
+    
+    components: [renderSettings, inputSettings]
+    
+    // 相机
+    Camera {
+        id: camera
+        position: Qt.vector3d(0, 0, 20)
+        viewCenter: Qt.vector3d(0, 0, 0)
+        upVector: Qt.vector3d(0, 1, 0)
+        projectionType: CameraLens.PerspectiveProjection
+        fieldOfView: 45
+        nearPlane: 0.1
+        farPlane: 1000
+    }
+    
+    // 轨道控制器
+    OrbitCameraController {
+        camera: camera
+    }
+    
+    // 光源
+    Entity {
+        components: [
+            PointLight {
+                color: "white"
+                intensity: 1
+            },
+            Transform {
+                translation: Qt.vector3d(10, 10, 10)
+            }
+        ]
+    }
+    
+    // 立方体
+    Entity {
+        components: [
+            CuboidMesh {
+                xExtent: 2
+                yExtent: 2
+                zExtent: 2
+            },
+            PhongMaterial {
+                ambient: "#3498db"
+                diffuse: "#2980b9"
+                specular: "white"
+                shininess: 100
+            },
+            Transform {
+                id: cubeTransform
+                scale: 1
+                rotation: fromAxisAndAngle(Qt.vector3d(1, 0, 0), 0)
+            }
+        ]
+        
+        // 旋转动画
+        RotationAnimation on rotation {
+            duration: 10000
+            from: Qt.quaternion(1, 0, 0, 0)
+            to: Qt.quaternion(0.707, 0.707, 0, 0)
+            loops: Animation.Infinite
+            running: true
+        }
+    }
+    
+    // 球体
+    Entity {
+        components: [
+            SphereMesh {
+                radius: 1.5
+                rings: 32
+                slices: 32
+            },
+            PhongMaterial {
+                ambient: "#e74c3c"
+                diffuse: "#c0392b"
+            },
+            Transform {
+                translation: Qt.vector3d(5, 0, 0)
+            }
+        ]
+    }
+    
+    // 地板
+    Entity {
+        components: [
+            PlaneMesh {
+                width: 20
+                height: 20
+            },
+            PhongMaterial {
+                ambient: "#7f8c8d"
+                diffuse: "#95a5a6"
+            },
+            Transform {
+                translation: Qt.vector3d(0, -3, 0)
+                rotation: fromAxisAndAngle(Qt.vector3d(1, 0, 0), -90)
+            }
+        ]
+    }
+}
+```
+
+```cpp
+// [C++] 加载 3D 场景
+#include <Qt3DQuick/QQmlAspectEngine>
+#include <QGuiApplication>
+
+int main(int argc, char *argv[])
+{
+    QGuiApplication app(argc, argv);
+    
+    Qt3DCore::Quick::QQmlAspectEngine engine;
+    engine.aspectEngine()->rootEntity()->setParent(&app);
+    engine.qmlEngine()->load(QUrl("qrc:/main.qml"));
+    
+    return app.exec();
+}
+```
+
+---
+
+## 8.3 综合项目：待办事项应用
+
+让我们使用四种语言实现一个完整的待办事项应用。
+
+### 8.3.1 功能规格
+
+- 添加/编辑/删除任务
+- 设置任务优先级（高/中/低）
+- 标记任务完成状态
+- 按优先级/状态筛选
+- 本地数据持久化
+- 支持搜索
+
+### 8.3.2 C++ 实现
+
+```cpp
+// [C++] todo.h - 数据模型
+#ifndef TODO_H
+#define TODO_H
+
+#include <QObject>
+#include <QDateTime>
+
+class Todo : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int id READ id CONSTANT)
+    Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged)
+    Q_PROPERTY(QString description READ description WRITE setDescription NOTIFY descriptionChanged)
+    Q_PROPERTY(int priority READ priority WRITE setPriority NOTIFY priorityChanged)
+    Q_PROPERTY(bool completed READ completed WRITE setCompleted NOTIFY completedChanged)
+    Q_PROPERTY(QDateTime dueDate READ dueDate WRITE setDueDate NOTIFY dueDateChanged)
+    Q_PROPERTY(QDateTime createdAt READ createdAt CONSTANT)
+
+public:
+    enum Priority { Low = 0, Medium = 1, High = 2 };
+    Q_ENUM(Priority)
+    
+    explicit Todo(QObject *parent = nullptr);
+    explicit Todo(int id, const QString &title, QObject *parent = nullptr);
+    
+    int id() const;
+    QString title() const;
+    void setTitle(const QString &title);
+    QString description() const;
+    void setDescription(const QString &description);
+    int priority() const;
+    void setPriority(int priority);
+    bool completed() const;
+    void setCompleted(bool completed);
+    QDateTime dueDate() const;
+    void setDueDate(const QDateTime &dueDate);
+    QDateTime createdAt() const;
+    
+    QJsonObject toJson() const;
+    static Todo* fromJson(const QJsonObject &json, QObject *parent = nullptr);
+
+signals:
+    void titleChanged(const QString &title);
+    void descriptionChanged(const QString &description);
+    void priorityChanged(int priority);
+    void completedChanged(bool completed);
+    void dueDateChanged(const QDateTime &dueDate);
+
+private:
+    int m_id;
+    QString m_title;
+    QString m_description;
+    int m_priority = Medium;
+    bool m_completed = false;
+    QDateTime m_dueDate;
+    QDateTime m_createdAt;
+};
+
+#endif
+```
+
+```cpp
+// [C++] todomanager.h - 管理器
+#ifndef TODOMANAGER_H
+#define TODOMANAGER_H
+
+#include <QObject>
+#include <QList>
+#include <QAbstractListModel>
+#include "todo.h"
+
+class TodoManager : public QAbstractListModel
+{
+    Q_OBJECT
+    Q_PROPERTY(int count READ count NOTIFY countChanged)
+    Q_PROPERTY(int completedCount READ completedCount NOTIFY completedCountChanged)
+    Q_PROPERTY(int pendingCount READ pendingCount NOTIFY pendingCountChanged)
+
+public:
+    enum TodoRoles {
+        IdRole = Qt::UserRole + 1,
+        TitleRole,
+        DescriptionRole,
+        PriorityRole,
+        CompletedRole,
+        DueDateRole,
+        CreatedAtRole
+    };
+    Q_ENUM(TodoRoles)
+    
+    explicit TodoManager(QObject *parent = nullptr);
+    ~TodoManager();
+    
+    // QAbstractListModel 接口
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    QHash<int, QByteArray> roleNames() const override;
+    
+    int count() const;
+    int completedCount() const;
+    int pendingCount() const;
+    
+    Q_INVOKABLE Todo* get(int index) const;
+    Q_INVOKABLE void add(const QString &title, const QString &description = QString(),
+                        int priority = Todo::Medium, const QDateTime &dueDate = QDateTime());
+    Q_INVOKABLE void remove(int index);
+    Q_INVOKABLE void toggleCompleted(int index);
+    Q_INVOKABLE void setPriority(int index, int priority);
+    Q_INVOKABLE void clearCompleted();
+    Q_INVOKABLE QList<Todo*> filterByPriority(int priority) const;
+    Q_INVOKABLE QList<Todo*> filterByCompletion(bool completed) const;
+    Q_INVOKABLE void saveToFile(const QString &filePath);
+    Q_INVOKABLE void loadFromFile(const QString &filePath);
+
+signals:
+    void countChanged(int count);
+    void completedCountChanged(int count);
+    void pendingCountChanged(int count);
+    void error(const QString &message);
+
+private:
+    QList<Todo*> m_todos;
+    int m_nextId = 1;
+    
+    void updateCounts();
+};
+
+#endif
+```
+
+```cpp
+// [C++] mainwindow.h - 主窗口
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
+
+#include <QMainWindow>
+#include <QListView>
+#include <QLineEdit>
+#include <QComboBox>
+#include <QPushButton>
+#include "todomanager.h"
+
+class MainWindow : public QMainWindow
+{
+    Q_OBJECT
+
+public:
+    MainWindow(QWidget *parent = nullptr);
+    ~MainWindow();
+
+private slots:
+    void onAddTodo();
+    void onRemoveTodo();
+    void onToggleCompleted();
+    void onFilterChanged(int index);
+    void onSearchTextChanged(const QString &text);
+    void onSave();
+    void onLoad();
+    
+private:
+    void setupUI();
+    void setupConnections();
+    
+    TodoManager *m_manager;
+    QListView *m_listView;
+    QLineEdit *m_titleEdit;
+    QLineEdit *m_descEdit;
+    QComboBox *m_priorityCombo;
+    QComboBox *m_filterCombo;
+    QLineEdit *m_searchEdit;
+    QLabel *m_statsLabel;
+};
+
+#endif
+```
+
+### 8.3.3 Python 实现
+
+```python
+# [Python] todo.py
+from PySide6.QtCore import QObject, Signal, Property, QDateTime
+from enum import IntEnum
+
+class Priority(IntEnum):
+    LOW = 0
+    MEDIUM = 1
+    HIGH = 2
+
+class Todo(QObject):
+    titleChanged = Signal(str)
+    descriptionChanged = Signal(str)
+    priorityChanged = Signal(int)
+    completedChanged = Signal(bool)
+    dueDateChanged = Signal(QDateTime)
+    
+    def __init__(self, todo_id, title, parent=None):
+        super().__init__(parent)
+        self._id = todo_id
+        self._title = title
+        self._description = ""
+        self._priority = Priority.MEDIUM
+        self._completed = False
+        self._due_date = QDateTime()
+        self._created_at = QDateTime.currentDateTime()
+    
+    @Property(int, constant=True)
+    def id(self):
+        return self._id
+    
+    def _get_title(self):
+        return self._title
+    def _set_title(self, value):
+        if self._title != value:
+            self._title = value
+            self.titleChanged.emit(value)
+    title = Property(str, _get_title, _set_title, notify=titleChanged)
+    
+    def _get_description(self):
+        return self._description
+    def _set_description(self, value):
+        if self._description != value:
+            self._description = value
+            self.descriptionChanged.emit(value)
+    description = Property(str, _get_description, _set_description, notify=descriptionChanged)
+    
+    def _get_priority(self):
+        return self._priority
+    def _set_priority(self, value):
+        if self._priority != value:
+            self._priority = value
+            self.priorityChanged.emit(value)
+    priority = Property(int, _get_priority, _set_priority, notify=priorityChanged)
+    
+    def _get_completed(self):
+        return self._completed
+    def _set_completed(self, value):
+        if self._completed != value:
+            self._completed = value
+            self.completedChanged.emit(value)
+    completed = Property(bool, _get_completed, _set_completed, notify=completedChanged)
+    
+    def _get_due_date(self):
+        return self._due_date
+    def _set_due_date(self, value):
+        if self._due_date != value:
+            self._due_date = value
+            self.dueDateChanged.emit(value)
+    dueDate = Property(QDateTime, _get_due_date, _set_due_date, notify=dueDateChanged)
+    
+    @Property(QDateTime, constant=True)
+    def createdAt(self):
+        return self._created_at
+    
+    def to_dict(self):
+        return {
+            "id": self._id,
+            "title": self._title,
+            "description": self._description,
+            "priority": self._priority,
+            "completed": self._completed,
+            "due_date": self._due_date.toString() if self._due_date.isValid() else None,
+            "created_at": self._created_at.toString()
+        }
+    
+    @classmethod
+    def from_dict(cls, data, parent=None):
+        todo = cls(data["id"], data["title"], parent)
+        todo.description = data.get("description", "")
+        todo.priority = data.get("priority", Priority.MEDIUM)
+        todo.completed = data.get("completed", False)
+        return todo
+```
+
+```python
+# [Python] todo_manager.py
+from PySide6.QtCore import (QAbstractListModel, QModelIndex, Qt, 
+                            Signal, Property, QDateTime)
+from PySide6.QtQml import qmlRegisterType
+import json
+from todo import Todo, Priority
+
+class TodoManager(QAbstractListModel):
+    IdRole = Qt.UserRole + 1
+    TitleRole = Qt.UserRole + 2
+    DescriptionRole = Qt.UserRole + 3
+    PriorityRole = Qt.UserRole + 4
+    CompletedRole = Qt.UserRole + 5
+    DueDateRole = Qt.UserRole + 6
+    CreatedAtRole = Qt.UserRole + 7
+    
+    countChanged = Signal(int)
+    completedCountChanged = Signal(int)
+    pendingCountChanged = Signal(int)
+    error = Signal(str)
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._todos = []
+        self._next_id = 1
+    
+    def rowCount(self, parent=QModelIndex()):
+        return len(self._todos)
+    
+    def data(self, index, role=Qt.DisplayRole):
+        if not index.isValid() or index.row() >= len(self._todos):
+            return None
+        
+        todo = self._todos[index.row()]
+        
+        if role == self.TitleRole or role == Qt.DisplayRole:
+            return todo.title
+        elif role == self.IdRole:
+            return todo.id
+        elif role == self.DescriptionRole:
+            return todo.description
+        elif role == self.PriorityRole:
+            return todo.priority
+        elif role == self.CompletedRole:
+            return todo.completed
+        elif role == self.DueDateRole:
+            return todo.dueDate
+        elif role == self.CreatedAtRole:
+            return todo.createdAt
+        
+        return None
+    
+    def roleNames(self):
+        return {
+            self.IdRole: b"id",
+            self.TitleRole: b"title",
+            self.DescriptionRole: b"description",
+            self.PriorityRole: b"priority",
+            self.CompletedRole: b"completed",
+            self.DueDateRole: b"dueDate",
+            self.CreatedAtRole: b"createdAt"
+        }
+    
+    @Property(int, notify=countChanged)
+    def count(self):
+        return len(self._todos)
+    
+    @Property(int, notify=completedCountChanged)
+    def completedCount(self):
+        return sum(1 for t in self._todos if t.completed)
+    
+    @Property(int, notify=pendingCountChanged)
+    def pendingCount(self):
+        return sum(1 for t in self._todos if not t.completed)
+    
+    def get(self, index):
+        if 0 <= index < len(self._todos):
+            return self._todos[index]
+        return None
+    
+    def add(self, title, description="", priority=Priority.MEDIUM, due_date=QDateTime()):
+        todo = Todo(self._next_id, title, self)
+        todo.description = description
+        todo.priority = priority
+        todo.dueDate = due_date
+        
+        self.beginInsertRows(QModelIndex(), len(self._todos), len(self._todos))
+        self._todos.append(todo)
+        self.endInsertRows()
+        
+        self._next_id += 1
+        self._update_counts()
+    
+    def remove(self, index):
+        if 0 <= index < len(self._todos):
+            self.beginRemoveRows(QModelIndex(), index, index)
+            del self._todos[index]
+            self.endRemoveRows()
+            self._update_counts()
+    
+    def toggleCompleted(self, index):
+        todo = self.get(index)
+        if todo:
+            todo.completed = not todo.completed
+            self.dataChanged.emit(self.index(index), self.index(index), [self.CompletedRole])
+            self._update_counts()
+    
+    def clearCompleted(self):
+        completed_indices = [i for i, t in enumerate(self._todos) if t.completed]
+        for index in reversed(completed_indices):
+            self.remove(index)
+    
+    def saveToFile(self, file_path):
+        try:
+            data = [todo.to_dict() for todo in self._todos]
+            with open(file_path, 'w') as f:
+                json.dump(data, f, indent=2)
+        except Exception as e:
+            self.error.emit(str(e))
+    
+    def loadFromFile(self, file_path):
+        try:
+            with open(file_path, 'r') as f:
+                data = json.load(f)
+            
+            self.beginResetModel()
+            self._todos = []
+            for item in data:
+                todo = Todo.from_dict(item, self)
+                self._todos.append(todo)
+                self._next_id = max(self._next_id, todo.id + 1)
+            self.endResetModel()
+            self._update_counts()
+        except Exception as e:
+            self.error.emit(str(e))
+    
+    def _update_counts(self):
+        self.countChanged.emit(self.count)
+        self.completedCountChanged.emit(self.completedCount)
+        self.pendingCountChanged.emit(self.pendingCount)
+
+# 注册类型
+qmlRegisterType(TodoManager, "TodoModule", 1, 0, "TodoManager")
+```
+
+### 8.3.4 Clojure/Basilisp 实现
+
+```clojure
+;; [Clojure] todo.clj
+(ns todo
+  (:require [libpython-clj2.python :as py]
+            [libpython-clj2.require :refer [require-python]]
+            [clojure.data.json :as json]))
+
+(py/initialize!)
+(require-python '[PySide6.QtCore :as QtCore])
+
+;; 定义 Todo 类
+(def Todo
+  (py/create-class
+    "Todo"
+    [QtCore/QObject]
+    {"titleChanged" (QtCore/Signal str)
+     "descriptionChanged" (QtCore/Signal str)
+     "priorityChanged" (QtCore/Signal int)
+     "completedChanged" (QtCore/Signal bool)
+     
+     "__init__" (fn [self id title]
+                  (py/call-attr-super self "__init__" nil)
+                  (py/set-attr! self "_id" id)
+                  (py/set-attr! self "_title" title)
+                  (py/set-attr! self "_description" "")
+                  (py/set-attr! self "_priority" 1)  ; MEDIUM
+                  (py/set-attr! self "_completed" false)
+                  (py/set-attr! self "_created_at" 
+                    (py/call-attr QtCore/QDateTime "currentDateTime")))
+     
+     ; Getters
+     "id" (fn [self] (py/get-attr self "_id"))
+     "title" (fn [self] (py/get-attr self "_title"))
+     "description" (fn [self] (py/get-attr self "_description"))
+     "priority" (fn [self] (py/get-attr self "_priority"))
+     "completed" (fn [self] (py/get-attr self "_completed"))
+     
+     ; Setters
+     "setTitle" (fn [self value]
+                  (when (not= (py/get-attr self "_title") value)
+                    (py/set-attr! self "_title" value)
+                    (py/call-attr self "titleChanged.emit" value)))
+     
+     "setCompleted" (fn [self value]
+                      (when (not= (py/get-attr self "_completed") value)
+                        (py/set-attr! self "_completed" value)
+                        (py/call-attr self "completedChanged.emit" value)))}))
+
+(defn create-todo [id title]
+  (Todo id title))
+
+(defn to-dict [todo]
+  {:id (py/call-attr todo "id")
+   :title (py/call-attr todo "title")
+   :description (py/call-attr todo "description")
+   :priority (py/call-attr todo "priority")
+   :completed (py/call-attr todo "completed")})
+```
+
+```clojure
+;; [Basilisp] todo.lpy
+(ns todo
+  (:import [PySide6.QtCore QObject Signal QDateTime]))
+
+(defclass Todo [QObject]
+  "待办事项类"
+  (titleChanged (Signal str))
+  (descriptionChanged (Signal str))
+  (priorityChanged (Signal int))
+  (completedChanged (Signal bool))
+  
+  (defn __init__ [self id title]
+    (.__init__ (super Todo self) nil)
+    (set! (.-_id self) id)
+    (set! (.-_title self) title)
+    (set! (.-_description self) "")
+    (set! (.-_priority self) 1)
+    (set! (.-_completed self) false)
+    (set! (.-_created_at self) (QDateTime/currentDateTime)))
+  
+  ;; Getters
+  (defn id [self] (.-_id self))
+  (defn title [self] (.-_title self))
+  (defn description [self] (.-_description self))
+  (defn priority [self] (.-_priority self))
+  (defn completed [self] (.-_completed self))
+  (defn createdAt [self] (.-_created_at self))
+  
+  ;; Setters
+  (defn setTitle [self value]
+    (when (not= (.-_title self) value)
+      (set! (.-_title self) value)
+      (.emit (.titleChanged self) value)))
+  
+  (defn setDescription [self value]
+    (when (not= (.-_description self) value)
+      (set! (.-_description self) value)
+      (.emit (.descriptionChanged self) value)))
+  
+  (defn setPriority [self value]
+    (when (not= (.-_priority self) value)
+      (set! (.-_priority self) value)
+      (.emit (.priorityChanged self) value)))
+  
+  (defn setCompleted [self value]
+    (when (not= (.-_completed self) value)
+      (set! (.-_completed self) value)
+      (.emit (.completedChanged self) value)))
+  
+  (defn toDict [self]
+    {:id (.id self)
+     :title (.title self)
+     :description (.description self)
+     :priority (.priority self)
+     :completed (.completed self)
+     :created_at (str (.createdAt self))}))
+
+(defn create-todo [id title]
+  (Todo id title))
+```
+
+### 8.3.5 项目截图与运行说明
+
+**运行 C++ 版本：**
+```bash
+cd cpp/12_project/todo_app
+mkdir build && cd build
+cmake ..
+make
+./todo_app
+```
+
+**运行 Python 版本：**
+```bash
+cd python/12_project/todo_app
+python main.py
+```
+
+**运行 Clojure 版本：**
+```bash
+cd clojure/12_project/todo_app
+clojure -M:run
+```
+
+**运行 Basilisp 版本：**
+```bash
+cd basilisp/12_project/todo_app
+basilisp run main.lpy
+```
+
+---
+
+## 8.4 本章小结
+
+本章介绍了 Qt 的高级主题：
+
+| 主题 | 关键内容 | 应用场景 |
+|------|----------|----------|
+| 并发编程 | QtConcurrent、QThreadPool | 多线程任务 |
+| 3D 图形 | Qt3D、Entity-Component | 3D 可视化 |
+| 综合项目 | Todo App | 完整应用开发 |
+
+通过本章的学习，你应该能够：
+- 使用 QtConcurrent 编写高效的多线程代码
+- 创建简单的 3D 场景
+- 构建完整的 Qt 应用程序
+
+在下一章中，我们将提供额外的参考资料和附录。
