@@ -73,7 +73,7 @@ sudo apt install cmake
 
 验证安装:
 
-#+begin_src sh
+#+begin_src sh :results raw
 cmake --version
 # 应显示 3.16+ 版本
 #+end_src
@@ -125,6 +125,162 @@ cmake -S . -B build
 cmake --build build
 ./build/hello
 #+end_src
+
+
+*** 2.1.4 CMake 编译 Qt 程序详解
+
+Qt 程序的编译过程与传统 C++ 程序不同, 它包含一个**预编译阶段**. 理解这个过程对于调试和优化构建非常重要.
+
+**** Qt 预编译工具
+
+Qt 提供了三个核心预编译工具:
+
+| 工具 | 全称                 | 输入                   | 输出      | 作用                                         |
+|------+----------------------+------------------------+-----------+----------------------------------------------|
+| *moc*  | Meta-Object Compiler | 含 ~Q_OBJECT~ 宏的头文件 | ~moc_*.cpp~ | 处理信号/槽, 属性系统, 运行时类型信息        |
+| *uic*  | UI Compiler          | ~.ui~ 文件               | ~ui_*.h~    | 将 Qt Designer 的 UI 文件转换为 C++ 头文件   |
+| *rcc*  | Resource Compiler    | ~.qrc~ 文件              | ~qrc_*.cpp~ | 将资源文件(图片, 翻译文件等)编译为二进制代码 |
+
+**** CMake 自动处理
+
+现代 CMake 通过以下变量自动调用 Qt 预编译工具:
+
+#+begin_src cmake
+# 必须设置的语言标准
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# 自动运行 moc (处理 Q_OBJECT 宏)
+set(CMAKE_AUTOMOC ON)
+
+# 自动运行 uic (处理 .ui 文件)
+set(CMAKE_AUTOUIC ON)
+
+# 自动运行 rcc (处理 .qrc 资源文件)
+set(CMAKE_AUTORCC ON)
+#+end_src
+
+**** 完整示例
+
+下面是一个包含 UI 文件和资源文件的完整项目结构:
+
+#+begin_src
+myapp/
+├── CMakeLists.txt
+├── main.cpp
+├── mainwindow.cpp
+├── mainwindow.h
+├── mainwindow.ui      # Qt Designer UI 文件
+└── resources.qrc      # 资源文件清单
+#+end_src
+
+***** CMakeLists.txt
+
+#+begin_src cmake
+cmake_minimum_required(VERSION 3.16)
+project(MyApp LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# 启用 Qt 预编译工具
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
+
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
+
+add_executable(myapp
+    main.cpp
+    mainwindow.cpp
+    mainwindow.h
+    mainwindow.ui        # CMake 自动调用 uic 生成 ui_mainwindow.h
+    resources.qrc        # CMake 自动调用 rcc 生成 qrc_resources.cpp
+)
+
+target_link_libraries(myapp Qt6::Core Qt6::Gui Qt6::Widgets)
+#+end_src
+
+***** resources.qrc (资源文件)
+
+#+begin_src xml
+<RCC>
+    <qresource prefix="/">
+        <file>images/icon.png</file>
+        <file>styles/app.qss</file>
+    </qresource>
+</RCC>
+#+end_src
+
+***** mainwindow.h (需要 moc 处理)
+
+#+begin_src cpp
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
+
+#include <QMainWindow>
+
+// Q_OBJECT 宏指示 moc 需要为这个类生成元对象代码
+class MainWindow : public QMainWindow {
+    Q_OBJECT  // <-- moc 会读取这个宏
+
+public:
+    explicit MainWindow(QWidget *parent = nullptr);
+
+signals:
+    void userClicked();  // 信号声明
+
+private slots:
+    void onButtonClick();  // 槽函数声明
+};
+
+#endif
+#+end_src
+
+**** 手动运行预编译工具(调试用)
+
+虽然 CMake 会自动处理, 但在调试时你可能需要手动运行:
+
+#+begin_src sh
+# 手动运行 moc
+moc mainwindow.h -o moc_mainwindow.cpp
+
+# 手动运行 uic
+uic mainwindow.ui -o ui_mainwindow.h
+
+# 手动运行 rcc
+rcc resources.qrc -o qrc_resources.cpp
+#+end_src
+
+**** 编译流程图
+
+完整的 Qt 程序编译流程:
+
+#+begin_example
+mainwindow.h --(moc)--> moc_mainwindow.cpp --+---> 编译器 ---> 链接器 ---> 可执行文件
+                                            |
+mainwindow.ui --(uic)--> ui_mainwindow.h ----+---> 编译器 ---> 链接器 ---> 可执行文件
+                                            |
+resources.qrc --(rcc)--> qrc_resources.cpp -+---> 编译器 ---> 链接器 ---> 可执行文件
+                                            |
+main.cpp -----------------------------------+---> 编译器 ---> 链接器 ---> 可执行文件
+                                            |
+mainwindow.cpp ----------------------------+---> 编译器 ---> 链接器 ---> 可执行文件
+#+end_example
+
+**** 常见问题
+
+1. *"undefined reference to vtable"* 错误
+   - 原因: CMake 没有找到 ~Q_OBJECT~ 宏, 未运行 moc
+   - 解决: 确保设置了 ~CMAKE_AUTOMOC ON~
+
+2. *"ui_xxx.h: No such file or directory"* 错误
+   - 原因: uic 未运行或输出目录不正确
+   - 解决: 确保设置了 ~CMAKE_AUTOUIC ON~
+
+3. *资源文件无法加载*
+   - 原因: rcc 未运行或 qrc 文件路径错误
+   - 解决: 确保设置了 ~CMAKE_AUTORCC ON~, 并检查 qrc 中的文件路径
 
 
 ** 2.2 Python 环境搭建
