@@ -294,7 +294,6 @@ cmake --build cpp/build --target todo_app
 ./cpp/build/12_project/todo_app/todo_app
 ```
 
----
 
 ### Python 版本 (PySide6)
 
@@ -365,7 +364,6 @@ python/
 └── requirements.txt            # Python 依赖
 ```
 
----
 
 ### Emacs：快速编译当前示例
 仓库内的 `.dir-locals.el` 会在 Emacs 里打开 `main.cpp` 时自动设置 `compile-command`，让你直接 `M-x compile` 就能编译并运行当前示例：
