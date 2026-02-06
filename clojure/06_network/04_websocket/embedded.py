@@ -3,6 +3,10 @@ def run_block_1():
 from PySide6.QtCore import QUrl, QTimer, QCoreApplication
 from PySide6.QtWebSockets import QWebSocket
 from PySide6.QtNetwork import QAbstractSocket
+import sys
+
+# 确保 QCoreApplication 已创建
+app = QCoreApplication.instance() or QCoreApplication(sys.argv)
 
 class WebSocketClient:
     def __init__(self):
@@ -93,22 +97,23 @@ client = WebSocketClient()
 def run_block_4():
     exec(r"""
 from PySide6.QtCore import QCoreApplication
-import sys
 
-app = QCoreApplication.instance() or QCoreApplication(sys.argv)
-app.exec()
+# 获取已有的应用实例
+app = QCoreApplication.instance()
+if app:
+    app.exec()
 """, globals())
 
 def run_block_5(server_url):
     from PySide6.QtCore import QUrl, QTimer
-
+    
     url = QUrl(server_url)
-
+    
     # 延迟连接，让事件循环先启动
     QTimer.singleShot(100, lambda: client.connect_to_server(url))
-
-    # 超时处理 (30秒)
-    QTimer.singleShot(30000, lambda: (
+    
+    # 超时处理 (10秒)
+    QTimer.singleShot(10000, lambda: (
         print('\n[WebSocket] 超时，关闭连接...'),
         client.close()
     ))

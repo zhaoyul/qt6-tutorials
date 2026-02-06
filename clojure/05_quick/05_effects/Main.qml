@@ -5,15 +5,14 @@
  * - Opacity: 透明度
  * - Rotation: 旋转
  * - Scale: 缩放
- * - ShaderEffect: 着色器效果
- * - Blend: 混合模式
- * - DropShadow: 阴影效果
+ * - Animation: 动画效果
+ * - Gradient: 渐变效果
+ * - Shadow: 阴影效果（使用内嵌矩形模拟）
  */
 
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtQuick.Effects
 
 ApplicationWindow {
     id: root
@@ -209,9 +208,9 @@ ApplicationWindow {
                 }
             }
 
-            // 4. DropShadow 阴影效果
+            // 4. DropShadow 阴影效果（使用偏移矩形模拟）
             GroupBox {
-                title: "4. DropShadow (阴影)"
+                title: "4. DropShadow (阴影 - 模拟效果)"
                 Layout.fillWidth: true
 
                 Column {
@@ -219,78 +218,97 @@ ApplicationWindow {
                     width: parent.width
 
                     Row {
-                        spacing: 20
+                        spacing: 25
 
-                        // 带阴影的矩形
-                        Rectangle {
-                            id: shadowRect
+                        // 带阴影的矩形（使用底层矩形模拟阴影）
+                        Item {
                             width: 100
                             height: 60
-                            color: "white"
-                            radius: 10
-                            layer.enabled: true
-                            layer.effect: MultiEffect {
-                                shadowEnabled: true
-                                shadowColor: "#80000000"
-                                shadowBlur: 0.5
-                                shadowHorizontalOffset: 4
-                                shadowVerticalOffset: 4
+
+                            // 阴影层
+                            Rectangle {
+                                width: 100
+                                height: 60
+                                color: "#80000000"
+                                radius: 10
+                                x: 4
+                                y: 4
                             }
 
-                            Text {
-                                anchors.centerIn: parent
-                                text: "阴影效果"
+                            // 主体
+                            Rectangle {
+                                width: 100
+                                height: 60
+                                color: "white"
+                                radius: 10
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "阴影效果"
+                                }
                             }
                         }
 
-                        // 带内发光效果的圆形
+                        // 发光效果（使用边框模拟）
                         Rectangle {
-                            id: glowRect
                             width: 60
                             height: 60
                             radius: 30
                             color: "orange"
-                            layer.enabled: true
-                            layer.effect: MultiEffect {
-                                shadowEnabled: true
-                                shadowColor: "orange"
-                                shadowBlur: 1.0
-                                shadowScale: 1.5
+                            border.color: "#FFFFA500"
+                            border.width: 4
+                            opacity: 0.9
+
+                            // 外层光晕
+                            Rectangle {
+                                anchors.centerIn: parent
+                                width: 70
+                                height: 70
+                                radius: 35
+                                color: "transparent"
+                                border.color: "#60FFA500"
+                                border.width: 2
                             }
                         }
 
                         // 卡片效果
-                        Rectangle {
+                        Item {
                             width: 100
                             height: 70
-                            color: "white"
-                            radius: 8
-                            layer.enabled: true
-                            layer.effect: MultiEffect {
-                                shadowEnabled: true
-                                shadowColor: "#40000000"
-                                shadowBlur: 0.3
-                                shadowHorizontalOffset: 0
-                                shadowVerticalOffset: 2
+
+                            Rectangle {
+                                width: 100
+                                height: 70
+                                color: "#20000000"
+                                radius: 8
+                                x: 0
+                                y: 2
                             }
 
-                            Column {
-                                anchors.centerIn: parent
-                                spacing: 5
+                            Rectangle {
+                                width: 100
+                                height: 70
+                                color: "white"
+                                radius: 8
 
-                                Rectangle {
-                                    width: 60
-                                    height: 8
-                                    color: "#ddd"
-                                    radius: 4
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                }
-                                Rectangle {
-                                    width: 40
-                                    height: 8
-                                    color: "#ddd"
-                                    radius: 4
-                                    anchors.horizontalCenter: parent.horizontalCenter
+                                Column {
+                                    anchors.centerIn: parent
+                                    spacing: 5
+
+                                    Rectangle {
+                                        width: 60
+                                        height: 8
+                                        color: "#ddd"
+                                        radius: 4
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                    }
+                                    Rectangle {
+                                        width: 40
+                                        height: 8
+                                        color: "#ddd"
+                                        radius: 4
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                    }
                                 }
                             }
                         }
@@ -367,84 +385,82 @@ ApplicationWindow {
                 }
             }
 
-            // 6. 模糊效果
+            // 6. 渐变效果
             GroupBox {
-                title: "6. Blur (模糊效果)"
+                title: "6. Gradient (渐变效果)"
                 Layout.fillWidth: true
 
                 Column {
                     spacing: 10
                     width: parent.width
 
-                    Slider {
-                        id: blurSlider
-                        width: parent.width
-                        from: 0
-                        to: 64
-                        value: 0
-                    }
+                    Row {
+                        spacing: 15
+                        anchors.horizontalCenter: parent.horizontalCenter
 
-                    Rectangle {
-                        width: parent.width
-                        height: 80
-                        color: "lightyellow"
-                        clip: true
-
-                        Row {
-                            anchors.centerIn: parent
-                            spacing: 20
+                        // 线性渐变
+                        Rectangle {
+                            width: 100
+                            height: 60
+                            radius: 8
+                            gradient: Gradient {
+                                orientation: Gradient.Horizontal
+                                GradientStop { position: 0; color: "red" }
+                                GradientStop { position: 0.5; color: "yellow" }
+                                GradientStop { position: 1; color: "green" }
+                            }
 
                             Text {
-                                text: "模糊测试"
-                                font.pixelSize: 24
+                                anchors.centerIn: parent
+                                text: "水平渐变"
+                                color: "white"
                                 font.bold: true
-                                color: "darkred"
-                                layer.enabled: blurSlider.value > 0
-                                layer.effect: MultiEffect {
-                                    blurEnabled: true
-                                    blur: blurSlider.value / 64
-                                }
-                            }
-
-                            Rectangle {
-                                width: 60
-                                height: 60
-                                color: "green"
-                                radius: 10
-                                layer.enabled: blurSlider.value > 0
-                                layer.effect: MultiEffect {
-                                    blurEnabled: true
-                                    blur: blurSlider.value / 64
-                                }
-                            }
-
-                            Rectangle {
-                                width: 60
-                                height: 60
-                                gradient: Gradient {
-                                    GradientStop { position: 0; color: "purple" }
-                                    GradientStop { position: 1; color: "blue" }
-                                }
-                                layer.enabled: blurSlider.value > 0
-                                layer.effect: MultiEffect {
-                                    blurEnabled: true
-                                    blur: blurSlider.value / 64
-                                }
                             }
                         }
-                    }
 
-                    Label {
-                        text: "模糊强度: " + blurSlider.value.toFixed(0)
-                        font.pixelSize: 12
-                        color: "gray"
+                        // 垂直渐变
+                        Rectangle {
+                            width: 100
+                            height: 60
+                            radius: 8
+                            gradient: Gradient {
+                                GradientStop { position: 0; color: "blue" }
+                                GradientStop { position: 1; color: "cyan" }
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "垂直渐变"
+                                color: "white"
+                                font.bold: true
+                            }
+                        }
+
+                        // 对角渐变（使用角度）
+                        Rectangle {
+                            width: 60
+                            height: 60
+                            radius: 30
+                            gradient: Gradient {
+                                GradientStop { position: 0; color: "purple" }
+                                GradientStop { position: 1; color: "pink" }
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "圆形"
+                                color: "white"
+                                font.bold: true
+                                font.pixelSize: 10
+                            }
+                        }
                     }
                 }
             }
 
-            // 7. 颜色调整
+            // 7. 颜色调整（使用 opacity 和 overlay 模拟）
             GroupBox {
-                title: "7. 颜色调整 (Brightness/Contrast)"
+                title: "7. 颜色调整 (Brightness/Contrast 模拟)"
                 Layout.fillWidth: true
 
                 Column {
@@ -455,24 +471,22 @@ ApplicationWindow {
                         spacing: 10
 
                         Column {
-                            Label { text: "亮度" }
+                            Label { text: "亮度模拟" }
                             Slider {
                                 id: brightnessSlider
                                 width: 150
-                                from: -1
+                                from: 0
                                 to: 1
-                                value: 0
+                                value: 0.5
                             }
                         }
 
                         Column {
-                            Label { text: "对比度" }
-                            Slider {
-                                id: contrastSlider
-                                width: 150
-                                from: 0
-                                to: 2
-                                value: 1
+                            Label { text: "叠加色" }
+                            ComboBox {
+                                id: overlayColor
+                                width: 120
+                                model: ["白色", "黑色", "红色", "蓝色"]
                             }
                         }
                     }
@@ -500,22 +514,50 @@ ApplicationWindow {
                                 }
                             }
 
-                            // 调整后的
+                            // 调整后的（使用半透明叠加层模拟亮度调整）
                             Rectangle {
                                 width: 60
                                 height: 60
                                 color: "teal"
                                 radius: 5
-                                layer.enabled: true
-                                layer.effect: MultiEffect {
-                                    brightness: brightnessSlider.value
-                                    contrast: contrastSlider.value
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    color: {
+                                        switch(overlayColor.currentIndex) {
+                                            case 0: return "#FFFFFF"
+                                            case 1: return "#000000"
+                                            case 2: return "#FF0000"
+                                            case 3: return "#0000FF"
+                                            default: return "#FFFFFF"
+                                        }
+                                    }
+                                    opacity: brightnessSlider.value
+                                    radius: 5
                                 }
 
                                 Text {
                                     anchors.centerIn: parent
                                     text: "调整后"
                                     color: "white"
+                                }
+                            }
+
+                            // 另一个示例
+                            Rectangle {
+                                width: 60
+                                height: 60
+                                gradient: Gradient {
+                                    GradientStop { position: 0; color: "orange" }
+                                    GradientStop { position: 1; color: "red" }
+                                }
+                                radius: 5
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    color: "white"
+                                    opacity: 1 - brightnessSlider.value
+                                    radius: 5
                                 }
                             }
                         }
