@@ -162,6 +162,23 @@ clojure/                        # Clojure + PySide6 示例
 └── python.edn
 ```
 
+## ✅ Clojure 示例覆盖情况（截至 2026-02-06）
+
+说明：以下每个子目录均包含可运行的 `main.clj` 示例。
+
+- 01_core: 01_meta_object, 02_signals_slots, 03_properties, 04_containers, 05_io_system, 06_event_loop, 07_threading, 08_timer
+- 02_gui: 01_painting, 02_images, 03_fonts, 04_events, 05_window
+- 03_widgets: 01_basic_widgets, 02_layouts, 03_dialogs, 04_main_window, 05_item_views, 06_graphics_view, 07_custom_widgets
+- 04_qml: 01_basics, 02_types, 03_javascript, 04_cpp_integration
+- 05_quick: 01_items, 02_controls, 03_animations, 04_states, 05_effects
+- 06_network: 01_tcp, 02_udp, 03_http, 04_websocket
+- 07_sql: 01_basics, 01_connection, 02_queries, 03_models
+- 08_multimedia: 01_audio, 02_video, 03_camera
+- 09_test: 01_unit_test, 02_gui_test
+- 10_concurrent: 01_run, 01_basics, 02_map_reduce, 03_filter
+- 11_3d: 01_basics
+- 12_project: todo_app
+
 ## 🔑 核心类速查
 
 ### C++ Qt6 核心类
@@ -362,6 +379,33 @@ python/
 ├── 02_gui/                     # Qt GUI 模块 (Python)
 ├── 03_widgets/                 # Qt Widgets 模块 (Python)
 └── requirements.txt            # Python 依赖
+```
+
+
+### Clojure 版本 (libpython-clj2 + PySide6)
+
+#### 环境要求
+- Clojure CLI 工具
+- Python 3.x + PySide6
+- JDK 17+（仓库内示例已在 JDK 25 下验证）
+
+#### 配置 Python 解释器
+在 `clojure/python.edn` 中填写 Python 路径：
+```clojure
+{:python-executable "/path/to/python3"
+ :python-home "/path/to/python"}
+```
+
+#### 运行示例（推荐）
+```bash
+cd clojure
+clojure -M:run 01_core/01_meta_object/main.clj
+```
+
+#### 直接运行
+```bash
+cd clojure
+clojure -M 01_core/01_meta_object/main.clj
 ```
 
 

@@ -8,35 +8,88 @@
 2. **Python 3.x + PySide6**: `pip install pyside6`
 3. **JDK**: 支持 JDK 17-25（测试通过 JDK 25）
 
+## 最小运行示例
+
+```bash
+cd clojure
+clojure -M:run 01_core/01_meta_object/main.clj
+```
+
+如需直接运行：
+```bash
+cd clojure
+clojure -M 01_core/01_meta_object/main.clj
+```
+
 ## 项目结构
 
 ```
 clojure/
+├── AGENTS.md             # 经验与注意事项
+├── README.md             # 本文件
 ├── deps.edn              # Clojure 依赖配置
 ├── python.edn            # Python 环境配置
-├── README.md             # 本文件
+├── classes/              # 运行/编译产物（可忽略）
 ├── 01_core/              # 核心功能
-│   ├── 01_meta_object/   # ✅ 元对象系统
-│   ├── 02_signals_slots/ # ✅ 信号与槽
-│   ├── 03_properties/    # ✅ 属性系统
-│   ├── 04_containers/    # ✅ 容器类
-│   ├── 05_io_system/     # ✅ IO 系统
-│   ├── 06_event_loop/    # ✅ 事件循环
-│   ├── 07_threading/     # ✅ 多线程
-│   └── 08_timer/         # ✅ 定时器
-├── 02_gui/               # GUI 基础（控制台模式）
-├── 03_widgets/           # 控件
-│   ├── 01_basic_widgets/ # ✅ 基础控件
-│   ├── 02_layouts/       # ✅ 布局管理
-│   └── 03_dialogs/       # ✅ 对话框
+│   ├── 01_meta_object/
+│   ├── 02_signals_slots/
+│   ├── 03_properties/
+│   ├── 04_containers/
+│   ├── 05_io_system/
+│   ├── 06_event_loop/
+│   ├── 07_threading/
+│   └── 08_timer/
+├── 02_gui/               # GUI 与绘图
+│   ├── 01_painting/
+│   ├── 02_images/
+│   ├── 03_fonts/
+│   ├── 04_events/
+│   └── 05_window/
+├── 03_widgets/           # Widgets
+│   ├── 01_basic_widgets/
+│   ├── 02_layouts/
+│   ├── 03_dialogs/
+│   ├── 04_main_window/
+│   ├── 05_item_views/
+│   ├── 06_graphics_view/
+│   └── 07_custom_widgets/
 ├── 04_qml/               # QML
+│   ├── 01_basics/
+│   ├── 02_types/
+│   ├── 03_javascript/
+│   └── 04_cpp_integration/
 ├── 05_quick/             # Qt Quick
+│   ├── 01_items/
+│   ├── 02_controls/
+│   ├── 03_animations/
+│   ├── 04_states/
+│   └── 05_effects/
 ├── 06_network/           # 网络
-│   └── 03_http/          # ✅ HTTP 请求
+│   ├── 01_tcp/
+│   ├── 02_udp/
+│   ├── 03_http/
+│   └── 04_websocket/
 ├── 07_sql/               # 数据库
-│   └── 01_basics/        # ✅ SQL 基础
-└── 10_concurrent/        # 并发
-    └── 01_basics/        # ✅ 并发编程
+│   ├── 01_basics/
+│   ├── 01_connection/
+│   ├── 02_queries/
+│   └── 03_models/
+├── 08_multimedia/        # 多媒体
+│   ├── 01_audio/
+│   ├── 02_video/
+│   └── 03_camera/
+├── 09_test/              # 测试
+│   ├── 01_unit_test/
+│   └── 02_gui_test/
+├── 10_concurrent/        # 并发
+│   ├── 01_run/
+│   ├── 01_basics/
+│   ├── 02_map_reduce/
+│   └── 03_filter/
+├── 11_3d/                # 3D
+│   └── 01_basics/
+└── 12_project/           # 综合项目
+    └── todo_app/
 ```
 
 ## 配置
@@ -70,11 +123,46 @@ clojure -M:run 01_core/05_io_system/main.clj
 clojure -M:run 01_core/06_event_loop/main.clj
 clojure -M:run 01_core/07_threading/main.clj
 clojure -M:run 01_core/08_timer/main.clj
+clojure -M:run 02_gui/01_painting/main.clj
+clojure -M:run 02_gui/02_images/main.clj
+clojure -M:run 02_gui/03_fonts/main.clj
+clojure -M:run 02_gui/04_events/main.clj
+clojure -M:run 02_gui/05_window/main.clj
+clojure -M:run 03_widgets/01_basic_widgets/main.clj
 clojure -M:run 03_widgets/02_layouts/main.clj
 clojure -M:run 03_widgets/03_dialogs/main.clj
+clojure -M:run 03_widgets/04_main_window/main.clj
+clojure -M:run 03_widgets/05_item_views/main.clj
+clojure -M:run 03_widgets/06_graphics_view/main.clj
+clojure -M:run 03_widgets/07_custom_widgets/main.clj
+clojure -M:run 04_qml/01_basics/main.clj
+clojure -M:run 04_qml/02_types/main.clj
+clojure -M:run 04_qml/03_javascript/main.clj
+clojure -M:run 04_qml/04_cpp_integration/main.clj
+clojure -M:run 05_quick/01_items/main.clj
+clojure -M:run 05_quick/02_controls/main.clj
+clojure -M:run 05_quick/03_animations/main.clj
+clojure -M:run 05_quick/04_states/main.clj
+clojure -M:run 05_quick/05_effects/main.clj
+clojure -M:run 06_network/01_tcp/main.clj
+clojure -M:run 06_network/02_udp/main.clj
 clojure -M:run 06_network/03_http/main.clj
+clojure -M:run 06_network/04_websocket/main.clj
 clojure -M:run 07_sql/01_basics/main.clj
+clojure -M:run 07_sql/01_connection/main.clj
+clojure -M:run 07_sql/02_queries/main.clj
+clojure -M:run 07_sql/03_models/main.clj
+clojure -M:run 08_multimedia/01_audio/main.clj
+clojure -M:run 08_multimedia/02_video/main.clj
+clojure -M:run 08_multimedia/03_camera/main.clj
+clojure -M:run 09_test/01_unit_test/main.clj
+clojure -M:run 09_test/02_gui_test/main.clj
+clojure -M:run 10_concurrent/01_run/main.clj
 clojure -M:run 10_concurrent/01_basics/main.clj
+clojure -M:run 10_concurrent/02_map_reduce/main.clj
+clojure -M:run 10_concurrent/03_filter/main.clj
+clojure -M:run 11_3d/01_basics/main.clj
+clojure -M:run 12_project/todo_app/main.clj
 ```
 
 ### 方式2: 直接运行
