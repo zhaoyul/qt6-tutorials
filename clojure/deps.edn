@@ -1,7 +1,8 @@
 {:deps
  {org.clojure/clojure {:mvn/version "1.12.4"}
   clj-python/libpython-clj {:mvn/version "2.026"}
-  cnuernber/dtype-next {:mvn/version "11.004"}}
+  cnuernber/dtype-next {:mvn/version "11.004"}
+  nrepl/nrepl {:mvn/version "1.1.0"}}
 
  :paths ["src"]
 
@@ -102,5 +103,7 @@
   :ch11-n3d-basics {:main-opts ["-m" "qt6_tutorials.ch11.n3d.basics"]
            :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
   :ch12-project-todo-app {:main-opts ["-m" "qt6_tutorials.ch12.project.todo_app"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch12-project-todo-app-live {:main-opts ["-m" "qt6_tutorials.ch12.project.todo_app" "--nrepl"]
            :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
 }}

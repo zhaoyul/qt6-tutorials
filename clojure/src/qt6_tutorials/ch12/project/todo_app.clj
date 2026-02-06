@@ -6,7 +6,9 @@
 
 (require '[libpython-clj2.python :as py]
          '[libpython-clj2.require :refer [require-python]]
-         '[clojure.data.json :as json])
+         '[clojure.data.json :as json]
+         '[clojure.java.io :as io]
+         '[nrepl.server :as nrepl])
 
 (py/initialize!)
 
@@ -23,6 +25,90 @@
 
 (def FilterMode
   {:ALL 0 :ACTIVE 1 :DONE 2})
+
+(defonce nrepl-server (atom nil))
+(defonce extra-widgets (atom []))
+
+(defn start-nrepl!
+  "Start an in-process nREPL server. Returns the server map."
+  ([] (start-nrepl! 0))
+  ([port]
+   (when-not @nrepl-server
+     (let [server (nrepl/start-server :port port)]
+       (reset! nrepl-server server)
+       (let [port-str (str (:port server))
+             port-file (io/file ".nrepl-port")]
+         (spit port-file port-str)
+         (println (str "nREPL listening on port " port-str))
+         (println (str "nREPL port written to " (.getAbsolutePath port-file)))
+         (flush))
+       server))))
+
+(defn stop-nrepl!
+  "Stop the in-process nREPL server if it is running."
+  []
+  (when-let [server @nrepl-server]
+    (nrepl/stop-server server)
+    (reset! nrepl-server nil)
+    (try
+      (io/delete-file ".nrepl-port" true)
+      (catch Exception _ nil))))
+
+(defn window
+  "Return the PySide6 main window instance created by embedded.py."
+  []
+  (py/get-attr py-embedded "window"))
+
+(defn ui-dispatch!
+  "Schedule a function to run on the Qt UI thread."
+  [f]
+  (let [callback (py/make-callable (fn []
+                                     (try
+                                       (f)
+                                       (catch Exception e
+                                         (println "UI dispatch error:" e)))
+                                     nil))]
+    (py/call-attr py-embedded "enqueue_ui" callback)))
+
+(defn set-title!
+  "Update the window title."
+  [title]
+  (ui-dispatch!
+   (fn []
+     (py/call-attr (window) "setWindowTitle" title))))
+
+(defn set-subtitle!
+  "Update the subtitle label."
+  [text]
+  (ui-dispatch!
+   (fn []
+     (py/call-attr (py/get-attr (window) "subtitle") "setText" text))))
+
+(defn add-task!
+  "Add a task via the UI controls. Options: :priority, :tag."
+  ([text] (add-task! text {}))
+  ([text {:keys [priority tag] :or {priority "Medium" tag ""}}]
+   (ui-dispatch!
+    (fn []
+      (let [wnd (window)]
+        (py/call-attr (py/get-attr wnd "input_field") "setText" text)
+        (py/call-attr (py/get-attr wnd "priority_box") "setCurrentText" priority)
+        (py/call-attr (py/get-attr wnd "tag_input") "setText" tag)
+        (py/call-attr wnd "add_task"))))))
+
+(defn add-button!
+  "Add a button to the main layout and wire an on-click handler."
+  ([label] (add-button! label (fn [] (println "Clicked:" label))))
+  ([label on-click]
+   (ui-dispatch!
+    (fn []
+      (let [QPushButton (py/get-attr QtWidgets "QPushButton")
+            btn (QPushButton label)
+            handler (py/make-callable (fn [] (on-click) nil))]
+        (py/call-attr (py/get-attr btn "clicked") "connect" handler)
+        (py/call-attr (py/call-attr (window) "layout") "addWidget" btn)
+        (swap! extra-widgets conj btn)
+        btn)))))
 
 (defn data-file-path
   "Get the path for storing todo data."
@@ -112,9 +198,25 @@
   []
   (py/call-attr py-embedded "run_block_1"))
 
+(defn- parse-args
+  "Parse CLI args for experimental features."
+  [args]
+  (println args)
+  (loop [opts {} xs args]
+    (if (empty? xs)
+      opts
+      (let [[x & more] xs]
+        (case x
+          "--nrepl" (recur (assoc opts :nrepl true) more)
+          "--nrepl-port" (recur (assoc opts :nrepl-port (Integer/parseInt (first more))) (rest more))
+          (recur opts more))))))
+
 (defn -main
   [& args]
   (println "=== PySide6 Todo App (Clojure + libpython-clj) ===")
-  (run-todo-app)
+  (let [{:keys [nrepl nrepl-port]} (parse-args args)]
+    (when (or nrepl nrepl-port)
+      (start-nrepl! (or nrepl-port 0)))
+    (run-todo-app))
 
   (println "\n=== 完成 ==="))

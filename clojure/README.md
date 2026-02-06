@@ -118,6 +118,25 @@ clj -M:ch12-project-todo-app
 
 macOS 提示：GUI 示例需主线程运行，alias 已包含 `-XstartOnFirstThread`。
 
+## 实验性：UI + nREPL 热更新
+
+Todo App 提供一个实验性的内置 nREPL 入口，允许连接后动态修改 UI（类似 re-frame + reagent 的交互体验）：
+
+```bash
+cd clojure
+clj -M:ch12-project-todo-app-live
+```
+
+启动后会打印 nREPL 端口。连接后可以在 REPL 中执行：
+
+```clojure
+(require '[qt6_tutorials.ch12.project.todo_app :as todo] :reload)
+(todo/set-title! "Live Title")
+(todo/set-subtitle! "Changed from nREPL")
+(todo/add-task! "hello" {:priority "High" :tag "demo"})
+(todo/add-button! "Ping" #(println "Ping from UI"))
+```
+
 ## 示例说明
 
 ### 01_core - 核心功能

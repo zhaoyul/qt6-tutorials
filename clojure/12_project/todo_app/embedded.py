@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (
     QLineEdit, QPushButton, QListWidget, QListWidgetItem, QLabel,
     QFrame, QComboBox, QInputDialog, QButtonGroup
 )
-from PySide6.QtCore import Qt, QStandardPaths
+from PySide6.QtCore import Qt, QStandardPaths, QTimer
 from PySide6.QtGui import QColor
 from datetime import datetime
 import json
@@ -23,6 +23,24 @@ palette.setColor(palette.ColorRole.Button, '#eef2f6')
 palette.setColor(palette.ColorRole.Highlight, '#2f6fed')
 palette.setColor(palette.ColorRole.HighlightedText, '#ffffff')
 app.setPalette(palette)
+
+ui_queue = []
+
+def enqueue_ui(callback):
+    ui_queue.append(callback)
+
+def flush_ui_queue():
+    while ui_queue:
+        cb = ui_queue.pop(0)
+        try:
+            cb()
+        except Exception as e:
+            print(f'UI dispatch error: {e}')
+
+ui_timer = QTimer()
+ui_timer.setInterval(0)
+ui_timer.timeout.connect(flush_ui_queue)
+ui_timer.start()
 
 def data_file_path():
     data_dir = QStandardPaths.writableLocation(QStandardPaths.AppDataLocation)
