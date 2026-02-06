@@ -36,8 +36,9 @@
     (println "macOS 需要使用 -XstartOnFirstThread 运行此 GUI 示例，已跳过。")
     (System/exit 0)))
 
-(defn data-file-path []
+(defn data-file-path
   "Get the path for storing todo data."
+  []
   (let [QStandardPaths (py/get-attr QtCore "QStandardPaths")
         data-dir (py/call-attr QStandardPaths "writableLocation"
                                (py/get-attr QStandardPaths "AppDataLocation"))
@@ -47,16 +48,18 @@
     (py/call-attr-kw data-path "mkdir" [] {"parents" true "exist_ok" true})
     (py/call-attr os-path "join" data-dir "todos.json")))
 
-(defn priority-color [priority]
+(defn priority-color
   "Get color for a given priority."
+  [priority]
   (case priority
     "High" "#ef4444"
     "Medium" "#f59e0b"
     "Low" "#10b981"
     "#9ca3af"))
 
-(defn update-item-label [item]
+(defn update-item-label
   "Update the display label of an item."
+  [item]
   (let [base-text (py/call-attr item "data" (py/get-attr Qt "UserRole") 3)
         priority (or (py/call-attr item "data" (py/get-attr Qt "UserRole") 1) "Medium")
         tag (or (py/call-attr item "data" (py/get-attr Qt "UserRole") 2) "")
@@ -65,8 +68,9 @@
     (py/call-attr item "setText" (str base suffix))
     (py/call-attr item "setForeground" (priority-color priority))))
 
-(defn save-tasks [list-widget]
+(defn save-tasks
   "Save tasks to JSON file."
+  [list-widget]
   (let [tasks (atom [])
         count (py/call-attr list-widget "count")]
     (doseq [i (range count)]
@@ -82,8 +86,9 @@
       (catch Exception e
         (println "Error saving tasks:" e)))))
 
-(defn load-tasks [list-widget loading-atom]
+(defn load-tasks
   "Load tasks from JSON file."
+  [list-widget loading-atom]
   (let [QListWidgetItem (py/get-attr QtWidgets "QListWidgetItem")]
     (try
       (let [tasks (json/read-str (slurp (data-file-path)) :key-fn keyword)]
@@ -113,8 +118,9 @@
       (catch Exception e
         (println "Error loading tasks:" e)))))
 
-(defn run-todo-app []
-  "Run the Todo application."
+(defn run-todo-app
+  "Call the embedded Python entry point (`run_block_1`) that spins up the shared PySide6 UI."
+  []
   (py/call-attr py-embedded "run_block_1"))
 
 (defn -main

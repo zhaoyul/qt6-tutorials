@@ -20,25 +20,48 @@
 ;; 初始化 QCoreApplication（必须先创建才能使用信号槽）
 (py/call-attr signals "ensure_app")
 
+(def ^:private basic-conn-received? (volatile! false))
+
+(def ^:private on-test-signal-callback
+  "用于基本连接演示的槽函数"
+  (fn [msg]
+    (vreset! basic-conn-received? true)
+    (println (str "  [槽函数] 收到: " msg))))
+
 (defn demonstrate-basic-connection
-  "基本信号槽连接 - 使用 QObject 的内置信号"
+  "基本信号槽连接与断开 - 展示连接时收到消息，断开后收不到
+   
+   使用 ConnectionHelper 类来处理连接/断开，
+   避免 libpython-clj 中函数包装器对象不匹配的问题。"
   []
-  (println "\n=== 基本信号槽连接 ===")
+  (println "\n=== 基本信号槽连接与断开 ===")
 
-  (let [obj (QObject)]
+  (let [helper-class (py/get-attr signals "ConnectionHelper")
+        helper (helper-class)]
 
-    ;; 定义槽函数
-    (defn on-destroyed []
-      (println "对象将被销毁!"))
-
-    ;; 连接信号到槽
-    (py/call-attr (py/get-attr obj "destroyed") "connect" on-destroyed)
-
-    (println "信号连接成功，destroyed 信号已连接到槽函数")
-
-    ;; 断开连接
-    (py/call-attr (py/get-attr obj "destroyed") "disconnect" on-destroyed)
-    (println "信号已断开")))
+    ;; 1. 连接信号到槽
+    (py/call-attr helper "connect_slot" on-test-signal-callback)
+    (println "1. 信号已连接")
+    
+    ;; 2. 触发信号 → 应该收到消息
+    (println "2. 触发信号（连接状态）...")
+    (vreset! basic-conn-received? false)
+    (py/call-attr helper "emit_test" "Hello from connected signal!")
+    (if @basic-conn-received?
+      (println "   ✓ 消息已接收")
+      (println "   ✗ 未收到消息（异常）"))
+    
+    ;; 3. 断开连接
+    (py/call-attr helper "disconnect_slot")
+    (println "3. 信号已断开")
+    
+    ;; 4. 再次触发信号 → 不应该收到消息
+    (println "4. 再次触发信号（断开状态）...")
+    (vreset! basic-conn-received? false)
+    (py/call-attr helper "emit_test" "This should NOT be received!")
+    (if @basic-conn-received?
+      (println "   ✗ 消息仍被接收（断开失败）")
+      (println "   ✓ 未收到消息（断开成功）"))))
 
 (defn demonstrate-custom-signals
   "自定义信号"
@@ -62,27 +85,27 @@
     (py/call-attr comm "increment")))
 
 (defn demonstrate-multiple-slots
-  "一个信号连接多个槽"
+  "一个信号连接多个槽 - 使用可手动触发的自定义信号"
   []
   (println "\n=== 一个信号连接多个槽 ===")
 
-  (let [obj (QObject)]
+  (let [emitter-class (py/get-attr signals "ValueEmitter")
+        emitter (emitter-class)
+        slot-1 #(println "  槽函数 1 被调用: " %1 ", " %2)
+        slot-2 #(println "  槽函数 2 被调用: " %1 ", " %2)
+        slot-3 #(println "  槽函数 3 被调用: " %1 ", " %2)]
+    ;; 连接多个槽到同一个信号
+    (py/call-attr (py/get-attr emitter "valueChanged") "connect" slot-1)
+    (py/call-attr (py/get-attr emitter "valueChanged") "connect" slot-2)
+    (py/call-attr (py/get-attr emitter "valueChanged") "connect" slot-3)
 
-    (defn slot-1 []
-      (println "槽函数 1 被调用"))
-
-    (defn slot-2 []
-      (println "槽函数 2 被调用"))
-
-    (defn slot-3 []
-      (println "槽函数 3 被调用"))
-
-    ;; 连接多个槽
-    (py/call-attr (py/get-attr obj "destroyed") "connect" slot-1)
-    (py/call-attr (py/get-attr obj "destroyed") "connect" slot-2)
-    (py/call-attr (py/get-attr obj "destroyed") "connect" slot-3)
-
-    (println "一个信号已连接到 3 个槽函数")))
+    (println "一个信号已连接到 3 个槽函数")
+    
+    ;; 触发信号 - 所有连接的槽都会被调用
+    (println "触发信号...")
+    (py/call-attr emitter "emit_value" 42 "Test")
+    
+    (println "信号触发完成")))
 
 (defn demonstrate-signal-args
   "带参数的信号"

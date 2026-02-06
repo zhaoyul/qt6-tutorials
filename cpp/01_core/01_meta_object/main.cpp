@@ -28,7 +28,7 @@ class Person : public QObject
 
     // 声明属性
     Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
-    Q_PROPERTY(int age READ age WRITE setAge NOTIFY ageChanged)
+    Q_PROPERTY(int age      READ age  WRITE setAge  NOTIFY ageChanged)
 
     // 类信息
     Q_CLASSINFO("author", "Qt学习项目")
