@@ -145,6 +145,7 @@ basilisp/                       # Basilisp + PySide6 Lisp 示例
 └── README.md
 
 clojure/                        # Clojure + PySide6 示例
+├── src/                        # Clojure namespaces (qt6_tutorials.*)
 ├── 01_core/                    # 核心低级模块或元对象
 ├── 02_gui/                     # GUI 与绘图
 ├── 03_widgets/                 # Widgets 系列
@@ -164,7 +165,7 @@ clojure/                        # Clojure + PySide6 示例
 
 ## ✅ Clojure 示例覆盖情况（截至 2026-02-06）
 
-说明：以下每个子目录均包含可运行的 `main.clj` 示例。
+说明：以下每个子目录均对应一个可运行的命名空间（位于 `clojure/src/qt6_tutorials/...`），并在 `clojure/deps.edn` 中提供 alias。
 
 - 01_core: 01_meta_object, 02_signals_slots, 03_properties, 04_containers, 05_io_system, 06_event_loop, 07_threading, 08_timer
 - 02_gui: 01_painting, 02_images, 03_fonts, 04_events, 05_window
@@ -399,14 +400,10 @@ python/
 #### 运行示例（推荐）
 ```bash
 cd clojure
-clojure -M:run 01_core/01_meta_object/main.clj
+clj -M:ch01-core-meta-object
 ```
 
-#### 直接运行
-```bash
-cd clojure
-clojure -M 01_core/01_meta_object/main.clj
-```
+（其他示例请参考 `clojure/deps.edn` 中的 alias 列表）
 
 
 ### Emacs：快速编译当前示例

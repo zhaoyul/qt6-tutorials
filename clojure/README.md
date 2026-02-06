@@ -12,13 +12,7 @@
 
 ```bash
 cd clojure
-clojure -M:run 01_core/01_meta_object/main.clj
-```
-
-如需直接运行：
-```bash
-cd clojure
-clojure -M 01_core/01_meta_object/main.clj
+clj -M:ch01-core-meta-object
 ```
 
 ## 项目结构
@@ -27,10 +21,11 @@ clojure -M 01_core/01_meta_object/main.clj
 clojure/
 ├── AGENTS.md             # 经验与注意事项
 ├── README.md             # 本文件
-├── deps.edn              # Clojure 依赖配置
+├── deps.edn              # Clojure 依赖配置（每个示例都有对应 alias）
 ├── python.edn            # Python 环境配置
 ├── classes/              # 运行/编译产物（可忽略）
-├── 01_core/              # 核心功能
+├── src/                  # Clojure namespaces (qt6_tutorials.*)
+├── 01_core/              # 核心功能（Python embedded 模块）
 │   ├── 01_meta_object/
 │   ├── 02_signals_slots/
 │   ├── 03_properties/
@@ -109,68 +104,19 @@ clojure/
 
 ## 运行示例
 
-### 方式1: 使用 :run alias（推荐）
+每个示例都有对应 alias，命名规则为 `chXX-<section>-<example>`（如 `01_core/02_signals_slots` → `ch01-core-signals-slots`，命名空间为 `qt6_tutorials.ch01.core.signals_slots`），直接运行即可：
 
 ```bash
 cd clojure
-
-# 使用统一的 :run alias
-clojure -M:run 01_core/01_meta_object/main.clj
-clojure -M:run 01_core/02_signals_slots/main.clj
-clojure -M:run 01_core/03_properties/main.clj
-clojure -M:run 01_core/04_containers/main.clj
-clojure -M:run 01_core/05_io_system/main.clj
-clojure -M:run 01_core/06_event_loop/main.clj
-clojure -M:run 01_core/07_threading/main.clj
-clojure -M:run 01_core/08_timer/main.clj
-clojure -M:run 02_gui/01_painting/main.clj
-clojure -M:run 02_gui/02_images/main.clj
-clojure -M:run 02_gui/03_fonts/main.clj
-clojure -M:run 02_gui/04_events/main.clj
-clojure -M:run 02_gui/05_window/main.clj
-clojure -M:run 03_widgets/01_basic_widgets/main.clj
-clojure -M:run 03_widgets/02_layouts/main.clj
-clojure -M:run 03_widgets/03_dialogs/main.clj
-clojure -M:run 03_widgets/04_main_window/main.clj
-clojure -M:run 03_widgets/05_item_views/main.clj
-clojure -M:run 03_widgets/06_graphics_view/main.clj
-clojure -M:run 03_widgets/07_custom_widgets/main.clj
-clojure -M:run 04_qml/01_basics/main.clj
-clojure -M:run 04_qml/02_types/main.clj
-clojure -M:run 04_qml/03_javascript/main.clj
-clojure -M:run 04_qml/04_cpp_integration/main.clj
-clojure -M:run 05_quick/01_items/main.clj
-clojure -M:run 05_quick/02_controls/main.clj
-clojure -M:run 05_quick/03_animations/main.clj
-clojure -M:run 05_quick/04_states/main.clj
-clojure -M:run 05_quick/05_effects/main.clj
-clojure -M:run 06_network/01_tcp/main.clj
-clojure -M:run 06_network/02_udp/main.clj
-clojure -M:run 06_network/03_http/main.clj
-clojure -M:run 06_network/04_websocket/main.clj
-clojure -M:run 07_sql/01_basics/main.clj
-clojure -M:run 07_sql/01_connection/main.clj
-clojure -M:run 07_sql/02_queries/main.clj
-clojure -M:run 07_sql/03_models/main.clj
-clojure -M:run 08_multimedia/01_audio/main.clj
-clojure -M:run 08_multimedia/02_video/main.clj
-clojure -M:run 08_multimedia/03_camera/main.clj
-clojure -M:run 09_test/01_unit_test/main.clj
-clojure -M:run 09_test/02_gui_test/main.clj
-clojure -M:run 10_concurrent/01_run/main.clj
-clojure -M:run 10_concurrent/01_basics/main.clj
-clojure -M:run 10_concurrent/02_map_reduce/main.clj
-clojure -M:run 10_concurrent/03_filter/main.clj
-clojure -M:run 11_3d/01_basics/main.clj
-clojure -M:run 12_project/todo_app/main.clj
+clj -M:ch01-core-meta-object
+clj -M:ch02-gui-painting
+clj -M:ch06-network-websocket ws://localhost:8080
+clj -M:ch12-project-todo-app
 ```
 
-### 方式2: 直接运行
+完整 alias 列表请查看 `deps.edn` 的 `:aliases`。
 
-```bash
-cd clojure
-clojure -M 01_core/01_meta_object/main.clj
-```
+macOS 提示：GUI 示例需主线程运行，alias 已包含 `-XstartOnFirstThread`。
 
 ## 示例说明
 

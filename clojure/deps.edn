@@ -3,11 +3,104 @@
   clj-python/libpython-clj {:mvn/version "2.026"}
   cnuernber/dtype-next {:mvn/version "11.004"}}
 
- :paths ["src" "."]
+ :paths ["src"]
 
- ;; 使用 :run alias 配置 JVM 参数
- ;; -XstartOnFirstThread: macOS GUI 必须在主线程运行
- ;; --enable-native-access=ALL-UNNAMED: Java 21+ 原生访问支持
  :aliases
- {:run {:jvm-opts ["-XstartOnFirstThread"
-                   "--enable-native-access=ALL-UNNAMED"]}}}
+ {
+  :ch01-core-containers {:main-opts ["-m" "qt6_tutorials.ch01.core.containers"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch01-core-event-loop {:main-opts ["-m" "qt6_tutorials.ch01.core.event_loop"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch01-core-io-system {:main-opts ["-m" "qt6_tutorials.ch01.core.io_system"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch01-core-meta-object {:main-opts ["-m" "qt6_tutorials.ch01.core.meta_object"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch01-core-properties {:main-opts ["-m" "qt6_tutorials.ch01.core.properties"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch01-core-signals-slots {:main-opts ["-m" "qt6_tutorials.ch01.core.signals_slots"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch01-core-threading {:main-opts ["-m" "qt6_tutorials.ch01.core.threading"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch01-core-timer {:main-opts ["-m" "qt6_tutorials.ch01.core.timer"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch02-gui-events {:main-opts ["-m" "qt6_tutorials.ch02.gui.events"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch02-gui-fonts {:main-opts ["-m" "qt6_tutorials.ch02.gui.fonts"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch02-gui-images {:main-opts ["-m" "qt6_tutorials.ch02.gui.images"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch02-gui-painting {:main-opts ["-m" "qt6_tutorials.ch02.gui.painting"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch02-gui-window {:main-opts ["-m" "qt6_tutorials.ch02.gui.window"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch03-widgets-basic-widgets {:main-opts ["-m" "qt6_tutorials.ch03.widgets.basic_widgets"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch03-widgets-custom-widgets {:main-opts ["-m" "qt6_tutorials.ch03.widgets.custom_widgets"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch03-widgets-dialogs {:main-opts ["-m" "qt6_tutorials.ch03.widgets.dialogs"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch03-widgets-graphics-view {:main-opts ["-m" "qt6_tutorials.ch03.widgets.graphics_view"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch03-widgets-item-views {:main-opts ["-m" "qt6_tutorials.ch03.widgets.item_views"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch03-widgets-layouts {:main-opts ["-m" "qt6_tutorials.ch03.widgets.layouts"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch03-widgets-main-window {:main-opts ["-m" "qt6_tutorials.ch03.widgets.main_window"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch04-qml-basics {:main-opts ["-m" "qt6_tutorials.ch04.qml.basics"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch04-qml-cpp-integration {:main-opts ["-m" "qt6_tutorials.ch04.qml.cpp_integration"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch04-qml-javascript {:main-opts ["-m" "qt6_tutorials.ch04.qml.javascript"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch04-qml-types {:main-opts ["-m" "qt6_tutorials.ch04.qml.types"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch05-quick-animations {:main-opts ["-m" "qt6_tutorials.ch05.quick.animations"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch05-quick-controls {:main-opts ["-m" "qt6_tutorials.ch05.quick.controls"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch05-quick-effects {:main-opts ["-m" "qt6_tutorials.ch05.quick.effects"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch05-quick-items {:main-opts ["-m" "qt6_tutorials.ch05.quick.items"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch05-quick-states {:main-opts ["-m" "qt6_tutorials.ch05.quick.states"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch06-network-http {:main-opts ["-m" "qt6_tutorials.ch06.network.http"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch06-network-tcp {:main-opts ["-m" "qt6_tutorials.ch06.network.tcp"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch06-network-udp {:main-opts ["-m" "qt6_tutorials.ch06.network.udp"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch06-network-websocket {:main-opts ["-m" "qt6_tutorials.ch06.network.websocket"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch07-sql-basics {:main-opts ["-m" "qt6_tutorials.ch07.sql.basics"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch07-sql-connection {:main-opts ["-m" "qt6_tutorials.ch07.sql.connection"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch07-sql-models {:main-opts ["-m" "qt6_tutorials.ch07.sql.models"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch07-sql-queries {:main-opts ["-m" "qt6_tutorials.ch07.sql.queries"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch08-multimedia-audio {:main-opts ["-m" "qt6_tutorials.ch08.multimedia.audio"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch08-multimedia-camera {:main-opts ["-m" "qt6_tutorials.ch08.multimedia.camera"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch08-multimedia-video {:main-opts ["-m" "qt6_tutorials.ch08.multimedia.video"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch09-test-gui-test {:main-opts ["-m" "qt6_tutorials.ch09.test.gui_test"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch09-test-unit-test {:main-opts ["-m" "qt6_tutorials.ch09.test.unit_test"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch10-concurrent-basics {:main-opts ["-m" "qt6_tutorials.ch10.concurrent.basics"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch10-concurrent-filter {:main-opts ["-m" "qt6_tutorials.ch10.concurrent.filter"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch10-concurrent-map-reduce {:main-opts ["-m" "qt6_tutorials.ch10.concurrent.map_reduce"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch10-concurrent-run {:main-opts ["-m" "qt6_tutorials.ch10.concurrent.run"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch11-n3d-basics {:main-opts ["-m" "qt6_tutorials.ch11.n3d.basics"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch12-project-todo-app {:main-opts ["-m" "qt6_tutorials.ch12.project.todo_app"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+}}

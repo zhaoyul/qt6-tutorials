@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
     QFrame, QComboBox, QInputDialog, QButtonGroup
 )
 from PySide6.QtCore import Qt, QStandardPaths
+from PySide6.QtGui import QColor
 
 
 class FilterMode(IntEnum):
@@ -60,7 +61,7 @@ def update_item_label(item: QListWidgetItem):
         suffix += f" #{tag}"
     
     item.setText(base_text + suffix)
-    item.setForeground(priority_color(priority))
+    item.setForeground(QColor(priority_color(priority)))
 
 
 class TodoApp(QWidget):

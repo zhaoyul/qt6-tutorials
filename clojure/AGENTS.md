@@ -33,7 +33,7 @@
   - 避免直接用 `py/->python` 传空向量。
 
 ## 当前示例覆盖情况（截至 2026-02-06）
-说明：以下每个子目录均包含可运行的 `main.clj` 示例。
+说明：以下每个子目录均对应一个可运行的命名空间（位于 `src/qt6_tutorials/...`），并在 `deps.edn` 中提供同名 alias，可直接 `clj -M:<alias>` 运行。
 
 - 01_core: 01_meta_object, 02_signals_slots, 03_properties, 04_containers, 05_io_system, 06_event_loop, 07_threading, 08_timer
 - 02_gui: 01_painting, 02_images, 03_fonts, 04_events, 05_window

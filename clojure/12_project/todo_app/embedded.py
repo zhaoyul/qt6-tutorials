@@ -6,6 +6,7 @@ from PySide6.QtWidgets import (
     QFrame, QComboBox, QInputDialog, QButtonGroup
 )
 from PySide6.QtCore import Qt, QStandardPaths
+from PySide6.QtGui import QColor
 from datetime import datetime
 import json
 import os
@@ -40,7 +41,7 @@ def update_item_label(item):
     if tag:
         suffix += f' #{tag}'
     item.setText(base + suffix)
-    item.setForeground(priority_color(priority))
+    item.setForeground(QColor(priority_color(priority)))
 
 class TodoApp(QWidget):
     def __init__(self):
