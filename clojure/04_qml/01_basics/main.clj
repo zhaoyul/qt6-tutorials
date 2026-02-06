@@ -119,15 +119,15 @@ Window {
   "运行基本 QML 示例"
   []
   (println "\n=== 基本 QML 示例 ===")
-  
+
   (let [app (QApplication (py/->py-list []))
         engine (QQmlApplicationEngine)]
-    
+
     ;; 加载 QML 文件
     (let [qml-path (str (System/getProperty "user.dir")
                         "/04_qml/01_basics/Main.qml")]
       (py/call-attr engine "load" qml-path))
-    
+
     ;; 检查是否有根对象
     (if (empty? (py/call-attr engine "rootObjects"))
       (println "错误: 无法加载 QML")
@@ -145,13 +145,13 @@ Window {
   "运行属性绑定示例"
   []
   (println "\n=== 属性绑定示例 ===")
-  
+
   (let [app (QApplication (py/->py-list []))
         engine (QQmlApplicationEngine)]
-    
+
     (let [qml-path (create-qml-file property-binding-qml "/tmp/property_binding.qml")]
       (py/call-attr engine "load" qml-path))
-    
+
     (if (empty? (py/call-attr engine "rootObjects"))
       (println "错误: 无法加载 QML")
       (do
@@ -167,16 +167,16 @@ Window {
   "演示从 URL/字符串加载"
   []
   (println "\n=== 从内存加载 QML ===")
-  
+
   (let [app (QApplication (py/->py-list []))
         engine (QQmlApplicationEngine)
         component (QQmlComponent engine)]
-    
+
     ;; 从字符串设置数据
     (py/call-attr component "setData"
                   (.getBytes hello-qml)
                   (QUrl ""))
-    
+
     ;; 创建对象
     (let [obj (py/call-attr component "create")]
       (if obj
@@ -195,10 +195,10 @@ Window {
 (defn -main
   [& args]
   (println "=== PySide6 QML 基础示例 (Clojure) ===")
-  
+
   ;; 运行基本示例
   (run-basic-qml)
-  
+
   (println "\n=== 完成 ==="))
 
 (-main)

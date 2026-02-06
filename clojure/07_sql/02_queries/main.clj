@@ -51,42 +51,42 @@
   "演示 INSERT 插入数据"
   []
   (println "\n=== INSERT 插入数据 ===\n")
-  
+
   (py/call-attr py-embedded "run_block_3"))
 
 (defn demonstrate-select
   "演示 SELECT 查询数据"
   []
   (println "\n=== SELECT 查询数据 ===\n")
-  
+
   (py/call-attr py-embedded "run_block_4"))
 
 (defn demonstrate-update
   "演示 UPDATE 更新数据"
   []
   (println "\n=== UPDATE 更新数据 ===\n")
-  
+
   (py/call-attr py-embedded "run_block_5"))
 
 (defn demonstrate-delete
   "演示 DELETE 删除数据"
   []
   (println "\n=== DELETE 删除数据 ===\n")
-  
+
   (py/call-attr py-embedded "run_block_6"))
 
 (defn demonstrate-transaction
   "演示事务处理"
   []
   (println "\n=== 事务中的增删改查 ===\n")
-  
+
   (py/call-attr py-embedded "run_block_7"))
 
 (defn demonstrate-error-handling
   "演示错误处理"
   []
   (println "\n=== 错误处理 ===\n")
-  
+
   (py/call-attr py-embedded "run_block_8"))
 
 (defn -main
@@ -104,10 +104,10 @@
       (demonstrate-delete)
       (demonstrate-transaction)
       (demonstrate-error-handling)
-      
+
       ;; 清理
       (py/call-attr py-embedded "run_block_9")
-      
+
       (println "\n=== 完成 ==="))
     (println "Qt SQL 驱动不可用或连接失败，跳过演示")))
 

@@ -26,42 +26,42 @@
   "HTTP GET 请求"
   []
   (println "\n=== HTTP GET 请求 ===")
-  
+
   (py/call-attr py-embedded "run_block_2")
-  
+
   (println "GET 请求完成"))
 
 (defn demonstrate-http-post
   "HTTP POST 请求"
   []
   (println "\n=== HTTP POST 请求 ===")
-  
+
   (py/call-attr py-embedded "run_block_3")
-  
+
   (println "POST 请求完成"))
 
 (defn demonstrate-async-http
   "异步 HTTP 请求"
   []
   (println "\n=== 异步 HTTP 请求 ===")
-  
+
   (py/call-attr py-embedded "run_block_4")
-  
+
   (println "异步请求已发送"))
 
 (defn demonstrate-headers
   "自定义 HTTP 头"
   []
   (println "\n=== 自定义 HTTP 头 ===")
-  
+
   (py/call-attr py-embedded "run_block_5")
-  
+
   (println "自定义头请求完成"))
 
 (defn -main
   [& args]
   (println "=== PySide6 HTTP 网络请求示例 (Clojure) ===")
-  
+
   ;; 网络请求在命令行模式下可能有延迟，简化演示
   (println "\nHTTP 功能说明:")
   (println "- QNetworkAccessManager: HTTP 请求管理器")
@@ -70,7 +70,7 @@
   (println "- 支持 GET, POST, PUT, DELETE 等方法")
   (println "- 支持自定义 Headers")
   (println "- 支持异步回调")
-  
+
   (println "\n=== 完成 ==="))
 
 (-main)

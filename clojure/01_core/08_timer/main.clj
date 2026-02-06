@@ -22,7 +22,7 @@
   "单次定时器"
   []
   (println "\n=== 单次定时器 ===")
-  
+
   (let [executed (atom false)]
     ;; 使用 Python 代码创建单次定时器
     (py/call-attr py-embedded "run_block_2")
@@ -33,9 +33,9 @@
   "重复定时器"
   []
   (println "\n=== 重复定时器 ===")
-  
+
   (py/call-attr py-embedded "run_block_3")
-  
+
   (println "重复定时器已启动 (100ms 间隔)")
   (Thread/sleep 500))  ;; 等待定时器触发几次
 
@@ -43,7 +43,7 @@
   "Lambda 定时器"
   []
   (println "\n=== Lambda 定时器 ===")
-  
+
   (let [values (atom [])]
     (py/call-attr py-embedded "run_block_4")
     (println "Lambda 定时器运行中...")
@@ -53,20 +53,20 @@
   "精确计时"
   []
   (println "\n=== 精确计时 ===")
-  
+
   (py/call-attr py-embedded "run_block_5")
-  
+
   (println "精确计时完成"))
 
 (defn -main
   [& args]
   (println "=== PySide6 定时器示例 (Clojure) ===")
-  
+
   (demonstrate-single-shot)
   (demonstrate-repeating-timer)
   (demonstrate-lambda-timer)
   (demonstrate-precise-timer)
-  
+
   (println "\n=== 完成 ==="))
 
 (-main)

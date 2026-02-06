@@ -23,9 +23,9 @@
 (defn -main
   [& args]
   (println "=== Qt6 Multimedia Audio Demo ===\n")
-  
+
   (list-audio-devices)
-  
+
   (println "\n=== Done ==="))
 
 (-main)

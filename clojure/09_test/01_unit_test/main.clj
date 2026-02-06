@@ -135,7 +135,7 @@
     (py/call-attr self "assertIn" "42" result)
     (py/call-attr self "assertEqual" result "Result: 42")
     (py/call-attr self "assertTrue" (.startsWith result "Result")
-                   "Should start with 'Result'")))
+                  "Should start with 'Result'")))
 
 ;; 比较浮点数
 (defn- test-floating-point [self]
@@ -177,7 +177,7 @@
         line-edit (QLineEdit)]
     ;; 模拟按键
     (py/call-attr QTest "keyClicks" line-edit "Hello Qt")
-    (py/call-attr self "assertEqual" 
+    (py/call-attr self "assertEqual"
                   (py/call-attr line-edit "text")
                   "Hello Qt")))
 
@@ -204,7 +204,7 @@
   (println "=== PySide6 单元测试示例 (Clojure) ===\n")
   (println "使用 Python unittest 框架")
   (println "也展示了 PySide6.QtTest 的特定功能\n")
-  
+
   (let [run-qt? (run-qt-widget-tests?)]
     (when run-qt?
       ;; 确保 QApplication 存在 (某些 Qt 测试需要)
@@ -213,24 +213,24 @@
           (QApplication (py/->py-list [])))))
     (when-not run-qt?
       (println "跳过 Qt Widgets/QTest 测试 (macOS 非主线程限制). 设置 QT_WIDGET_TESTS=1 可强制启用。")))
-  
+
   ;; 获取测试类
   (def TestCalculatorClass TestCalculator)
   (when (run-qt-widget-tests?)
     (def TestQtSpecificClass TestQtSpecific))
-  
+
   ;; 运行测试
   (let [loader (py/call-attr unittest "TestLoader")
         suite (py/call-attr unittest "TestSuite")
         runner (py/call-attr unittest "TextTestRunner" nil {"verbosity" 2})]
-    
+
     ;; 加载测试类
     (py/call-attr suite "addTests"
                   (py/call-attr loader "loadTestsFromTestCase" TestCalculator))
     (when (run-qt-widget-tests?)
       (py/call-attr suite "addTests"
                     (py/call-attr loader "loadTestsFromTestCase" TestQtSpecific)))
-    
+
     ;; 运行
     (let [result (py/call-attr runner "run" suite)]
       (if (py/call-attr result "wasSuccessful")

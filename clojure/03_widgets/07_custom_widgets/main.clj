@@ -18,9 +18,9 @@
   "演示自定义控件"
   []
   (println "\n=== 创建自定义控件 GUI 窗口 ===")
-  
+
   (py/call-attr py-embedded "run_block_1")
-  
+
   (println "\n演示完成"))
 
 (defn -main
@@ -28,9 +28,9 @@
   (println "=== PySide6 自定义控件示例 (Clojure) ===")
   (println "注意: macOS 必须使用 -XstartOnFirstThread JVM 参数")
   (println "      可通过 clojure -M:run 运行")
-  
+
   (demonstrate-custom-widgets)
-  
+
   (println "\n=== 完成 ==="))
 
 (-main)

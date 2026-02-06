@@ -51,11 +51,9 @@
             name (py/call-attr method "name")]
         (println (str "  Method: " name))))))
 
-
 (def ^:private on-destroyed-callback
   (fn [obj]
     (println (str "对象被销毁: " obj))))
-
 
 (defn demonstrate-signal-connection
   "演示信号连接
@@ -69,8 +67,7 @@
         ;; 使用 volatile 来存储连接状态
         connected? (volatile! false)]
 
-
-    ;; 连接信号
+;; 连接信号
     (py/call-attr (py/get-attr sender "destroyed") "connect" on-destroyed-callback)
     (vreset! connected? true)
     (println "信号连接成功!")

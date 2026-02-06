@@ -24,10 +24,10 @@
 (defn -main
   [& args]
   (println "Running task...")
-  
+
   ;; 使用 ThreadPoolExecutor 替代 QtConcurrent::run
   (py/call-attr py-embedded "run_block_2")
-  
+
   (println "Done"))
 
 (-main)

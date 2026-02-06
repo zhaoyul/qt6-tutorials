@@ -13,18 +13,18 @@
   "IO 操作演示"
   []
   (println "\n=== PySide6 IO 系统 ===")
-  
+
   ;; 使用 Python 代码演示
   (py/call-attr py-embedded "run_block_1")
-  
+
   (println "\nIO 演示完成"))
 
 (defn -main
   [& args]
   (println "=== PySide6 IO 系统示例 (Clojure) ===")
-  
+
   (demonstrate-io)
-  
+
   (println "\n=== 完成 ==="))
 
 (-main)

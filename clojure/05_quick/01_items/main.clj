@@ -19,15 +19,15 @@
 (defn -main
   [& args]
   (println "=== PySide6 Quick 基础元素示例 (Clojure) ===")
-  
+
   (let [app (QGuiApplication (py/->py-list []))
         engine (QQmlApplicationEngine)]
-    
+
     ;; 加载 QML 文件
     (let [qml-path (str (System/getProperty "user.dir")
                         "/05_quick/01_items/Main.qml")]
       (py/call-attr engine "load" qml-path))
-    
+
     ;; 检查是否有根对象
     (if (empty? (py/call-attr engine "rootObjects"))
       (println "错误: 无法加载 QML")

@@ -14,9 +14,9 @@
   "演示基础控件"
   []
   (println "\n=== 创建 GUI 窗口演示 ===")
-  
+
   (py/call-attr py-embedded "run_block_1")
-  
+
   (println "\n演示完成"))
 
 (defn -main
@@ -24,9 +24,9 @@
   (println "=== PySide6 基础控件示例 (Clojure) ===")
   (println "注意: macOS 必须使用 -XstartOnFirstThread JVM 参数")
   (println "      可通过 clojure -M:run 运行")
-  
+
   (demonstrate-widgets)
-  
+
   (println "\n=== 完成 ==="))
 
 (-main)

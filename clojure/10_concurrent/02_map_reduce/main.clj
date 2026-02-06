@@ -19,10 +19,10 @@
 (defn -main
   [& args]
   (println "Map-Reduce demo")
-  
+
   ;; 使用 ThreadPoolExecutor 替代 QtConcurrent::mappedReduced
   (py/call-attr py-embedded "run_block_2")
-  
+
   (println "Done"))
 
 (-main)

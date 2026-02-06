@@ -55,7 +55,7 @@
   "测试按钮文本设置"
   (let [button (QPushButton)]
     (py/call-attr button "setText" "Hello")
-    (py/call-attr self "assertEqual" 
+    (py/call-attr self "assertEqual"
                   (py/call-attr button "text")
                   "Hello")))
 
@@ -66,7 +66,7 @@
     (py/call-attr widget "show")
     (py/call-attr self "assertTrue"
                   (py/call-attr widget "isVisible"))
-    
+
     ;; 测试隐藏
     (py/call-attr widget "hide")
     (py/call-attr self "assertFalse"
@@ -85,19 +85,19 @@
   ;; 创建 QApplication (GUI 程序需要)
   (py/call-attr py-embedded "run_block_2")
   (def app (py/get-attr py-embedded "app"))
-  
+
   ;; 获取测试类
   (def TestGuiDemoClass TestGuiDemo)
-  
+
   ;; 运行测试
   (let [loader (py/call-attr unittest "TestLoader")
         suite (py/call-attr unittest "TestSuite")
         runner (py/call-attr unittest "TextTestRunner" nil {"verbosity" 2})]
-    
+
     ;; 加载测试
     (py/call-attr suite "addTests"
                   (py/call-attr loader "loadTestsFromTestCase" TestGuiDemo))
-    
+
     ;; 运行
     (let [result (py/call-attr runner "run" suite)]
       (if (py/call-attr result "wasSuccessful")

@@ -21,19 +21,19 @@
   "演示继承 QThread 的方式"
   []
   (println "\n=== QThread 继承方式 ===")
-  
+
   ;; 定义 Worker 类（通过 Python）
   (py/call-attr py-embedded "run_block_1")
-  
+
   (let [worker-class (py/get-attr py-embedded "WorkerThread")
         thread (worker-class "Worker1")]
-    
+
     ;; 连接信号
     (py/call-attr (py/get-attr thread "progress") "connect"
                   (fn [value] (println (str "进度: " value "%"))))
     (py/call-attr (py/get-attr thread "resultReady") "connect"
                   (fn [result] (println (str "结果: " result))))
-    
+
     ;; 启动并等待（使用带超时的 wait）
     (py/call-attr thread "start")
     (py/call-attr thread "wait" 2000)))  ;; 最多等待 2 秒
@@ -42,18 +42,18 @@
   "QThreadPool 使用"
   []
   (println "\n=== QThreadPool 方式 ===")
-  
+
   (py/call-attr py-embedded "run_block_2")
-  
+
   (let [task-class (py/get-attr py-embedded "Task")
         pool (py/call-attr QThreadPool "globalInstance")]
-    
+
     (println (str "最大线程数: " (py/call-attr pool "maxThreadCount")))
-    
+
     ;; 提交任务
     (doseq [i (range 1 6)]
       (py/call-attr pool "start" (task-class i)))
-    
+
     ;; 等待完成（带超时）
     (py/call-attr pool "waitForDone" 3000)  ;; 最多等待 3 秒
     (println "所有任务完成")))
@@ -61,13 +61,13 @@
 (defn -main
   [& args]
   (println "=== PySide6 多线程示例 (Clojure) ===")
-  
+
   ;; 初始化 QCoreApplication
   (py/call-attr py-embedded "run_block_3")
-  
+
   (demonstrate-qthread-inheritance)
   (demonstrate-threadpool)
-  
+
   (println "\n=== 线程最佳实践 ===")
   (println "1. 避免继承 QThread, 使用 moveToThread")
   (println "2. 使用信号槽跨线程通信")

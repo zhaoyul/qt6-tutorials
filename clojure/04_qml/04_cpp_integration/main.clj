@@ -30,14 +30,14 @@
   "主函数"
   [& args]
   (println "=== PySide6 QML 与 Python 集成示例 (Clojure) ===\n")
-  
+
   (let [app (QGuiApplication (py/->py-list []))]
-    
+
     ;; 注册 Counter 类型到 QML
     (qmlRegisterType Counter "QmlCppIntegration" 1 0 "Counter")
-    
+
     (let [engine (QQmlApplicationEngine)]
-      
+
       ;; 创建全局 Counter 实例并设置上下文属性
       (let [global-counter (Counter engine)
             ctx (py/call-attr engine "rootContext")]
@@ -50,23 +50,23 @@
                       "appVersion" "1.0.0")
         (py/call-attr ctx "setContextProperty"
                       "debugMode" true))
-      
+
       ;; 加载 QML 文件
       (let [qml-path (str (System/getProperty "user.dir")
-                         "/04_qml/04_cpp_integration/Main.qml")]
+                          "/04_qml/04_cpp_integration/Main.qml")]
         (py/call-attr engine "load" qml-path))
-      
+
       ;; 检查加载是否成功
       (if (empty? (py/call-attr engine "rootObjects"))
         (println "错误: QML 加载失败")
         (do
           (println "QML 加载成功")
           (when-let [auto-ms (System/getenv "QT6_TUTORIAL_AUTOQUIT")]
-          (py/call-attr QTimer "singleShot"
-                        (Integer/parseInt auto-ms)
-                        (py/get-attr app "quit")))
-        (py/call-attr app "exec")
-        (when (System/getenv "QT6_TUTORIAL_AUTOQUIT")
-          (System/exit 0)))))))
+            (py/call-attr QTimer "singleShot"
+                          (Integer/parseInt auto-ms)
+                          (py/get-attr app "quit")))
+          (py/call-attr app "exec")
+          (when (System/getenv "QT6_TUTORIAL_AUTOQUIT")
+            (System/exit 0)))))))
 
 (-main)

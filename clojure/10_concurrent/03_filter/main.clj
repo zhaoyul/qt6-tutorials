@@ -18,10 +18,10 @@
 (defn -main
   [& args]
   (println "Filter demo")
-  
+
   ;; 使用 ThreadPoolExecutor 替代 QtConcurrent::filtered
   (py/call-attr py-embedded "run_block_2")
-  
+
   (println "Done"))
 
 (-main)

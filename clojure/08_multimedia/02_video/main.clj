@@ -20,9 +20,9 @@
 (defn -main
   [& args]
   (println "=== Qt6 Multimedia Video Demo ===\n")
-  
+
   (list-video-devices)
-  
+
   (println "\n=== Done ==="))
 
 (-main)

@@ -42,7 +42,7 @@
     ;; 1. 连接信号到槽
     (py/call-attr helper "connect_slot" on-test-signal-callback)
     (println "1. 信号已连接")
-    
+
     ;; 2. 触发信号 → 应该收到消息
     (println "2. 触发信号（连接状态）...")
     (vreset! basic-conn-received? false)
@@ -50,11 +50,11 @@
     (if @basic-conn-received?
       (println "   ✓ 消息已接收")
       (println "   ✗ 未收到消息（异常）"))
-    
+
     ;; 3. 断开连接
     (py/call-attr helper "disconnect_slot")
     (println "3. 信号已断开")
-    
+
     ;; 4. 再次触发信号 → 不应该收到消息
     (println "4. 再次触发信号（断开状态）...")
     (vreset! basic-conn-received? false)
@@ -100,11 +100,11 @@
     (py/call-attr (py/get-attr emitter "valueChanged") "connect" slot-3)
 
     (println "一个信号已连接到 3 个槽函数")
-    
+
     ;; 触发信号 - 所有连接的槽都会被调用
     (println "触发信号...")
     (py/call-attr emitter "emit_value" 42 "Test")
-    
+
     (println "信号触发完成")))
 
 (defn demonstrate-signal-args

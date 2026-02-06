@@ -27,9 +27,9 @@
 (defn -main
   [& args]
   (println "=== Qt6 Multimedia Camera Demo ===\n")
-  
+
   (show-camera-info)
-  
+
   (println "\n=== Done ==="))
 
 (-main)

@@ -25,10 +25,10 @@
   "定时器事件"
   []
   (println "\n=== 定时器事件 ===")
-  
+
   ;; 使用 Python 代码演示
   (py/call-attr py-embedded "run_block_2")
-  
+
   ;; 等待定时器执行
   (Thread/sleep 2000)
   (println "定时器演示完成"))
@@ -37,34 +37,34 @@
   "自定义事件"
   []
   (println "\n=== 自定义事件 ===")
-  
+
   (py/call-attr py-embedded "run_block_3")
-  
+
   (println "自定义事件演示完成"))
 
 (defn demonstrate-signal-events
   "信号作为事件"
   []
   (println "\n=== 信号事件处理 ===")
-  
+
   (py/call-attr py-embedded "run_block_4")
-  
+
   (println "信号事件演示完成"))
 
 (defn -main
   [& args]
   (println "=== PySide6 事件系统示例 (Clojure) ===")
-  
+
   (demonstrate-timer-events)
   (demonstrate-custom-events)
   (demonstrate-signal-events)
-  
+
   (println "\n=== 事件要点 ===")
   (println "1. QTimer: 定时器事件")
   (println "2. QEvent: 基础事件类")
   (println "3. postEvent: 异步发送事件")
   (println "4. Signal: 信号槽机制")
-  
+
   (println "\n=== 完成 ==="))
 
 (-main)
