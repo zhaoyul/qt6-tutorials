@@ -1,10 +1,10 @@
-# Qt6 系统学习项目
+* Qt6 系统学习项目
 
 本项目通过代码示例系统展示 Qt6 的核心功能，帮助全面学习 Qt6 开发。
 
-## 📚 学习路线图
+** 📚 学习路线图
 
-```
+#+begin_example
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                           Qt6 学习路线图                                    │
 ├─────────────────────────────────────────────────────────────────────────────┤
@@ -36,11 +36,11 @@
 │  └─────────────┘    └─────────────┘    └─────────────┘                      │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
-```
+#+end_example
 
-## 📁 项目结构
+** 📁 项目结构
 
-```
+#+begin_example
 cpp/
 ├── 01_core/                    # Qt Core 模块
 │   ├── 01_meta_object/         # 元对象系统 (MOC)
@@ -161,11 +161,11 @@ clojure/                        # Clojure + PySide6 示例
 ├── README.md
 ├── deps.edn
 └── python.edn
-```
+#+end_example
 
-## ✅ Clojure 示例覆盖情况（截至 2026-02-06）
+** ✅ Clojure 示例覆盖情况（截至 2026-02-06）
 
-说明：以下每个子目录均对应一个可运行的命名空间（位于 `clojure/src/qt6_tutorials/...`），并在 `clojure/deps.edn` 中提供 alias。
+说明：以下每个子目录均对应一个可运行的命名空间（位于 =clojure/src/qt6_tutorials/...=），并在 =clojure/deps.edn= 中提供 alias。
 
 - 01_core: 01_meta_object, 02_signals_slots, 03_properties, 04_containers, 05_io_system, 06_event_loop, 07_threading, 08_timer
 - 02_gui: 01_painting, 02_images, 03_fonts, 04_events, 05_window
@@ -180,117 +180,119 @@ clojure/                        # Clojure + PySide6 示例
 - 11_3d: 01_basics
 - 12_project: todo_app
 
-## 🔑 核心类速查
+** 🔑 核心类速查
 
-### C++ Qt6 核心类
+*** C++ Qt6 核心类
 
-### Qt Core 核心类
-| 类名                | 功能             | 示例位置               |
-|---------------------|------------------|------------------------|
-| `QObject`           | 所有Qt对象的基类 | 01_core/01_meta_object |
-| `QCoreApplication`  | 事件循环         | 01_core/06_event_loop  |
-| `QString`           | Unicode字符串    | 01_core/04_containers  |
-| `QList` / `QVector` | 动态数组         | 01_core/04_containers  |
-| `QMap` / `QHash`    | 关联容器         | 01_core/04_containers  |
-| `QFile` / `QDir`    | 文件操作         | 01_core/05_io_system   |
-| `QThread`           | 线程             | 01_core/07_threading   |
-| `QTimer`            | 定时器           | 01_core/08_timer       |
-| `QVariant`          | 通用值容器       | 01_core/03_properties  |
+**** Qt Core 核心类
+| 类名             | 功能             | 示例位置               |
+|------------------+------------------+------------------------|
+| =QObject=          | 所有Qt对象的基类 | 01_core/01_meta_object |
+| =QCoreApplication= | 事件循环         | 01_core/06_event_loop  |
+| =QString=          | Unicode字符串    | 01_core/04_containers  |
+| =QList= / =QVector=  | 动态数组         | 01_core/04_containers  |
+| =QMap= / =QHash=     | 关联容器         | 01_core/04_containers  |
+| =QFile= / =QDir=     | 文件操作         | 01_core/05_io_system   |
+| =QThread=          | 线程             | 01_core/07_threading   |
+| =QTimer=           | 定时器           | 01_core/08_timer       |
+| =QVariant=         | 通用值容器       | 01_core/03_properties  |
 
-### Qt GUI 核心类
-| 类名                 | 功能        | 示例位置           |
-|----------------------|-------------|--------------------|
-| `QGuiApplication`    | GUI应用程序 | 02_gui/05_window   |
-| `QPainter`           | 2D绘图      | 02_gui/01_painting |
-| `QImage` / `QPixmap` | 图像        | 02_gui/02_images   |
-| `QFont`              | 字体        | 02_gui/03_fonts    |
-| `QWindow`            | 窗口        | 02_gui/05_window   |
-| `QEvent`             | 事件基类    | 02_gui/04_events   |
+**** Qt GUI 核心类
+| 类名             | 功能        | 示例位置           |
+|------------------+-------------+--------------------|
+| =QGuiApplication=  | GUI应用程序 | 02_gui/05_window   |
+| =QPainter=         | 2D绘图      | 02_gui/01_painting |
+| =QImage= / =QPixmap= | 图像        | 02_gui/02_images   |
+| =QFont=            | 字体        | 02_gui/03_fonts    |
+| =QWindow=          | 窗口        | 02_gui/05_window   |
+| =QEvent=           | 事件基类    | 02_gui/04_events   |
 
-### Qt Widgets 核心类
-| 类名           | 功能         | 示例位置                  |
-|----------------|--------------|---------------------------|
-| `QApplication` | Widgets应用  | 03_widgets/01_basic       |
-| `QWidget`      | 所有控件基类 | 03_widgets/01_basic       |
-| `QPushButton`  | 按钮         | 03_widgets/01_basic       |
-| `QLabel`       | 标签         | 03_widgets/01_basic       |
-| `QLineEdit`    | 单行输入     | 03_widgets/01_basic       |
-| `QTextEdit`    | 多行文本     | 03_widgets/01_basic       |
-| `QVBoxLayout`  | 垂直布局     | 03_widgets/02_layouts     |
-| `QHBoxLayout`  | 水平布局     | 03_widgets/02_layouts     |
-| `QMainWindow`  | 主窗口       | 03_widgets/04_main_window |
-| `QDialog`      | 对话框       | 03_widgets/03_dialogs     |
-| `QTableView`   | 表格视图     | 03_widgets/05_item_views  |
-| `QListView`    | 列表视图     | 03_widgets/05_item_views  |
+**** Qt Widgets 核心类
+| 类名         | 功能         | 示例位置                  |
+|--------------+--------------+---------------------------|
+| =QApplication= | Widgets应用  | 03_widgets/01_basic       |
+| =QWidget=      | 所有控件基类 | 03_widgets/01_basic       |
+| =QPushButton=  | 按钮         | 03_widgets/01_basic       |
+| =QLabel=       | 标签         | 03_widgets/01_basic       |
+| =QLineEdit=    | 单行输入     | 03_widgets/01_basic       |
+| =QTextEdit=    | 多行文本     | 03_widgets/01_basic       |
+| =QVBoxLayout=  | 垂直布局     | 03_widgets/02_layouts     |
+| =QHBoxLayout=  | 水平布局     | 03_widgets/02_layouts     |
+| =QMainWindow=  | 主窗口       | 03_widgets/04_main_window |
+| =QDialog=      | 对话框       | 03_widgets/03_dialogs     |
+| =QTableView=   | 表格视图     | 03_widgets/05_item_views  |
+| =QListView=    | 列表视图     | 03_widgets/05_item_views  |
 
-### Qt Network 核心类
-| 类名                    | 功能      | 示例位置           |
-|-------------------------|-----------|--------------------|
-| `QTcpSocket`            | TCP客户端 | 06_network/01_tcp  |
-| `QTcpServer`            | TCP服务器 | 06_network/01_tcp  |
-| `QUdpSocket`            | UDP通信   | 06_network/02_udp  |
-| `QNetworkAccessManager` | HTTP请求  | 06_network/03_http |
+**** Qt Network 核心类
+| 类名                  | 功能      | 示例位置           |
+|-----------------------+-----------+--------------------|
+| =QTcpSocket=            | TCP客户端 | 06_network/01_tcp  |
+| =QTcpServer=            | TCP服务器 | 06_network/01_tcp  |
+| =QUdpSocket=            | UDP通信   | 06_network/02_udp  |
+| =QNetworkAccessManager= | HTTP请求  | 06_network/03_http |
 
-### Python PySide6 对应类
+*** Python PySide6 对应类
 
-| C++ 类                | PySide6 类                    | 说明             |
-|-----------------------|-------------------------------|------------------|
-| `QObject`             | `PySide6.QtCore.QObject`      | 完全一致         |
-| `Q_PROPERTY`          | `@Property` 装饰器            | Python化语法     |
-| `signals:` / `slots:` | `Signal` / `@Slot`            | 类级别定义信号   |
-| `QString`             | Python `str`                  | 直接使用原生类型 |
-| `QList` / `QVector`   | Python `list`                 | 直接使用原生类型 |
-| `QMap` / `QHash`      | Python `dict`                 | 直接使用原生类型 |
-| `QFile` / `QDir`      | `QFile` / `QDir` 或 `pathlib` | 可用Qt或标准库   |
-| `qDebug()`            | Python `print()`              | 或 Qt 的日志系统 |
+| C++ 类            | PySide6 类              | 说明             |
+|-------------------+-------------------------+------------------|
+| =QObject=           | =PySide6.QtCore.QObject=  | 完全一致         |
+| =Q_PROPERTY=        | =@Property= 装饰器        | Python化语法     |
+| =signals:= / =slots:= | =Signal= / =@Slot=          | 类级别定义信号   |
+| =QString=           | Python =str=              | 直接使用原生类型 |
+| =QList= / =QVector=   | Python =list=             | 直接使用原生类型 |
+| =QMap= / =QHash=      | Python =dict=             | 直接使用原生类型 |
+| =QFile= / =QDir=      | =QFile= / =QDir= 或 =pathlib= | 可用Qt或标准库   |
+| =qDebug()=          | Python =print()=          | 或 Qt 的日志系统 |
 
 更多转换对照请参考各 Python 示例文件中的注释。
 
-## 🚀 快速开始
+** 🚀 快速开始
 
-### C++ 版本
+*** C++ 版本
 
-#### 环境要求
+**** 环境要求
 - Qt 6.5+ (推荐 6.6 或更高)
 - CMake 3.16+
 - C++17 兼容编译器
 
-#### 配置并构建（推荐）
-```bash
+**** 配置并构建（推荐）
+#+begin_src bash
 cmake -S cpp -B cpp/build
 cmake --build cpp/build -j 8
-```
+#+end_src
 
-### 构建单个示例
-```bash
+**** 构建单个示例
+#+begin_src bash
 cmake --build cpp/build --target meta_object_demo -j 8
-```
+#+end_src
 
-### 构建所有示例
-```bash
+**** 构建所有示例
+#+begin_src bash
 cmake -S cpp -B cpp/build
 cmake --build cpp/build -j 8
-```
+#+end_src
 
-### 运行示例
+**** 运行示例
 构建完成后，可直接运行对应可执行文件（在构建目录的子目录中）：
-```bash
+#+begin_src bash
 ./cpp/build/01_core/01_meta_object/meta_object_demo
-```
+#+end_src
 
 也可以单独构建目标：
-```bash
+#+begin_src bash
 cmake --build cpp/build --target meta_object_demo
 ./cpp/build/01_core/01_meta_object/meta_object_demo
-```
+#+end_src
 
-> 如果 CMake 找不到 Qt，请在配置时指定 Qt 安装路径，例如：
-> `cmake -S cpp -B cpp/build -DCMAKE_PREFIX_PATH=/path/to/Qt/6.x.x`
->
-> 08_multimedia 和 11_3d 为可选模块：缺少 Qt Multimedia/Qt 3D 时会自动跳过。
+#+begin_quote
+如果 CMake 找不到 Qt，请在配置时指定 Qt 安装路径，例如：
+=cmake -S cpp -B cpp/build -DCMAKE_PREFIX_PATH=/path/to/Qt/6.x.x=
 
-### 构建可选/综合示例
-```bash
+08_multimedia 和 11_3d 为可选模块：缺少 Qt Multimedia/Qt 3D 时会自动跳过。
+#+end_quote
+
+**** 构建可选/综合示例
+#+begin_src bash
 # Qt Multimedia (可选)
 cmake --build cpp/build --target multimedia_audio_demo
 cmake --build cpp/build --target multimedia_video_demo
@@ -301,29 +303,29 @@ cmake --build cpp/build --target qt3d_basics_demo
 
 # 综合项目
 cmake --build cpp/build --target todo_app
-```
+#+end_src
 
-### 运行可选/综合示例
-```bash
+**** 运行可选/综合示例
+#+begin_src bash
 ./cpp/build/08_multimedia/01_audio/multimedia_audio_demo
 ./cpp/build/08_multimedia/02_video/multimedia_video_demo
 ./cpp/build/08_multimedia/03_camera/multimedia_camera_demo
 ./cpp/build/11_3d/01_basics/qt3d_basics_demo
 ./cpp/build/12_project/todo_app/todo_app
-```
+#+end_src
 
 
-### Python 版本 (PySide6)
+*** Python 版本 (PySide6)
 
-项目同时提供了 Python 版本的实现，使用 **PySide6** 绑定库。
+项目同时提供了 Python 版本的实现，使用 *PySide6* 绑定库。
 
-#### 环境要求
+**** 环境要求
 - Python 3.9+
 - PySide6 6.5+
 
-#### 方式一：使用虚拟环境 venv（推荐）
+**** 方式一：使用虚拟环境 venv（推荐）
 
-```bash
+#+begin_src bash
 # 1. 创建虚拟环境
 cd python
 python3 -m venv venv
@@ -340,11 +342,11 @@ pip install -r requirements.txt
 # 4. 运行示例
 cd 01_core/01_meta_object
 python main.py
-```
+#+end_src
 
-#### 方式二：使用 conda
+**** 方式二：使用 conda
 
-```bash
+#+begin_src bash
 # 1. 创建 conda 环境
 conda create -n qt6-py python=3.11
 
@@ -357,21 +359,21 @@ conda install pyside6
 # 4. 运行示例
 cd python/01_core/01_meta_object
 python main.py
-```
+#+end_src
 
-#### 退出虚拟环境
+**** 退出虚拟环境
 
-```bash
+#+begin_src bash
 # 退出 venv
 deactivate
 
 # 退出 conda
 conda deactivate
-```
+#+end_src
 
-#### 项目结构 (Python)
+**** 项目结构 (Python)
 
-```
+#+begin_example
 python/
 ├── 01_core/                    # Qt Core 模块 (Python)
 │   ├── 01_meta_object/
@@ -380,48 +382,48 @@ python/
 ├── 02_gui/                     # Qt GUI 模块 (Python)
 ├── 03_widgets/                 # Qt Widgets 模块 (Python)
 └── requirements.txt            # Python 依赖
-```
+#+end_example
 
 
-### Clojure 版本 (libpython-clj2 + PySide6)
+*** Clojure 版本 (libpython-clj2 + PySide6)
 
-#### 环境要求
+**** 环境要求
 - Clojure CLI 工具
 - Python 3.x + PySide6
 - JDK 17+（仓库内示例已在 JDK 25 下验证）
 
-#### 配置 Python 解释器
-在 `clojure/python.edn` 中填写 Python 路径：
-```clojure
+**** 配置 Python 解释器
+在 =clojure/python.edn= 中填写 Python 路径：
+#+begin_src clojure
 {:python-executable "/path/to/python3"
  :python-home "/path/to/python"}
-```
+#+end_src
 
-#### 运行示例（推荐）
-```bash
+**** 运行示例（推荐）
+#+begin_src bash
 cd clojure
 clj -M:ch01-core-meta-object
-```
+#+end_src
 
-（其他示例请参考 `clojure/deps.edn` 中的 alias 列表）
+（其他示例请参考 =clojure/deps.edn= 中的 alias 列表）
 
 
-### Emacs：快速编译当前示例
-仓库内的 `.dir-locals.el` 会在 Emacs 里打开 `main.cpp` 时自动设置 `compile-command`，让你直接 `M-x compile` 就能编译并运行当前示例：
-- 仅对 `c++-mode` 且文件名为 `main.cpp` 的缓冲区生效
-- 从当前目录的 `CMakeLists.txt` 中解析 `add_executable(...)` 的目标名
-- 使用仓库根目录下的 `build/`，生成命令：
-  - `cmake --build <root>/build --target <target> -j 8 && <root>/build/<rel>/<target>`
+*** Emacs：快速编译当前示例
+仓库内的 =.dir-locals.el= 会在 Emacs 里打开 =main.cpp= 时自动设置 =compile-command=，让你直接 =M-x compile= 就能编译并运行当前示例：
+- 仅对 =c++-mode= 且文件名为 =main.cpp= 的缓冲区生效
+- 从当前目录的 =CMakeLists.txt= 中解析 =add_executable(...)= 的目标名
+- 使用仓库根目录下的 =build/=，生成命令：
+  - =cmake --build <root>/build --target <target> -j 8 && <root>/build/<rel>/<target>=
 
-## 📖 学习建议
+** 📖 学习建议
 
-1. **按顺序学习**：从 01_core 开始，逐步深入
-2. **动手实践**：修改示例代码，观察效果变化
-3. **阅读文档**：每个示例都有对应的官方文档链接
-4. **理解原理**：信号槽机制和元对象系统是核心
+1. *按顺序学习*：从 01_core 开始，逐步深入
+2. *动手实践*：修改示例代码，观察效果变化
+3. *阅读文档*：每个示例都有对应的官方文档链接
+4. *理解原理*：信号槽机制和元对象系统是核心
 
-## 🔗 官方资源
+** 🔗 官方资源
 
-- [Qt 6 Documentation](https://doc.qt.io/qt-6/)
-- [Qt Examples](https://doc.qt.io/qt-6/qtexamplesandtutorials.html)
-- [Qt Forum](https://forum.qt.io/)
+- [[https://doc.qt.io/qt-6/][Qt 6 Documentation]]
+- [[https://doc.qt.io/qt-6/qtexamplesandtutorials.html][Qt Examples]]
+- [[https://forum.qt.io/][Qt Forum]]

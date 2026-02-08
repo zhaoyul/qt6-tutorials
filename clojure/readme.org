@@ -1,0 +1,299 @@
+#+TITLE: PySide6 Clojure Examples (via libpython-clj)
+
+使用 [[https://github.com/clj-python/libpython-clj][libpython-clj]] 调用 PySide6 的 Clojure 示例.
+
+* 前置要求
+
+1. *Clojure CLI 工具* (https://clojure.org/guides/install_clojure)
+2. *Python 3.x + PySide6*: ~pip install pyside6~
+3. *JDK*: 支持 JDK 17-25(测试通过 JDK 25)
+
+* 最小运行示例
+
+#+begin_src bash
+cd clojure
+clj -M:ch01-core-meta-object
+#+end_src
+
+* 项目结构
+
+#+begin_src
+clojure/
+├── AGENTS.md             # 经验与注意事项
+├── README.md             # 本文件
+├── deps.edn              # Clojure 依赖配置(每个示例都有对应 alias)
+├── python.edn            # Python 环境配置
+├── classes/              # 运行/编译产物(可忽略)
+├── src/                  # Clojure namespaces (qt6_tutorials.*)
+├── 01_core/              # 核心功能(Python embedded 模块)
+│   ├── 01_meta_object/
+│   ├── 02_signals_slots/
+│   ├── 03_properties/
+│   ├── 04_containers/
+│   ├── 05_io_system/
+│   ├── 06_event_loop/
+│   ├── 07_threading/
+│   └── 08_timer/
+├── 02_gui/               # GUI 与绘图
+│   ├── 01_painting/
+│   ├── 02_images/
+│   ├── 03_fonts/
+│   ├── 04_events/
+│   └── 05_window/
+├── 03_widgets/           # Widgets
+│   ├── 01_basic_widgets/
+│   ├── 02_layouts/
+│   ├── 03_dialogs/
+│   ├── 04_main_window/
+│   ├── 05_item_views/
+│   ├── 06_graphics_view/
+│   └── 07_custom_widgets/
+├── 04_qml/               # QML
+│   ├── 01_basics/
+│   ├── 02_types/
+│   ├── 03_javascript/
+│   └── 04_cpp_integration/
+├── 05_quick/             # Qt Quick
+│   ├── 01_items/
+│   ├── 02_controls/
+│   ├── 03_animations/
+│   ├── 04_states/
+│   └── 05_effects/
+├── 06_network/           # 网络
+│   ├── 01_tcp/
+│   ├── 02_udp/
+│   ├── 03_http/
+│   └── 04_websocket/
+├── 07_sql/               # 数据库
+│   ├── 01_basics/
+│   ├── 02_connection/
+│   ├── 03_queries/
+│   └── 04_models/
+├── 08_multimedia/        # 多媒体
+│   ├── 01_audio/
+│   ├── 02_video/
+│   └── 03_camera/
+├── 09_test/              # 测试
+│   ├── 01_unit_test/
+│   └── 02_gui_test/
+├── 10_concurrent/        # 并发
+│   ├── 01_basics/
+│   ├── 02_run/
+│   ├── 03_map_reduce/
+│   └── 04_filter/
+├── 11_3d/                # 3D (alias: ch11-n3d-basics)
+│   └── 01_basics/
+└── 12_project/           # 综合项目
+    └── todo_app/
+#+end_src
+
+* 配置
+
+** Python 环境 (python.edn)
+
+#+begin_src clojure
+{:python-executable "/path/to/python3"
+ :python-home "/path/to/python"}
+#+end_src
+
+示例(conda 环境):
+#+begin_src clojure
+{:python-executable "/Users/a123/miniforge/envs/qt6-py/bin/python3"
+ :python-home "/Users/a123/miniforge/envs/qt6-py"}
+#+end_src
+
+* 运行示例
+
+每个示例都有对应 alias, 命名规则为 ~chXX-<section>-<example>~(如 ~01_core/02_signals_slots~ → ~ch01-core-signals-slots~, 命名空间为 ~qt6_tutorials.ch01.core.signals_slots~), 直接运行即可:
+
+#+begin_src bash
+cd clojure
+clj -M:ch01-core-meta-object
+clj -M:ch02-gui-painting
+clj -M:ch06-network-websocket ws://localhost:8080
+clj -M:ch12-project-todo-app
+#+end_src
+
+完整 alias 列表请查看 ~deps.edn~ 的 ~:aliases~.
+
+macOS 提示: GUI 示例需主线程运行, alias 已包含 ~-XstartOnFirstThread~.
+
+* 实验性: UI + nREPL 热更新
+
+Todo App 提供一个实验性的内置 nREPL 入口, 允许连接后动态修改 UI(类似 re-frame + reagent 的交互体验):
+
+#+begin_src bash
+cd clojure
+clj -M:ch12-project-todo-app-live
+#+end_src
+
+启动后会打印 nREPL 端口. 连接后可以在 REPL 中执行:
+
+#+begin_src clojure
+(require '[qt6_tutorials.ch12.project.todo_app :as todo] :reload)
+(todo/set-title! "Live Title")
+(todo/set-subtitle! "Changed from nREPL")
+(todo/add-task! "hello" {:priority "High" :tag "demo"})
+(todo/add-button! "Ping" #(println "Ping from UI"))
+#+end_src
+
+* 示例说明
+
+** 01_core - 核心功能
+
+| 示例             | 说明                                   |
+|------------------+----------------------------------------|
+| ~01_meta_object~   | QObject 元对象信息, 动态属性, 信号连接 |
+| ~02_signals_slots~ | 信号槽连接, 自定义信号, 多槽连接       |
+| ~03_properties~    | 动态属性, 属性变化通知                 |
+| ~04_containers~    | QStringList, QSettings, 容器操作       |
+| ~05_io_system~     | QFile, QDir, 文件信息, 路径操作        |
+| ~06_event_loop~    | 事件循环, 定时器事件, 自定义事件       |
+| ~07_threading~     | QThread, QThreadPool, 多线程任务       |
+| ~08_timer~         | QTimer, 单次/重复定时器, 精确计时      |
+
+** 02_gui - GUI 与绘图
+
+| 示例         | 说明                           |
+|--------------+--------------------------------|
+| ~01_painting~ | QPainter, 2D 绘图, 画笔与画刷  |
+| ~02_images~   | QImage, QPixmap, 图像处理      |
+| ~03_fonts~    | QFont, 字体度量与渲染          |
+| ~04_events~   | 鼠标, 键盘事件处理             |
+| ~05_window~   | QWidget, 窗口管理与几何属性    |
+
+** 03_widgets - 控件
+
+| 示例              | 说明                                               |
+|-------------------+----------------------------------------------------|
+| ~01_basic_widgets~  | QLabel, QPushButton, QLineEdit 等基础控件          |
+| ~02_layouts~        | QVBoxLayout, QHBoxLayout, QGridLayout, QFormLayout |
+| ~03_dialogs~        | 消息框, 输入框, 文件对话框                         |
+| ~04_main_window~    | QMainWindow, 菜单栏, 工具栏, 状态栏                |
+| ~05_item_views~     | QListView, QTableView, QTreeView                   |
+| ~06_graphics_view~  | QGraphicsView, QGraphicsScene                      |
+| ~07_custom_widgets~ | 自定义控件绘制与事件处理                           |
+
+** 04_qml - QML
+
+| 示例               | 说明                           |
+|--------------------+--------------------------------|
+| ~01_basics~          | QML 基础语法与组件             |
+| ~02_types~           | QML 类型系统与自定义类型       |
+| ~03_javascript~      | QML 中的 JavaScript 集成       |
+| ~04_cpp_integration~ | QML 与 C++ 交互（Python 模拟） |
+
+** 05_quick - Qt Quick
+
+| 示例          | 说明                   |
+|---------------+------------------------|
+| ~01_items~      | Qt Quick 基础元素      |
+| ~02_controls~   | Qt Quick Controls 组件 |
+| ~03_animations~ | 属性动画与过渡动画     |
+| ~04_states~     | 状态与状态切换         |
+| ~05_effects~    | 视觉效果与着色器       |
+
+** 06_network - 网络
+
+| 示例         | 说明                                           |
+|--------------+------------------------------------------------|
+| ~01_tcp~       | QTcpServer, QTcpSocket, TCP 通信               |
+| ~02_udp~       | QUdpSocket, UDP 广播与单播                     |
+| ~03_http~      | QNetworkAccessManager, HTTP GET/POST, 异步请求 |
+| ~04_websocket~ | QWebSocket, WebSocket 客户端通信               |
+
+** 07_sql - 数据库
+
+| 示例          | 说明                               |
+|---------------+------------------------------------|
+| ~01_basics~     | SQLite, SQL 查询, 事务处理, Qt SQL |
+| ~02_connection~ | QSqlDatabase, 数据库连接管理       |
+| ~03_queries~    | QSqlQuery, 查询执行与结果处理      |
+| ~04_models~     | QSqlTableModel, 数据模型与视图绑定 |
+
+** 08_multimedia - 多媒体
+
+| 示例         | 说明               |
+|--------------+--------------------|
+| ~01_audio~   | QSoundEffect, 音频播放 |
+| ~02_video~   | QMediaPlayer, 视频播放 |
+| ~03_camera~  | QCamera, 摄像头捕获    |
+
+** 09_test - 测试
+
+| 示例         | 说明                  |
+|--------------+-----------------------|
+| ~01_unit_test~ | Qt Test, 单元测试框架 |
+| ~02_gui_test~  | GUI 自动化测试        |
+|              |                       |
+
+** 10_concurrent - 并发
+
+| 示例          | 说明                                               |
+|---------------+----------------------------------------------------|
+| ~01_basics~     | QThreadPool, Runnable, ThreadPoolExecutor, asyncio |
+| ~02_run~        | QtConcurrent::run, 异步函数执行                    |
+| ~03_map_reduce~ | QtConcurrent::map, 并行数据处理                    |
+| ~04_filter~     | QtConcurrent::filter, 并行数据过滤                 |
+
+** 11_3d - 3D
+
+| 示例        | 说明                    |
+|-------------+-------------------------|
+| ~01_basics~ | Qt 3D 基础, 3D 场景渲染 |
+
+** 12_project - 综合项目
+
+| 示例       | 说明                      |
+|------------+---------------------------|
+| ~todo_app~ | 待办事项应用，含 nREPL 热更新 |
+
+* libpython-clj 快速参考
+
+** 初始化
+#+begin_src clojure
+(require '[libpython-clj2.python :as py])
+(py/initialize!)
+#+end_src
+
+** 导入模块
+#+begin_src clojure
+(require '[libpython-clj2.require :refer [require-python]])
+(require-python '[PySide6.QtCore :as QtCore :bind-ns])
+#+end_src
+
+** 获取类
+#+begin_src clojure
+(def QObject (py/get-attr QtCore "QObject"))
+#+end_src
+
+** 创建对象
+#+begin_src clojure
+(def obj (QObject))
+#+end_src
+
+** 调用方法
+#+begin_src clojure
+(py/call-attr obj "setProperty" "key" "value")
+#+end_src
+
+** 连接信号
+#+begin_src clojure
+(py/call-attr (py/get-attr button "clicked") "connect" callback-fn)
+#+end_src
+
+* 与 Python 版本的对比
+
+| Python                       | Clojure (libpython-clj)                                      |
+|------------------------------+--------------------------------------------------------------|
+| ~from PySide6 import QtCore~   | ~(require-python '[PySide6.QtCore :as QtCore :bind-ns])~       |
+| ~QObject()~                    | ~(def QObject (py/get-attr QtCore "QObject"))~ then ~(QObject)~  |
+| ~obj.setProperty(k, v)~        | ~(py/call-attr obj "setProperty" k v)~                         |
+| ~button.clicked.connect(slot)~ | ~(py/call-attr (py/get-attr button "clicked") "connect" slot)~ |
+
+* 注意事项
+
+1. *QCoreApplication 创建*: 在 macOS 上, 通过 Python 代码创建避免 GUI 初始化问题
+2. *信号槽*: 始终先获取信号对象 ~(py/get-attr obj "signal")~ 再调用 ~connect~
+3. *线程等待*: 使用带超时的 ~wait~, 如 ~(py/call-attr thread "wait" 2000)~
+4. *嵌入 Python*: 优先拆成独立 ~.py~ 文件, 用 ~require-python :from ...~ 加载

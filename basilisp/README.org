@@ -1,0 +1,48 @@
+* PySide6 Qt6 教程 - Basilisp 版本
+
+本文件夹提供了与 Python 示例相对应的 Basilisp 重写版本.
+
+** 环境要求
+
+- Python 3.9+
+- PySide6 (=pip install pyside6=)
+- Basilisp (=pip install basilisp=)
+
+** 运行示例
+
+从仓库根目录运行:
+
+#+begin_src bash
+PYTHONPYCACHEPREFIX=/tmp/pycache conda run -n qt6-py python -m basilisp.cli run basilisp/01_core/01_meta_object/main.lpy
+#+end_src
+
+或从示例目录运行:
+
+#+begin_src bash
+cd basilisp/01_core/01_meta_object
+PYTHONPYCACHEPREFIX=/tmp/pycache conda run -n qt6-py python -m basilisp.cli run main.lpy
+#+end_src
+
+注意事项:
+- Basilisp 示例直接基于 PySide6 编写(不使用 =runpy=)
+- QML/Quick 演示从 =python/= 目录加载 QML 文件, 因此请从仓库根目录运行以保持相对路径一致
+
+** 目录结构
+
+目录结构与 =python/= 一一对应:
+
+#+begin_example
+basilisp/
+├── 01_core/                    # 元对象/信号/属性/容器/事件等
+├── 02_gui/                     # GUI 相关
+├── 03_widgets/                 # Widgets 及布局
+├── 04_qml/                     # QML & C++ 集成
+├── 05_quick/                   # Quick 控件, 动画, 状态, 效果
+├── 06_network/                 # 网络通信 (TCP/UDP/HTTP/WebSocket)
+├── 07_sql/                     # SQL 示例
+├── 08_multimedia/              # 多媒体示例
+├── 09_test/                    # 测试/自动化
+├── 10_concurrent/              # 并发/任务
+├── 11_3d/                      # 3D 示例
+└── 12_project/                 # 综合项目
+#+end_example
