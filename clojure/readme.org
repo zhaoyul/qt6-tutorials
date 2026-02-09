@@ -85,6 +85,8 @@ clojure/
 │   └── 01_basics/
 └── 12_project/           # 综合项目
     └── todo_app/
+└── 13_reagent/           # Reagent 风格数据驱动 UI
+    └── todo_app/
 #+end_src
 
 * 配置
@@ -247,6 +249,12 @@ clj -M:ch12-project-todo-app-live
 | 示例       | 说明                      |
 |------------+---------------------------|
 | ~todo_app~ | 待办事项应用，含 nREPL 热更新 |
+
+** 13_reagent - Reagent 风格数据驱动 UI
+
+| 示例       | 说明                                  |
+|------------+---------------------------------------|
+| ~todo_app~ | Hiccup + diff 的数据驱动 Todo 应用示例 |
 
 * libpython-clj 快速参考
 

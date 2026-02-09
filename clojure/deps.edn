@@ -42,6 +42,8 @@
            :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
   :ch03-widgets-graphics-view {:main-opts ["-m" "qt6_tutorials.ch03.widgets.graphics_view"]
            :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch03-widgets-hiccup-demo {:main-opts ["-m" "qt6_tutorials.ch03.widgets.hiccup_demo"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
   :ch03-widgets-item-views {:main-opts ["-m" "qt6_tutorials.ch03.widgets.item_views"]
            :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
   :ch03-widgets-layouts {:main-opts ["-m" "qt6_tutorials.ch03.widgets.layouts"]
@@ -103,6 +105,8 @@
   :ch11-n3d-basics {:main-opts ["-m" "qt6_tutorials.ch11.n3d.basics"]
            :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
   :ch12-project-todo-app {:main-opts ["-m" "qt6_tutorials.ch12.project.todo_app"]
+           :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
+  :ch13-reagent-todo-app {:main-opts ["-m" "qt6_tutorials.ch13.reagent.todo_app"]
            :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}
   :ch12-project-todo-app-live {:main-opts ["-m" "qt6_tutorials.ch12.project.todo_app" "--nrepl"]
            :jvm-opts ["-XstartOnFirstThread" "--enable-native-access=ALL-UNNAMED"]}

@@ -1,0 +1,4 @@
+#+TITLE: Reagent-style Hiccup UI
+
+This chapter hosts the data-driven Hiccup renderer and example app.
+Clojure sources live under src/qt6_tutorials/ch13/reagent.
