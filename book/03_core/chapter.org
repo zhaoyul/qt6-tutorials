@@ -113,8 +113,6 @@ child2 = QObject(parent)
 # 当 parent 被删除, child1 和 child2 也会被删除
 #+end_src
 
---------------
-
 ** 3.2 信号与槽(Signals & Slots)
 
 信号与槽是 Qt 的核心通信机制, 用于对象间的松耦合通信.

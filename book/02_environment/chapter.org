@@ -516,6 +516,4 @@ pyside6-designer
 | Basilisp | =src/hello_qt.lpy= | =basilisp run src/hello_qt.lpy=        |
 
 
-
-环境搭建完成! 现在你可以开始 Qt6
-的学习之旅了. 在下一章中, 我们将深入探索 Qt Core 核心模块.
+环境搭建完成! 现在你可以开始 Qt6 的学习之旅了. 在下一章中, 我们将深入探索 Qt Core 核心模块.

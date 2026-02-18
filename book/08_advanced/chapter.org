@@ -171,8 +171,6 @@ void threadPoolExample()
 }
 #+end_src
 
---------------
-
 ** 8.2 3D 图形(Qt 3D)
 
 Qt 3D 提供了用于创建 3D 应用程序的框架.
@@ -320,7 +318,6 @@ int main(int argc, char *argv[])
 }
 #+end_src
 
---------------
 
 ** 8.3 综合项目: 待办事项应用
 
@@ -913,8 +910,6 @@ cd basilisp/12_project/todo_app
 basilisp run main.lpy
 #+end_src
 
---------------
-
 ** 8.4 跨越边界--在 Clojure 中继承 PySide6 类
 
 在使用 =libpython-clj= 调用 Python 库时, 绝大多数情况下我们只需要当个"使用者"(调用函数, 读取属性). 但在 GUI 开发中, 我们经常需要当"定义者"--我们需要继承 =QWidget= 来创建自定义组件, 或者继承 =QThread= 来处理后台任务.
@@ -1030,7 +1025,6 @@ class MyCustomWidget(QWidget):
 
 记住: *不要试图在 Clojure 的 =create-class= 中与 Shiboken 搏斗*, 把类的定义权交给 Python, 把业务逻辑的控制权留在 Clojure.
 
---------------
 
 ** 8.5 本章小结
 
