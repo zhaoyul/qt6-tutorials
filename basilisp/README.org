@@ -1,48 +1,115 @@
-* PySide6 Qt6 教程 - Basilisp 版本
+* Basilisp / PySide6 示例
 
-本文件夹提供了与 Python 示例相对应的 Basilisp 重写版本.
+=basilisp/= 目录提供与 Python 版本大体对应的 Basilisp 重写示例，适合对照理解 Lisp 风格下的 Qt API 调用方式。
 
-** 环境要求
+** 前置要求
 
 - Python 3.9+
-- PySide6 (=pip install pyside6=)
-- Basilisp (=pip install basilisp=)
+- PySide6
+- Basilisp
 
-** 运行示例
+推荐先用 venv:
+
+#+begin_src bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install pyside6 basilisp
+#+end_src
+
+验证安装:
+
+#+begin_src bash
+python -c "import PySide6"
+python -m basilisp.cli version
+#+end_src
+
+** 快速开始
 
 从仓库根目录运行:
 
 #+begin_src bash
-PYTHONPYCACHEPREFIX=/tmp/pycache conda run -n qt6-py python -m basilisp.cli run basilisp/01_core/01_meta_object/main.lpy
+source .venv/bin/activate
+python -m basilisp.cli run basilisp/01_core/01_meta_object/main.lpy
 #+end_src
 
-或从示例目录运行:
+也可以进入示例目录运行:
 
 #+begin_src bash
 cd basilisp/01_core/01_meta_object
-PYTHONPYCACHEPREFIX=/tmp/pycache conda run -n qt6-py python -m basilisp.cli run main.lpy
+python -m basilisp.cli run main.lpy
 #+end_src
-
-注意事项:
-- Basilisp 示例直接基于 PySide6 编写(不使用 =runpy=)
-- QML/Quick 演示从 =python/= 目录加载 QML 文件, 因此请从仓库根目录运行以保持相对路径一致
 
 ** 目录结构
 
-目录结构与 =python/= 一一对应:
-
 #+begin_example
 basilisp/
-├── 01_core/                    # 元对象/信号/属性/容器/事件等
-├── 02_gui/                     # GUI 相关
-├── 03_widgets/                 # Widgets 及布局
-├── 04_qml/                     # QML & C++ 集成
-├── 05_quick/                   # Quick 控件, 动画, 状态, 效果
-├── 06_network/                 # 网络通信 (TCP/UDP/HTTP/WebSocket)
-├── 07_sql/                     # SQL 示例
-├── 08_multimedia/              # 多媒体示例
-├── 09_test/                    # 测试/自动化
-├── 10_concurrent/              # 并发/任务
-├── 11_3d/                      # 3D 示例
-└── 12_project/                 # 综合项目
+├── 01_core/
+├── 02_gui/
+├── 03_widgets/
+├── 04_qml/
+├── 05_quick/
+├── 06_network/
+├── 07_sql/
+├── 08_multimedia/
+├── 09_test/
+├── 10_concurrent/
+├── 11_3d/
+└── 12_project/
 #+end_example
+
+注意:
+
+- =05_quick/= 同时包含 =01_animations/= 和 =01_items/=。
+- 多个 QML/Quick 示例依赖仓库相对路径读取 =Main.qml=。
+
+** 运行约定
+
+- 普通核心/GUI/Widgets 示例可从各自目录独立运行。
+- QML/Quick 示例建议始终从仓库根目录运行，避免工作目录变化导致 =Main.qml= 路径失效。
+- 若只做自动化验证，可给部分 QML/Quick 示例设置 =QT6_TUTORIAL_AUTOQUIT=。
+
+示例:
+
+#+begin_src bash
+QT_QPA_PLATFORM=offscreen \
+QT6_TUTORIAL_AUTOQUIT=200 \
+python -m basilisp.cli run basilisp/04_qml/01_basics/main.lpy
+#+end_src
+
+** Troubleshooting
+
+*** 找不到 =PySide6= 或 =basilisp=
+
+先确认当前 shell 激活的是你安装依赖时使用的 venv:
+
+#+begin_src bash
+python -c "import PySide6"
+python -m basilisp.cli version
+#+end_src
+
+*** QML 加载失败
+
+优先检查两件事:
+
+1. 当前工作目录是不是仓库根目录
+2. 示例引用的 =Main.qml= 是否与当前路径匹配
+
+*** 运行后生成很多缓存文件
+
+可以像下面这样把 Python 缓存重定向到临时目录:
+
+#+begin_src bash
+PYTHONPYCACHEPREFIX=/tmp/pycache \
+python -m basilisp.cli run basilisp/01_core/01_meta_object/main.lpy
+#+end_src
+
+*** GUI / 多媒体示例在无桌面环境下失败
+
+这类示例依赖图形环境或真实设备。优先先验证 =01_core=、=02_gui=、=03_widgets= 等基础章节。
+
+** 相关文档
+
+- [[file:../python/README.org][Python / PySide6 README]]
+- [[file:../README.org][仓库总览]]
+- [[file:AGENTS.md][Basilisp 经验记录]]

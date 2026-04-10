@@ -1,0 +1,123 @@
+#+TITLE: Qt6 Tutorials - C++ 版本
+
+* C++ / Qt6 示例
+
+=cpp/= 目录是本仓库的主构建入口。所有示例通过 CMake 统一管理，章节结构与仓库根目录保持一致。
+
+** 前置要求
+
+- Qt 6.5+，推荐 Qt 6.6 或更高
+- CMake 3.16+
+- 支持 C++17 的编译器
+
+可选模块:
+
+- Qt Multimedia: =08_multimedia/=
+- Qt 3D: =11_3d/=
+
+** 快速开始
+
+*** 配置
+
+#+begin_src bash
+cmake -S cpp -B cpp/build
+#+end_src
+
+如果 Qt 安装在非系统默认路径:
+
+#+begin_src bash
+cmake -S cpp -B cpp/build \
+  -DCMAKE_PREFIX_PATH=/path/to/Qt/6.x.x
+#+end_src
+
+*** 构建一个示例
+
+#+begin_src bash
+cmake --build cpp/build --target meta_object_demo -j 8
+#+end_src
+
+*** 运行一个示例
+
+#+begin_src bash
+./cpp/build/01_core/01_meta_object/meta_object_demo
+#+end_src
+
+*** 构建全部主线示例
+
+#+begin_src bash
+cmake --build cpp/build -j 8
+#+end_src
+
+** 目标命名约定
+
+- 大多数目标以 =_demo= 结尾，例如 =meta_object_demo=、=qml_basics_demo=。
+- 综合项目目标名通常更直接，例如 =todo_app=。
+- 构建产物路径与章节路径一致:
+
+#+begin_example
+cpp/build/<chapter>/<example>/<target>
+#+end_example
+
+例如:
+
+- =cpp/build/01_core/01_meta_object/meta_object_demo=
+- =cpp/build/04_qml/01_basics/qml_basics_demo=
+- =cpp/build/12_project/todo_app/todo_app=
+
+** 推荐的起步顺序
+
+1. =01_core/01_meta_object=
+2. =01_core/02_signals_slots=
+3. =02_gui/01_painting=
+4. =03_widgets/01_basic_widgets=
+5. =04_qml/01_basics=
+6. =05_quick/01_items=
+
+** 常用命令
+
+*** 重新配置并构建
+
+#+begin_src bash
+cmake -S cpp -B cpp/build
+cmake --build cpp/build -j 8
+#+end_src
+
+*** 构建指定目标
+
+#+begin_src bash
+cmake --build cpp/build --target quick_items_demo -j 8
+cmake --build cpp/build --target todo_app -j 8
+#+end_src
+
+*** 构建可选模块
+
+#+begin_src bash
+cmake --build cpp/build --target multimedia_audio_demo -j 8
+cmake --build cpp/build --target multimedia_video_demo -j 8
+cmake --build cpp/build --target multimedia_camera_demo -j 8
+cmake --build cpp/build --target qt3d_basics_demo -j 8
+#+end_src
+
+** Troubleshooting
+
+*** =find_package(Qt6 ...)= 失败
+
+- 检查当前安装的是 Qt 6，不是 Qt 5。
+- 为 CMake 显式传入 =CMAKE_PREFIX_PATH=。
+- 如果你使用 IDE 自带 Qt，请确认命令行环境也能访问到同一套 Qt 安装。
+
+*** 可选模块构建失败
+
+=cpp/CMakeLists.txt= 会把 =08_multimedia/= 和 =11_3d/= 作为可选目录处理。主线章节可以先独立完成；缺少模块时先跳过这两章。
+
+*** 找不到可执行文件
+
+不要假设产物都在 =cpp/build/bin=。本仓库按章节输出，路径模式是:
+
+#+begin_example
+cpp/build/<chapter>/<example>/<target>
+#+end_example
+
+*** 只想验证工具链是否正常
+
+先构建并运行 =meta_object_demo=。它不依赖 QML、Quick、多媒体或 3D，是最稳定的冒烟目标。

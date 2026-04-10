@@ -1,429 +1,165 @@
 * Qt6 系统学习项目
 
-本项目通过代码示例系统展示 Qt6 的核心功能，帮助全面学习 Qt6 开发。
+本仓库按统一章节组织 Qt6 教程示例，主线为 C++，同时提供 Python
+(PySide6)、Basilisp 和 Clojure 版本，方便对照同一主题在不同语言里的写法。
 
-** 📚 学习路线图
+** 仓库导航
 
-#+begin_example
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           Qt6 学习路线图                                    │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  第一阶段：基础核心                                                         │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐                      │
-│  │  01_core    │───▶│  02_gui     │───▶│ 03_widgets  │                      │
-│  │  Qt Core    │    │  Qt GUI     │    │ Qt Widgets  │                      │
-│  └─────────────┘    └─────────────┘    └─────────────┘                      │
-│        │                                     │                              │
-│        ▼                                     ▼                              │
-│  第二阶段：现代UI                                                           │
-│  ┌─────────────┐    ┌─────────────┐                                         │
-│  │  04_qml     │───▶│ 05_quick    │                                         │
-│  │  Qt QML     │    │ Qt Quick    │                                         │
-│  └─────────────┘    └─────────────┘                                         │
-│        │                                                                    │
-│        ▼                                                                    │
-│  第三阶段：功能扩展                                                         │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐   │
-│  │ 06_network  │    │  07_sql     │    │08_multimedia│    │  09_test    │   │
-│  │ Qt Network  │    │  Qt SQL     │    │Qt Multimedia│    │  Qt Test    │   │
-│  └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘   │
-│                                                                             │
-│  第四阶段：高级主题                                                         │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐                      │
-│  │10_concurrent│    │ 11_3d       │    │ 12_project  │                      │
-│  │Qt Concurrent│    │  Qt 3D      │    │  综合项目   │                      │
-│  └─────────────┘    └─────────────┘    └─────────────┘                      │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
-#+end_example
+- [[file:cpp/README.org][cpp/README.org]]: C++ / Qt6 / CMake 版本的构建与运行说明
+- [[file:python/README.org][python/README.org]]: Python / PySide6 版本
+- [[file:basilisp/README.org][basilisp/README.org]]: Basilisp / PySide6 版本
+- [[file:clojure/readme.org][clojure/readme.org]]: Clojure / libpython-clj2 / PySide6 版本
+- [[file:book/README.org][book/README.org]]: 书稿与章节正文
+- [[file:book/SUMMARY.org][book/SUMMARY.org]]: 书稿目录
 
-** 📁 项目结构
+** 先读这个
 
-#+begin_example
-cpp/
-├── 01_core/                    # Qt Core 模块
-│   ├── 01_meta_object/         # 元对象系统 (MOC)
-│   ├── 02_signals_slots/       # 信号与槽机制
-│   ├── 03_properties/          # 属性系统
-│   ├── 04_containers/          # 容器类
-│   ├── 05_io_system/           # I/O 系统
-│   ├── 06_event_loop/          # 事件循环
-│   ├── 07_threading/           # 多线程
-│   └── 08_timer/               # 定时器
-│
-├── 02_gui/                     # Qt GUI 模块
-│   ├── 01_painting/            # 2D绘图系统
-│   ├── 02_images/              # 图像处理
-│   ├── 03_fonts/               # 字体系统
-│   ├── 04_events/              # GUI事件处理
-│   └── 05_window/              # 窗口系统
-│
-├── 03_widgets/                 # Qt Widgets 模块
-│   ├── 01_basic_widgets/       # 基础控件
-│   ├── 02_layouts/             # 布局管理
-│   ├── 03_dialogs/             # 对话框
-│   ├── 04_main_window/         # 主窗口
-│   ├── 05_item_views/          # 视图组件
-│   ├── 06_graphics_view/       # 图形视图框架
-│   └── 07_custom_widgets/      # 自定义控件
-│
-├── 04_qml/                     # Qt QML 模块
-│   ├── 01_basics/              # QML基础语法
-│   ├── 02_types/               # QML类型系统
-│   ├── 03_javascript/          # JavaScript集成
-│   └── 04_cpp_integration/     # C++集成
-│
-├── 05_quick/                   # Qt Quick 模块
-│   ├── 01_items/               # Quick基础元素
-│   ├── 02_controls/            # Quick Controls
-│   ├── 03_animations/          # 动画系统
-│   ├── 04_states/              # 状态与转换
-│   └── 05_effects/             # 视觉效果
-│
-├── 06_network/                 # Qt Network 模块
-│   ├── 01_tcp/                 # TCP通信
-│   ├── 02_udp/                 # UDP通信
-│   ├── 03_http/                # HTTP请求
-│   └── 04_websocket/           # WebSocket
-│
-├── 07_sql/                     # Qt SQL 模块
-│   ├── 01_connection/          # 数据库连接
-│   ├── 02_queries/             # SQL查询
-│   └── 03_models/              # SQL模型
-│
-├── 08_multimedia/              # Qt Multimedia 模块 (可选)
-│   ├── 01_audio/               # 音频播放
-│   ├── 02_video/               # 视频播放
-│   └── 03_camera/              # 摄像头
-│
-├── 09_test/                    # Qt Test 模块
-│   ├── 01_unit_test/           # 单元测试
-│   └── 02_gui_test/            # GUI测试
-│
-├── 10_concurrent/              # Qt Concurrent 模块
-│   ├── 01_run/                 # QtConcurrent::run
-│   ├── 02_map_reduce/          # Map-Reduce
-│   └── 03_filter/              # Filter操作
-│
-├── 11_3d/                      # Qt 3D 模块 (可选)
-│   └── 01_basics/              # 3D基础
-│
-└── 12_project/                 # 综合实战项目
-    └── todo_app/               # 待办事项应用 (优先级/标签/筛选/编辑/持久化)
+- 章节编号是主索引: =01_core= 到 =12_project= 按学习顺序递进。
+- =book/= 是教材文本，=cpp/=、=python/=、=basilisp/=、=clojure/= 是可运行示例。
+- C++ 版本是最完整的构建基线；其他语言尽量保持同章对应，但会有少量额外示例。
+- =08_multimedia= 和 =11_3d= 依赖可选 Qt 模块；没有安装对应模块时，不必先解决这些章节。
 
-python/                         # Python 版本 (PySide6)
-├── 01_core/                    # Qt Core 模块 (Python)
-├── 02_gui/                     # Qt GUI 模块 (Python)
-├── 03_widgets/                 # Qt Widgets 模块 (Python)
-├── 04_qml/
-├── 05_quick/
-├── 06_network/
-├── 07_sql/
-├── 08_multimedia/
-├── 09_test/
-├── 10_concurrent/
-├── 11_3d/
-├── 12_project/
-├── README.org
-└── requirements.txt            # Python 依赖
+** 环境要求
 
-basilisp/                       # Basilisp + PySide6 Lisp 示例
-├── 01_core/                    # 元对象/信号/属性/容器/事件等
-├── 02_gui/                     # GUI 相关
-├── 03_widgets/                 # Widgets 及布局
-├── 04_qml/                     # QML & C++ 集成
-├── 05_quick/                   # Quick 控件、动画、状态、效果
-├── 06_network/                 # 网络通信 (TCP/UDP/HTTP/WebSocket)
-├── 07_sql/                     # SQL 示例
-├── 08_multimedia/              # 多媒体示例
-├── 09_test/                    # 测试/自动化
-├── 10_concurrent/              # 并发/任务
-├── 11_3d/                      # 3D 示例
-├── 12_project/                 # 综合项目
-├── AGENTS.md                  # Basilisp 环境/风格提示
-└── README.md
+| 目录         | 必需工具                          | 说明 |
+|--------------+-----------------------------------+------|
+| =cpp/=         | Qt 6.5+, CMake 3.16+, C++17 编译器 | 使用 CMake 构建；推荐 Qt 6.6+ |
+| =python/=      | Python 3.9+, PySide6 6.5+          | 推荐先建 venv 再安装 =requirements.txt= |
+| =basilisp/=    | Python 3.9+, PySide6, Basilisp     | 运行入口是 =python -m basilisp.cli run ...= |
+| =clojure/=     | Clojure CLI, JDK 17+, Python 3.9+, PySide6 | =clj= 运行时必须能找到装有 PySide6 的 Python |
+| 可选章节     | Qt Multimedia, Qt 3D              | 只影响 =08_multimedia/= 和 =11_3d/= |
 
-clojure/                        # Clojure + PySide6 示例
-├── src/                        # Clojure namespaces (qt6_tutorials.*)
-├── 01_core/                    # 核心低级模块或元对象
-├── 02_gui/                     # GUI 与绘图
-├── 03_widgets/                 # Widgets 系列
-├── 04_qml/                     # QML、JavaScript、C++ 集成
-├── 05_quick/                   # Quick 控件、动画、状态、效果
-├── 06_network/                 # TCP/UDP/HTTP/WebSocket
-├── 07_sql/                     # SQL 示例
-├── 08_multimedia/              # 多媒体
-├── 09_test/                    # 测试
-├── 10_concurrent/              # 并发
-├── 11_3d/                      # 3D
-├── 12_project/                 # 组合项目
-├── README.md
-├── deps.edn
-└── python.edn
-#+end_example
-
-** ✅ Clojure 示例覆盖情况（截至 2026-02-06）
-
-说明：以下每个子目录均对应一个可运行的命名空间（位于 =clojure/src/qt6_tutorials/...=），并在 =clojure/deps.edn= 中提供 alias。
-
-- 01_core: 01_meta_object, 02_signals_slots, 03_properties, 04_containers, 05_io_system, 06_event_loop, 07_threading, 08_timer
-- 02_gui: 01_painting, 02_images, 03_fonts, 04_events, 05_window
-- 03_widgets: 01_basic_widgets, 02_layouts, 03_dialogs, 04_main_window, 05_item_views, 06_graphics_view, 07_custom_widgets
-- 04_qml: 01_basics, 02_types, 03_javascript, 04_cpp_integration
-- 05_quick: 01_items, 02_controls, 03_animations, 04_states, 05_effects
-- 06_network: 01_tcp, 02_udp, 03_http, 04_websocket
-- 07_sql: 01_basics, 01_connection, 02_queries, 03_models
-- 08_multimedia: 01_audio, 02_video, 03_camera
-- 09_test: 01_unit_test, 02_gui_test
-- 10_concurrent: 01_run, 01_basics, 02_map_reduce, 03_filter
-- 11_3d: 01_basics
-- 12_project: todo_app
-
-** 🔑 核心类速查
-
-*** C++ Qt6 核心类
-
-**** Qt Core 核心类
-| 类名             | 功能             | 示例位置               |
-|------------------+------------------+------------------------|
-| =QObject=          | 所有Qt对象的基类 | 01_core/01_meta_object |
-| =QCoreApplication= | 事件循环         | 01_core/06_event_loop  |
-| =QString=          | Unicode字符串    | 01_core/04_containers  |
-| =QList= / =QVector=  | 动态数组         | 01_core/04_containers  |
-| =QMap= / =QHash=     | 关联容器         | 01_core/04_containers  |
-| =QFile= / =QDir=     | 文件操作         | 01_core/05_io_system   |
-| =QThread=          | 线程             | 01_core/07_threading   |
-| =QTimer=           | 定时器           | 01_core/08_timer       |
-| =QVariant=         | 通用值容器       | 01_core/03_properties  |
-
-**** Qt GUI 核心类
-| 类名             | 功能        | 示例位置           |
-|------------------+-------------+--------------------|
-| =QGuiApplication=  | GUI应用程序 | 02_gui/05_window   |
-| =QPainter=         | 2D绘图      | 02_gui/01_painting |
-| =QImage= / =QPixmap= | 图像        | 02_gui/02_images   |
-| =QFont=            | 字体        | 02_gui/03_fonts    |
-| =QWindow=          | 窗口        | 02_gui/05_window   |
-| =QEvent=           | 事件基类    | 02_gui/04_events   |
-
-**** Qt Widgets 核心类
-| 类名         | 功能         | 示例位置                  |
-|--------------+--------------+---------------------------|
-| =QApplication= | Widgets应用  | 03_widgets/01_basic       |
-| =QWidget=      | 所有控件基类 | 03_widgets/01_basic       |
-| =QPushButton=  | 按钮         | 03_widgets/01_basic       |
-| =QLabel=       | 标签         | 03_widgets/01_basic       |
-| =QLineEdit=    | 单行输入     | 03_widgets/01_basic       |
-| =QTextEdit=    | 多行文本     | 03_widgets/01_basic       |
-| =QVBoxLayout=  | 垂直布局     | 03_widgets/02_layouts     |
-| =QHBoxLayout=  | 水平布局     | 03_widgets/02_layouts     |
-| =QMainWindow=  | 主窗口       | 03_widgets/04_main_window |
-| =QDialog=      | 对话框       | 03_widgets/03_dialogs     |
-| =QTableView=   | 表格视图     | 03_widgets/05_item_views  |
-| =QListView=    | 列表视图     | 03_widgets/05_item_views  |
-
-**** Qt Network 核心类
-| 类名                  | 功能      | 示例位置           |
-|-----------------------+-----------+--------------------|
-| =QTcpSocket=            | TCP客户端 | 06_network/01_tcp  |
-| =QTcpServer=            | TCP服务器 | 06_network/01_tcp  |
-| =QUdpSocket=            | UDP通信   | 06_network/02_udp  |
-| =QNetworkAccessManager= | HTTP请求  | 06_network/03_http |
-
-*** Python PySide6 对应类
-
-| C++ 类            | PySide6 类              | 说明             |
-|-------------------+-------------------------+------------------|
-| =QObject=           | =PySide6.QtCore.QObject=  | 完全一致         |
-| =Q_PROPERTY=        | =@Property= 装饰器        | Python化语法     |
-| =signals:= / =slots:= | =Signal= / =@Slot=          | 类级别定义信号   |
-| =QString=           | Python =str=              | 直接使用原生类型 |
-| =QList= / =QVector=   | Python =list=             | 直接使用原生类型 |
-| =QMap= / =QHash=      | Python =dict=             | 直接使用原生类型 |
-| =QFile= / =QDir=      | =QFile= / =QDir= 或 =pathlib= | 可用Qt或标准库   |
-| =qDebug()=          | Python =print()=          | 或 Qt 的日志系统 |
-
-更多转换对照请参考各 Python 示例文件中的注释。
-
-** 🚀 快速开始
+** 5 分钟上手
 
 *** C++ 版本
 
-**** 环境要求
-- Qt 6.5+ (推荐 6.6 或更高)
-- CMake 3.16+
-- C++17 兼容编译器
-
-**** 配置并构建（推荐）
 #+begin_src bash
 cmake -S cpp -B cpp/build
-cmake --build cpp/build -j 8
-#+end_src
-
-**** 构建单个示例
-#+begin_src bash
 cmake --build cpp/build --target meta_object_demo -j 8
-#+end_src
-
-**** 构建所有示例
-#+begin_src bash
-cmake -S cpp -B cpp/build
-cmake --build cpp/build -j 8
-#+end_src
-
-**** 运行示例
-构建完成后，可直接运行对应可执行文件（在构建目录的子目录中）：
-#+begin_src bash
 ./cpp/build/01_core/01_meta_object/meta_object_demo
 #+end_src
 
-也可以单独构建目标：
-#+begin_src bash
-cmake --build cpp/build --target meta_object_demo
-./cpp/build/01_core/01_meta_object/meta_object_demo
-#+end_src
-
-#+begin_quote
-如果 CMake 找不到 Qt，请在配置时指定 Qt 安装路径，例如：
-=cmake -S cpp -B cpp/build -DCMAKE_PREFIX_PATH=/path/to/Qt/6.x.x=
-
-08_multimedia 和 11_3d 为可选模块：缺少 Qt Multimedia/Qt 3D 时会自动跳过。
-#+end_quote
-
-**** 构建可选/综合示例
-#+begin_src bash
-# Qt Multimedia (可选)
-cmake --build cpp/build --target multimedia_audio_demo
-cmake --build cpp/build --target multimedia_video_demo
-cmake --build cpp/build --target multimedia_camera_demo
-
-# Qt 3D (可选)
-cmake --build cpp/build --target qt3d_basics_demo
-
-# 综合项目
-cmake --build cpp/build --target todo_app
-#+end_src
-
-**** 运行可选/综合示例
-#+begin_src bash
-./cpp/build/08_multimedia/01_audio/multimedia_audio_demo
-./cpp/build/08_multimedia/02_video/multimedia_video_demo
-./cpp/build/08_multimedia/03_camera/multimedia_camera_demo
-./cpp/build/11_3d/01_basics/qt3d_basics_demo
-./cpp/build/12_project/todo_app/todo_app
-#+end_src
-
-
-*** Python 版本 (PySide6)
-
-项目同时提供了 Python 版本的实现，使用 *PySide6* 绑定库。
-
-**** 环境要求
-- Python 3.9+
-- PySide6 6.5+
-
-**** 方式一：使用虚拟环境 venv（推荐）
+如果 =cmake= 找不到 Qt:
 
 #+begin_src bash
-# 1. 创建虚拟环境
-cd python
-python3 -m venv venv
-
-# 2. 激活虚拟环境
-# Linux/macOS:
-source venv/bin/activate
-# Windows:
-venv\Scripts\activate
-
-# 3. 安装依赖
-pip install -r requirements.txt
-
-# 4. 运行示例
-cd 01_core/01_meta_object
-python main.py
+cmake -S cpp -B cpp/build \
+  -DCMAKE_PREFIX_PATH=/path/to/Qt/6.x.x
 #+end_src
 
-**** 方式二：使用 conda
+*** Python 版本
 
 #+begin_src bash
-# 1. 创建 conda 环境
-conda create -n qt6-py python=3.11
-
-# 2. 激活环境
-conda activate qt6-py
-
-# 3. 安装 PySide6
-conda install pyside6
-
-# 4. 运行示例
-cd python/01_core/01_meta_object
-python main.py
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r python/requirements.txt
+python python/01_core/01_meta_object/main.py
 #+end_src
 
-**** 退出虚拟环境
+*** Basilisp 版本
 
 #+begin_src bash
-# 退出 venv
-deactivate
-
-# 退出 conda
-conda deactivate
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install pyside6 basilisp
+python -m basilisp.cli run basilisp/01_core/01_meta_object/main.lpy
 #+end_src
 
-**** 项目结构 (Python)
+*** Clojure 版本
 
-#+begin_example
-python/
-├── 01_core/                    # Qt Core 模块 (Python)
-│   ├── 01_meta_object/
-│   ├── 02_signals_slots/
-│   └── ...
-├── 02_gui/                     # Qt GUI 模块 (Python)
-├── 03_widgets/                 # Qt Widgets 模块 (Python)
-└── requirements.txt            # Python 依赖
-#+end_example
+先确保当前 shell 中的 Python 能直接导入 =PySide6=，再运行 Clojure alias:
 
-
-*** Clojure 版本 (libpython-clj2 + PySide6)
-
-**** 环境要求
-- Clojure CLI 工具
-- Python 3.x + PySide6
-- JDK 17+（仓库内示例已在 JDK 25 下验证）
-
-**** 配置 Python 解释器
-在 =clojure/python.edn= 中填写 Python 路径：
-#+begin_src clojure
-{:python-executable "/path/to/python3"
- :python-home "/path/to/python"}
-#+end_src
-
-**** 运行示例（推荐）
 #+begin_src bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install PySide6
 cd clojure
 clj -M:ch01-core-meta-object
 #+end_src
 
-（其他示例请参考 =clojure/deps.edn= 中的 alias 列表）
+** 教程结构
 
+| 章节             | 主题                        | 常见示例 |
+|------------------+-----------------------------+----------|
+| =01_core=          | QObject、属性、事件循环、线程 | 元对象、信号槽、定时器 |
+| =02_gui=           | 绘图、图像、字体、窗口        | QPainter、QImage、事件处理 |
+| =03_widgets=       | 桌面控件与布局               | 按钮、布局、对话框、主窗口 |
+| =04_qml=           | QML 基础与脚本集成           | 基础语法、自定义类型、JavaScript |
+| =05_quick=         | Qt Quick 与动画              | Items、Controls、状态、效果 |
+| =06_network=       | 网络通信                     | TCP、UDP、HTTP、WebSocket |
+| =07_sql=           | 数据库                       | 连接、查询、模型 |
+| =08_multimedia=    | 多媒体                       | 音频、视频、摄像头 |
+| =09_test=          | 测试                         | 单元测试、GUI 测试 |
+| =10_concurrent=    | 并发                         | run、map/reduce、filter |
+| =11_3d=            | 3D                           | 基础场景与实体 |
+| =12_project=       | 综合项目                     | Todo 应用 |
 
-*** Emacs：快速编译当前示例
-仓库内的 =.dir-locals.el= 会在 Emacs 里打开 =main.cpp= 时自动设置 =compile-command=，让你直接 =M-x compile= 就能编译并运行当前示例：
-- 仅对 =c++-mode= 且文件名为 =main.cpp= 的缓冲区生效
-- 从当前目录的 =CMakeLists.txt= 中解析 =add_executable(...)= 的目标名
-- 使用仓库根目录下的 =build/=，生成命令：
-  - =cmake --build <root>/build --target <target> -j 8 && <root>/build/<rel>/<target>=
+** 各语言目录差异
 
-** 📖 学习建议
+- Python 和 Basilisp 的 =05_quick/= 目录额外包含 =01_animations/= 预热示例。
+- Clojure 通过 =src/qt6_tutorials/...= 提供可运行命名空间，并在 =deps.edn= 中为每个示例定义 alias。
+- Clojure 额外提供 =13_reagent/=，用于数据驱动 UI 的实验性示例。
 
-1. *按顺序学习*：从 01_core 开始，逐步深入
-2. *动手实践*：修改示例代码，观察效果变化
-3. *阅读文档*：每个示例都有对应的官方文档链接
-4. *理解原理*：信号槽机制和元对象系统是核心
+** 运行约定
 
-** 🔗 官方资源
+- C++: 构建产物位于 =cpp/build/<chapter>/<example>/=。
+- Python: 大多数示例直接运行 =python path/to/main.py= 即可。
+- Basilisp: QML/Quick 示例建议从仓库根目录运行，因为它们按仓库相对路径读取 =Main.qml=。
+- Clojure: 直接运行 =clj -M:<alias>=；不要手动拼接 =src/= 下的命名空间文件路径。
+
+** Troubleshooting
+
+*** Python / Basilisp / Clojure 提示找不到 =PySide6=
+
+先确认当前解释器确实装了依赖:
+
+#+begin_src bash
+python -c "import PySide6; print(PySide6.__version__)"
+#+end_src
+
+如果失败，说明你当前 shell 使用的不是装好依赖的解释器。优先做法是激活 venv，然后再运行示例或 =clj=。
+
+*** 没有 =conda=
+
+文档中的 =conda= 只是可选路径，不是前置条件。仓库默认支持标准 =venv= + =pip= 工作流。
+
+*** CMake 找不到 Qt6
+
+- 确认安装的是 Qt 6 而不是 Qt 5。
+- 用 =-DCMAKE_PREFIX_PATH= 指向 Qt 安装根。
+- macOS/Homebrew 环境下，必要时显式指定 =Qt6_DIR= 或 =CMAKE_PREFIX_PATH=。
+
+*** QML / Quick 示例在无桌面环境下卡住
+
+部分 QML/Quick 示例支持自动退出，可用于 smoke run:
+
+#+begin_src bash
+QT_QPA_PLATFORM=offscreen \
+QT6_TUTORIAL_AUTOQUIT=200 \
+python python/04_qml/01_basics/main.py
+#+end_src
+
+同样的 =QT6_TUTORIAL_AUTOQUIT= 也适用于若干 Basilisp / Clojure QML 与 Quick 示例。
+
+*** 多媒体 / 3D 示例无法构建
+
+这通常不是主线教程的问题，而是本机缺少可选 Qt 模块。先完成 =01_core= 到 =07_sql=，之后再补装:
+
+- Qt Multimedia: =08_multimedia/=
+- Qt 3D: =11_3d/=
+
+*** macOS 上 Clojure GUI 失败
+
+=deps.edn= 里的 alias 已经包含 =-XstartOnFirstThread=。如果你绕过 alias 直接跑 JVM，GUI 示例很容易失败。
+
+** 学习建议
+
+1. 先跑 =01_core/01_meta_object=，确认环境正常。
+2. 再按 =01_core -> 05_quick -> 06_network -> 12_project= 逐步推进。
+3. 每章优先对照 C++ 与 Python，再看 Basilisp 或 Clojure 变体。
+4. 遇到可选模块问题时先跳过，不要阻塞主线学习。
+
+** 参考资源
 
 - [[https://doc.qt.io/qt-6/][Qt 6 Documentation]]
-- [[https://doc.qt.io/qt-6/qtexamplesandtutorials.html][Qt Examples]]
-- [[https://forum.qt.io/][Qt Forum]]
+- [[https://doc.qt.io/qtforpython/][Qt for Python / PySide6 Documentation]]
+- [[https://doc.qt.io/qt-6/qtexamplesandtutorials.html][Qt Examples and Tutorials]]
