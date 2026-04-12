@@ -31,6 +31,9 @@
 
 ** 5 分钟上手
 
+如果你只是想先确认环境, 从 C++ 版本开始; 如果你想快速改界面效果, 从
+Python 版本开始; 如果你要对照 Lisp 风格绑定, 再进入 Basilisp 或 Clojure。
+
 *** C++ 版本
 
 #+begin_src bash
